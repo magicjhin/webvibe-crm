@@ -81,7 +81,7 @@ Codex review, Critical fixes, available checks, commit и push.
 
 ---
 
-## Итерация 0 — Bootstrap (in progress, ждёт Codex review + commit)
+## Итерация 0 — Bootstrap (✅ Done — commit `3cec00a`)
 
 - [x] `pnpm create next-app .` — TS, Tailwind, App Router, ESLint, без src/, pnpm. **Note:** CLI отказался работать в непустой папке → backup planning docs в `/tmp/webvibe-planning-backup/` → run CLI → restore.
 - [x] Активирован pnpm 11.4.0 через `corepack enable pnpm` + `corepack prepare pnpm@latest --activate`.
@@ -107,8 +107,8 @@ Codex review, Critical fixes, available checks, commit и push.
 - [x] Все Critical и Important исправлены, кроме tablet breakpoint (перенесён в Iter 6)
 - [x] Codex Pass 2 (focused): verdict `Yes`, 0 Critical / 0 Important / 0 Nice в новом scope
 - [x] По ADR-018: третий проход не запускается, модуль accepted
-- [ ] Commit: `chore: bootstrap next.js project`
-- [ ] Push в `origin/main`
+- [x] Commit: `chore: bootstrap next.js project` (`3cec00a`)
+- [x] Push в `origin/main` (выполнен; `git ls-remote origin main` = `3cec00a...`, working tree clean)
 
 ### Открытые вопросы / TODO для Iteration 1
 
