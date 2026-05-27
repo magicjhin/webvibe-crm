@@ -160,6 +160,8 @@ model Lead {
 
   @@index([status])
   @@index([nextContactAt])
+  @@index([clientId])
+  @@index([convertedToProjectId])
 }
 
 enum LeadUrgency {
@@ -316,7 +318,7 @@ model Invoice {
   clientId   String
   client     Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
   projectId  String?
-  project    Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  project    Project?      @relation(fields: [projectId], references: [id], onDelete: Restrict)
   maintenanceId String?
   maintenance Maintenance? @relation(fields: [maintenanceId], references: [id], onDelete: SetNull)
 
@@ -328,6 +330,10 @@ model Invoice {
   subtotal   Decimal       @db.Decimal(12, 2)
   total      Decimal       @db.Decimal(12, 2)        // = subtotal (нет PVM)
 
+  // Idempotency для maintenance cron: 'YYYY-MM' для kind=maintenance, null для остальных.
+  // Уникально с maintenanceId — гарантирует один счёт на период даже при retry/двойном запуске.
+  periodKey  String?
+
   notes      String?
   pdfUrl     String?                                  // кеш PDF в Blob
 
@@ -337,6 +343,7 @@ model Invoice {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  @@unique([maintenanceId, periodKey])               // idempotency для maintenance invoices
   @@index([clientId])
   @@index([projectId])
   @@index([status])
@@ -353,6 +360,8 @@ model InvoiceItem {
   unitPrice   Decimal  @db.Decimal(12, 2)
   total       Decimal  @db.Decimal(12, 2)            // = qty * unitPrice
   order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([invoiceId])
 }
@@ -368,9 +377,13 @@ enum InvoiceStatus {
   draft
   sent
   paid
-  overdue
   cancelled
 }
+
+// NB: `overdue` — это НЕ статус, а derived состояние:
+//     status='sent' AND dueAt < now()
+// Никогда не переводим Invoice в `overdue` персистентно (его нет в enum).
+// Dashboard и фильтры считают overdue на лету.
 ```
 
 > Никакого `vatRate`, `vatAmount`, `tax` — я не плательщик PVM.
@@ -387,7 +400,7 @@ model Contract {
   clientId    String
   client      Client         @relation(fields: [clientId], references: [id], onDelete: Restrict)
   projectId   String?
-  project     Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  project     Project?       @relation(fields: [projectId], references: [id], onDelete: Restrict)
 
   issuedAt    DateTime
   status      ContractStatus @default(draft)
@@ -435,7 +448,7 @@ model Proposal {
   clientId      String
   client        Client         @relation(fields: [clientId], references: [id], onDelete: Restrict)
   projectId     String?                                // если КП по существующему проекту
-  project       Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  project       Project?       @relation(fields: [projectId], references: [id], onDelete: Restrict)
 
   title         String
   status        ProposalStatus @default(draft)
@@ -458,6 +471,7 @@ model Proposal {
   updatedAt     DateTime @updatedAt
 
   @@index([clientId])
+  @@index([projectId])
   @@index([status])
 }
 
@@ -489,6 +503,7 @@ model Payment {
   paidAt     DateTime
   note       String?
   createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
   @@index([clientId])
   @@index([projectId])
@@ -518,9 +533,13 @@ model Expense {
   occurredAt  DateTime
   description String
   fileUrl     String?
+  // recurring/recurrence — storage-only поля (ADR-017).
+  // В MVP — индикатор повторяемости для ручного анализа.
+  // Автоматизация повторов (cron + auto-create) — Phase 2.
   recurring   Boolean        @default(false)
   recurrence  String?        // 'monthly' | 'yearly' | null
   createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
   @@index([occurredAt])
   @@index([category])
@@ -564,6 +583,8 @@ model Maintenance {
 
   @@index([status])
   @@index([nextInvoiceAt])
+  @@index([clientId])
+  @@index([projectId])
 }
 
 enum MaintenanceStatus {
@@ -595,6 +616,8 @@ model Reminder {
 
   @@index([dueAt])
   @@index([status])
+  @@index([clientId])
+  @@index([projectId])
 }
 
 enum ReminderKind {
@@ -630,6 +653,7 @@ model FileAsset {
   sizeBytes  Int?
   mimeType   String?
   createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([ownerType, ownerId])
 }
@@ -661,10 +685,12 @@ type DocumentRow = {
 
 ## Целостность данных
 
-- **Удаление Client** — `Restrict`, если есть связанные документы. Сначала архивировать.
-- **Удаление Project** — `Restrict` для invoices/contracts/proposals, `Cascade` для tasks.
-- **Удаление Invoice** — payments остаются, ссылка → `SetNull`. Удалять только черновики.
-- **Уникальность номеров** — на уровне БД (`@unique`).
+- **Удаление Client** — `Restrict`, если есть связанные projects/invoices/contracts/proposals/payments/maintenance. Лиды это **не блокируют** (Lead.clientId — `SetNull`), потому что лиды эфемерные и могут быть удалены вместе со старыми контактами. Перед удалением клиента — сначала архивировать документы или дождаться, пока все обязательства закроются.
+- **Удаление Project** — `Restrict` для invoices/contracts/proposals (документы важны для аудита; сначала удалить документы или оставить Project в архиве); `Cascade` для tasks и maintenance.
+- **Удаление Invoice** — payments остаются с `SetNull` на `invoiceId`. Удалять только черновики (status=draft).
+- **Удаление Lead** — `convertedToProjectId` уже `SetNull`. Лиды можно удалять свободно.
+- **Уникальность номеров** — на уровне БД (`@unique` на `Invoice.number`, `Contract.number`, `Proposal.number`).
+- **Maintenance idempotency** — `@@unique([maintenanceId, periodKey])` на `Invoice` гарантирует, что cron не создаст дубль счёта на тот же период даже при retry.
 
 ---
 

@@ -70,3 +70,9 @@ public/workbox-*.js.map
 
 # Misc
 *.local
+
+# Codex review artifacts (ephemeral, regenerated per module)
+CODEX-REVIEW-TASK.md
+REVIEW-CODEX.md
+CODEX-LAST-OUTPUT.md
+CODEX-TEST.md

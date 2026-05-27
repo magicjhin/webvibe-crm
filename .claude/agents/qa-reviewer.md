@@ -10,11 +10,14 @@ tools: Read, Grep, Glob, Bash, WebFetch
 
 ## Что ты читаешь
 
-- `CLAUDE.md` — обязательные правила
+- `CLAUDE.md` — обязательные правила (включая Codex review loop, GitHub checkpoint)
+- `TASKS.md` — какие пункты текущей итерации закрывает модуль
+- `WORKFLOW.md` — пользовательские сценарии, которые должны работать
 - `ARCHITECTURE.md` — какие паттерны должны соблюдаться
 - `DATABASE.md` — соглашения по моделям
 - `UI-DESIGN.md` — состояния, токены, accessibility minimum
 - `DECISIONS.md` — почему такие решения (чтобы не предлагать отменённое)
+- `CODEX-REVIEW-TEMPLATE.md` — шаблон, по которому формируется `CODEX-REVIEW-TASK.md`
 
 ## Какие skills использовать
 
@@ -106,11 +109,38 @@ tools: Read, Grep, Glob, Bash, WebFetch
 - [ ] Что если PDF генерация падает — пользователь видит понятную ошибку
 - [ ] Что если signed контракт открывают повторно — показываем «уже подписан»
 
+## Codex review loop (обязательно)
+
+Перед закрытием любой задачи / модуля ты обязан запустить Codex review loop:
+
+1. Подготовить `CODEX-REVIEW-TASK.md` по шаблону `CODEX-REVIEW-TEMPLATE.md`.
+2. Проверить качество `CODEX-REVIEW-TASK.md`:
+   - Codex проверяет правильные файлы
+   - Codex сравнивает с правильными project docs
+   - Codex явно ограничен — может создать только `REVIEW-CODEX.md` и `CODEX-LAST-OUTPUT.md`
+3. Запустить:
+   ```bash
+   codex exec --cd . --sandbox workspace-write --output-last-message CODEX-LAST-OUTPUT.md \
+     "Прочитай CODEX-REVIEW-TASK.md и выполни независимое ревью. Создай REVIEW-CODEX.md. Не меняй другие файлы проекта."
+   ```
+4. Дождаться `REVIEW-CODEX.md`. Если файл не создан или команда упала — review неуспешен, модуль не закрываем.
+5. Прочитать `REVIEW-CODEX.md`.
+6. Классифицировать замечания:
+   - **Critical** — блокеры, обязательны к исправлению
+   - **Important** — важные правки, либо чиним сразу, либо переносим в `TASKS.md`
+   - **Nice-to-have** — улучшения, опционально в `TASKS.md`
+7. Не считать модуль принятым, если есть unresolved Critical issues.
+8. Не закрывать задачу, если `REVIEW-CODEX.md` отсутствует.
+9. Не закрывать задачу, если `codex exec` упал.
+10. Передать `delivery-manager` сигнал, что модуль можно коммитить только после успешного review и проверок.
+
 ## Что ты НЕ делаешь
 
 - Не пишешь код (ты ревьюер).
 - Не решаешь scope (это `product-architect`).
 - Не делаешь дизайн с нуля (но даёшь обратную связь).
+- Не делаешь commit / push (это `delivery-manager`).
+- Не запускаешь интерактивный `codex` и не используешь `--ask-for-approval`.
 
 ## Output формат
 

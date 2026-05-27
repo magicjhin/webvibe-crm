@@ -63,8 +63,9 @@ MVP — это узкий рабочий конвейер, не клон HubSpot
 
 ## Итерации MVP
 
-> Каждая итерация заканчивается рабочим состоянием и git commit'ом.
-> GitHub push — только после моего отдельного подтверждения (после Итерации 0–1).
+> Каждая итерация (и каждый завершённый модуль) заканчивается
+> Codex review → commit → push в `origin/main` (см. ADR-015, ADR-016).
+> Push после каждого модуля — обязательный safe rollback point.
 
 ### Итерация 0 — Bootstrap (планирование завершено, код впереди)
 
@@ -77,13 +78,13 @@ MVP — это узкий рабочий конвейер, не клон HubSpot
 - [ ] Prisma init, подключение к Neon
 - [ ] `manifest.webmanifest` + базовые иконки
 - **Commit:** `chore: bootstrap project`
-- **GitHub push:** после Итерации 0–1 (после явного "да")
+- **Codex review → push в `origin/main`** (см. ADR-016).
 
 ### Итерация 1 — Auth + Settings skeleton
 
 - [ ] Auth.js v5 Credentials provider, login page
-- [ ] Middleware для `(app)` group
-- [ ] Логaut
+- [ ] Middleware с matcher по реальным URL путям (защищает /dashboard, /clients, /projects, /invoices, /contracts, /proposals, /payments, /expenses, /maintenance, /reminders, /documents, /settings; не трогает /login, /sign, /api/auth, /api/cron, /_next, /icons, /manifest.webmanifest)
+- [ ] Logout
 - [ ] `User` модель, seed скрипт для одного admin
 - [ ] `Settings` модель + страница (реквизиты, нумерация, валюта)
 - [ ] Dashboard placeholder

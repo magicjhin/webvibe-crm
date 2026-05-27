@@ -95,6 +95,8 @@ app/
       numbering/page.tsx
   sign/
     [token]/page.tsx              ← публичная страница подписи (NO auth)
+  offline/
+    page.tsx                      ← PWA offline shell
   api/
     auth/[...nextauth]/route.ts
     invoices/[id]/pdf/route.ts
@@ -102,9 +104,6 @@ app/
     proposals/[id]/pdf/route.ts
     sign/[token]/route.ts         ← POST подпись
     cron/maintenance-invoices/route.ts
-  manifest.webmanifest
-  icon.png
-  apple-icon.png
   layout.tsx
   globals.css
 
@@ -135,6 +134,11 @@ components/
     ProposalForm.tsx
     PaymentForm.tsx
     ExpenseForm.tsx
+    MaintenanceForm.tsx
+    ReminderForm.tsx
+    SettingsForm.tsx
+    SignatureForm.tsx             ← на публичной /sign/[token]
+    -- список расширяется по мере появления модулей --
   dashboard/
     KpiCard.tsx
     RevenueCard.tsx
@@ -173,6 +177,10 @@ lib/
     proposal.ts
     payment.ts
     expense.ts
+    maintenance.ts
+    reminder.ts
+    settings.ts
+    sign.ts                       ← schema POST /api/sign/[token]
   actions/                        ← server actions по доменам
     clients.ts
     leads.ts
@@ -218,7 +226,9 @@ public/
     icon-512.png
     icon-maskable.png
     apple-touch-icon.png
-  manifest.webmanifest
+  manifest.webmanifest                 ← статический PWA manifest (один источник истины)
+  sw.js                                ← Service Worker (generated, в .gitignore)
+  workbox-*.js                         ← (generated, в .gitignore)
   logo.svg
 
 scripts/
@@ -267,11 +277,41 @@ styles/
 - Один user, читаем из БД (`User` table).
 - Password verification: `bcryptjs` compare.
 - Session: JWT strategy (быстрее, не требует таблицы sessions).
-- Middleware (`middleware.ts`) защищает `(app)` group:
+- **Route groups в Next.js (`(app)`, `(auth)`) НЕ попадают в URL** — нельзя защитить
+  через `path.startsWith('/(app)')`. Защита делается через **whitelist публичных путей**
+  в `middleware.ts`:
+
+  ```ts
+  // middleware.ts
+  import { auth } from '@/lib/auth';
+
+  const PUBLIC = [
+    /^\/login(\/.*)?$/,
+    /^\/sign\/.+/,           // публичная страница подписи (GET HTML)
+    /^\/api\/sign\/.+/,      // POST подписи; защищён собственным sign-token check
+    /^\/api\/auth\/.+/,      // NextAuth handlers
+    /^\/api\/cron\/.+/,      // защищены своим CRON_SECRET
+    /^\/offline$/,           // PWA offline shell
+    /^\/manifest\.webmanifest$/,
+    /^\/icons?\/.+/,
+    /^\/favicon\.ico$/,
+  ];
+
+  export default auth((req) => {
+    const { pathname } = req.nextUrl;
+    if (PUBLIC.some((re) => re.test(pathname))) return;
+    if (!req.auth) {
+      return Response.redirect(new URL('/login', req.url));
+    }
+  });
+
+  export const config = {
+    // не трогаем статику Next.js и публичные файлы
+    matcher: ['/((?!_next/static|_next/image|.*\\..*).*)'],
+  };
   ```
-  if (!session && path.startsWith('/(app)')) redirect('/login')
-  ```
-- `/sign/[token]` — публичный, защищён собственным механизмом токенов.
+
+- `/sign/[token]` — публичный, защищён собственным механизмом токенов (sha256 hash + TTL + one-time).
 - `/api/cron/*` — защищены `Authorization: Bearer ${CRON_SECRET}`.
 
 ---
@@ -288,7 +328,8 @@ styles/
 ## Dates
 
 - В БД — UTC (`DateTime` в Prisma).
-- Парсинг входов от пользователя — `date-fns` с указанием timezone `Europe/Vilnius`.
+- Парсинг входов от пользователя — `date-fns` + `date-fns-tz` (`fromZonedTime`,
+  `toZonedTime`) с фиксированной TZ `Europe/Vilnius`.
 - Отображение — через `<DateDisplay>` компонент, локаль `lt`.
 
 ---
@@ -297,17 +338,23 @@ styles/
 
 ### Manifest
 
-`/manifest.webmanifest` со всеми обязательными полями + maskable иконка.
+`public/manifest.webmanifest` — статический файл (один источник истины).
+В `app/layout.tsx` — `<link rel="manifest" href="/manifest.webmanifest" />`.
+Поля: `name`, `short_name`, `start_url`, `scope`, `display: standalone`,
+`background_color`, `theme_color`, `icons` (192, 512, maskable), `lang: "ru"`.
 
 ### Service Worker
 
 - **Только в production** (`if (process.env.NODE_ENV === 'production') register()`).
 - В dev — `unregister()` при загрузке (избегаем конфликта с HMR).
+- Файлы `public/sw.js` и `public/workbox-*.js` **генерируются на build** —
+  в `.gitignore`, не коммитятся.
 - Стратегия:
   - HTML / pages: `NetworkFirst` (online — свежо, offline — последний кеш)
   - static assets (`/_next/static/`): `CacheFirst`
   - API / mutations: `NetworkOnly` (не кешируем POST)
-- Offline shell: `/offline` страница в кеше precache.
+- Offline shell: `app/offline/page.tsx` precache'ится. При полной потере сети
+  `NetworkFirst` fallback'ит на `/offline`.
 
 ### Что НЕ делаем
 
@@ -385,11 +432,45 @@ await prisma.contract.update({
 return raw; // отдаём только в URL, в БД хранится только hash
 ```
 
-При входе на `/sign/[token]`:
+При **GET** `/sign/[token]` (просмотр страницы):
 - хешируем токен, ищем по hash
 - проверяем `signTokenExpiresAt > now`
 - проверяем `status !== 'signed'`
-- после успешной подписи — `signTokenHash = null`, `status = 'signed'`
+
+При **POST** `/api/sign/[token]` (сама подпись) — **atomic consume** через `updateMany`:
+
+```ts
+// гарантирует one-time use даже при двойном submit
+const result = await prisma.contract.updateMany({
+  where: {
+    signTokenHash: hash,
+    signTokenExpiresAt: { gt: new Date() },
+    status: 'sent',                              // подписываем только отправленные документы
+  },
+  data: {
+    status: 'signed',
+    signedAt: new Date(),
+    signerName, signerIp, signerUserAgent,
+    signatureUrl,
+    signTokenHash: null,                          // обнуляем токен
+    signTokenExpiresAt: null,
+  },
+});
+
+if (result.count === 0) {
+  // токен невалиден, истёк, уже использован, или статус не позволяет
+  return Response.json({ ok: false, error: 'Invalid or expired token' }, { status: 410 });
+}
+```
+
+`updateMany` с условиями в `where` — атомарная операция Postgres. Второй параллельный
+POST не пройдёт условие (`status` уже `signed`), вернётся `count: 0`. PDF регенерируем
+после успешного `updateMany` с count = 1.
+
+**Безопасность загрузки подписи (PNG):** клиент НЕ должен иметь доступ к
+`BLOB_READ_WRITE_TOKEN`. Подпись загружается через server action / route handler,
+который сначала валидирует токен (то же условие, что в `updateMany`), затем
+из server-side загружает PNG в Blob, затем выполняет `updateMany`.
 
 ---
 

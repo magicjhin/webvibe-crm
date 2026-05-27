@@ -55,9 +55,11 @@ tools: Read, Grep, Glob, Write, Edit, Bash
 ## Status transitions (whitelist)
 
 ### Invoice
+
+> `overdue` — derived состояние (`status='sent' AND dueAt < today`), **не** статус. Не переводим в него.
+
 - `draft → sent | cancelled`
-- `sent → paid | overdue | cancelled`
-- `overdue → paid | cancelled`
+- `sent → paid | cancelled`
 - `paid → ⊥`
 - `cancelled → ⊥`
 
@@ -85,8 +87,9 @@ tools: Read, Grep, Glob, Write, Edit, Bash
   - проверяем `signTokenExpiresAt > now`
   - проверяем `status !== 'signed'`
   - 404 на любую ошибку (не «токен невалиден» — не утечка)
-- POST подписи валидирует токен ВТОРОЙ раз перед сохранением (race protection).
+- POST подписи использует **atomic consume** через `prisma.contract.updateMany({ where: { signTokenHash, signTokenExpiresAt: { gt: now }, status: 'sent' }, data: { status: 'signed', signedAt, signerName, signerIp, signerUserAgent, signatureUrl, signTokenHash: null, signTokenExpiresAt: null } })`. Если `count === 0` — токен невалиден / истёк / документ не отправлен / уже подписан (вернуть 410). См. `ARCHITECTURE.md` § Sign tokens.
 - Сохраняем `signerIp` из `headers().get('x-forwarded-for')` или `request.ip`.
+- `BLOB_READ_WRITE_TOKEN` **никогда** не уходит на клиент. PNG подписи загружается через server action / route handler.
 
 ## Maintenance cron
 
@@ -106,12 +109,12 @@ export async function GET(req: Request) {
   });
 
   for (const m of due) {
-    await prisma.$transaction(async (tx) => {
-      // 1) issue number
-      // 2) create draft invoice (kind: 'maintenance')
-      // 3) create reminder
-      // 4) push nextInvoiceAt += 1 month
-    });
+    // Идемпотентность: см. WORKFLOW.md § 7.
+    // Алгоритм: pre-check существующего invoice по UNIQUE(maintenanceId, periodKey)
+    // ВНЕ транзакции; если найден — сдвигаем nextInvoiceAt и continue.
+    // Иначе — атомарная транзакция: issueNumber + create invoice (с periodKey) +
+    // create reminder + update Maintenance.nextInvoiceAt.
+    // Ловим P2002 СНАРУЖИ транзакции, не внутри (Postgres aborts transaction).
   }
 
   return Response.json({ ok: true, count: due.length });

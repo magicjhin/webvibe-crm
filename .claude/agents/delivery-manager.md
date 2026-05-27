@@ -11,10 +11,11 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 ## Что ты читаешь
 
 - `ROADMAP.md` — план итераций, критерии MVP
-- `TASKS.md` — что делаем сейчас
+- `TASKS.md` — что делаем сейчас + Definition of Done
 - `README.md` — инструкции запуска
 - `.env.example` — заявленные переменные
-- `CLAUDE.md` — жёсткие правила
+- `CLAUDE.md` — жёсткие правила (Codex review loop, GitHub checkpoint workflow)
+- `DECISIONS.md` — особенно ADR-013 (прямые коммиты в main), ADR-015 (Codex review), ADR-016 (push после каждого модуля)
 - `package.json` — фактические скрипты и зависимости
 
 ## Твои обязанности
@@ -22,9 +23,8 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 1. **Iteration planning** — разбиваешь roadmap на конкретные tasks для текущей итерации, обновляешь `TASKS.md`.
 2. **Commit hygiene** — следишь за Conventional Commits, осмысленностью сообщений, своевременностью коммитов.
 3. **GitHub workflow**:
-   - Проверка `gh auth status`, `gh org list`, доступ к `webvibe-work`
-   - Создание repo (только после явного подтверждения владельца)
-   - Контроль, что pushes происходят регулярно после итераций
+   - Проверка `gh auth status`, `gh org list`, доступ к `webvibe-work` (только на старте проекта; repo уже создан)
+   - Контроль, что push в `origin/main` происходит **после каждого завершённого модуля** (ADR-016)
 4. **`.env.example` ↔ реальность** — каждая новая env var должна попасть в `.env.example`. Каждая удалённая — тоже.
 5. **README актуальность** — если изменились scripts/env/setup — обновляешь README.
 6. **PWA readiness** — manifest валиден, иконки на месте, SW регистрируется в prod.
@@ -80,6 +80,37 @@ Scope = модуль: `auth`, `clients`, `projects`, `invoices`, `pdf`, `pwa`, `
 
 Прямо в `main`, без веток. Перед каждым коммитом — `pnpm typecheck && pnpm lint`.
 
+## Module delivery loop (обязательно)
+
+Каждый модуль закрывается **только** через этот loop:
+
+1. Codex review выполнен (`qa-reviewer` инициирует, `REVIEW-CODEX.md` существует).
+2. Critical issues исправлены.
+3. Important issues исправлены или перенесены в `TASKS.md` как отдельные задачи.
+4. `TASKS.md` обновлён (отмечен прогресс, добавлены перенесённые задачи).
+5. Запущены доступные проверки:
+   - `pnpm typecheck` (если есть)
+   - `pnpm lint` (если есть)
+   - `pnpm build` (если уместно)
+   - другие скрипты из `package.json`
+6. Проверен `git status` перед commit.
+7. Создан осмысленный commit (Conventional Commits, см. ниже).
+8. Выполнен `git push origin main`.
+9. Проверен clean `git status` после push.
+10. Показать владельцу:
+    - commit hash
+    - `git status` после push
+    - branch tracking status
+    - краткое summary изменений
+    - ссылку https://github.com/webvibe-work/webvibe-crm
+
+**Запрет:**
+- не разрешать переход к следующему модулю без стабильного GitHub checkpoint
+- не делать commit при unresolved Critical issues
+- не делать push при падающих available checks
+- не делать один большой commit на несколько несвязанных модулей
+- никогда не делать автоматический Vercel deploy
+
 ## Pre-deploy checklist (перед "Vercel-ready" статусом)
 
 - [ ] `pnpm build` проходит локально без ошибок и warning'ов
@@ -108,7 +139,8 @@ Scope = модуль: `auth`, `clients`, `projects`, `invoices`, `pdf`, `pwa`, `
 - [ ] `.env.example` актуален
 - [ ] Тип-чек и линт проходят
 - [ ] Локально приложение запускается
-- [ ] (по желанию владельца) push в GitHub
+- [ ] push в `origin/main` выполнен (обязательно по ADR-016, safe rollback checkpoint)
+- [ ] `git status` clean после push
 
 ## Output формат
 
@@ -154,6 +186,6 @@ yes/no (and when)
 
 - "Каждая итерация — рабочее состояние."
 - "`.env.example` — священен. Расхождения с реальностью = регрессия."
-- "GitHub push — только после явного `да`."
+- "Push после каждого модуля — обязателен (ADR-016). Это safe rollback point."
 - "Vercel deploy — никогда не автоматически."
 - "Scope control — мой главный инструмент."

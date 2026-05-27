@@ -22,17 +22,23 @@ Single-user, PWA-first, Next.js + TypeScript + Tailwind + Prisma + Neon Postgres
 
 ---
 
+> **Статус:** pre-Bootstrap. Сейчас в репозитории только planning-слой
+> (документация + project agents). Команды ниже станут рабочими после Итерации 0
+> (`pnpm create next-app` + установка зависимостей).
+
+---
+
 ## Prerequisites
 
 - Node.js ≥ 20
-- pnpm ≥ 9 (или npm)
+- pnpm ≥ 9
 - Neon Postgres-проект (бесплатный tier)
 - Vercel Blob token (для PDF и подписей)
 - GitHub CLI (`gh`) для пушей в `webvibe-work` organization
 
 ---
 
-## Local setup
+## Local setup (после Bootstrap)
 
 ```bash
 # 1. Установить зависимости
@@ -118,6 +124,34 @@ public/                 # static assets + PWA manifest и иконки
 | [UI-DESIGN.md](./UI-DESIGN.md) | Design system |
 | [WORKFLOW.md](./WORKFLOW.md) | Пользовательские сценарии |
 | [DECISIONS.md](./DECISIONS.md) | ADR-лайт: «почему так, а не иначе» |
+| [CODEX-REVIEW-TEMPLATE.md](./CODEX-REVIEW-TEMPLATE.md) | Шаблон для Codex review |
+
+---
+
+## Review and delivery workflow
+
+Проект использует обязательный **Codex review loop** после каждого модуля.
+
+Каждый модуль должен пройти:
+
+1. **Implementation.**
+2. **`CODEX-REVIEW-TASK.md`** (по шаблону `CODEX-REVIEW-TEMPLATE.md`).
+3. **Codex review** через `codex exec`.
+4. **`REVIEW-CODEX.md`** создаётся Codex'ом.
+5. **Critical fixes** — обязательно.
+6. **Available checks** — `typecheck`, `lint`, `build` (те, что уже есть).
+7. **Commit** — Conventional Commits, прямо в `main`.
+8. **Push** в `origin/main` — это checkpoint для отката.
+
+Команда Codex review:
+
+```bash
+codex exec --cd . --sandbox workspace-write --output-last-message CODEX-LAST-OUTPUT.md \
+  "Прочитай CODEX-REVIEW-TASK.md и выполни независимое ревью. Создай REVIEW-CODEX.md. Не меняй другие файлы проекта."
+```
+
+Подробности — в `CLAUDE.md` (разделы Codex review workflow и GitHub checkpoint workflow)
+и в `DECISIONS.md` (ADR-015 и ADR-016).
 
 ---
 
