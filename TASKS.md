@@ -69,9 +69,15 @@ Codex review, Critical fixes, available checks, commit и push.
         Pass 2: 0 Critical + 6 Important (delivery-manager checklist, cron pattern, sign atomic consume, allowed files, InvoiceItem timestamps, backend-data timezone) — все исправлены
         Pass 3: 0 Critical + 6 Important (sign API whitelist, agent atomic consume, Mark as paid race, Lead.client policy, Expense scope, forms list) — все исправлены
         Pass 4: 0 Critical + 5 Important (overdue derived, Contract status, Expense ADR-017, FK indexes, sign workflow wording) — все исправлены
-  - [ ] Commit `chore: add codex review and github checkpoint workflow`
-  - [ ] Push в `origin/main`
-  - [ ] Проверка git status clean
+  - [x] Commit `chore: add codex review and github checkpoint workflow` (`81c3c4b`)
+  - [x] Push в `origin/main` (выполнен после `81c3c4b`)
+  - [x] Проверка git status clean (подтверждено `git status` после push)
+- [x] **Add 2-pass Codex review limit (ADR-018)** — модуль закрыт
+  - [x] CLAUDE.md + TASKS.md + DECISIONS.md (ADR-018) + qa-reviewer.md + delivery-manager.md
+  - [x] Codex Pass 1 — verdict `Yes`, 0 Critical, 0 Important, 3 Nice-to-have (косметика)
+  - [x] Pass 2 не запускался (Pass 1 — только docs touch-ups, по правилу ADR-018)
+  - [x] Commit `chore: limit codex review loop passes` (`1c492e9`)
+  - [x] Push в `origin/main` (HEAD → origin/main up to date)
 
 ---
 
