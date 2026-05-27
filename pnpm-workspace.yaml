@@ -1,0 +1,17 @@
+allowBuilds:
+  sharp: true
+  unrs-resolver: true
+  "@prisma/client": true
+  prisma: true
+  "@prisma/engines": true
+  "@tailwindcss/oxide": true
+  esbuild: true
+  msw: false
+onlyBuiltDependencies:
+  - "@prisma/client"
+  - "prisma"
+  - "@prisma/engines"
+  - "sharp"
+  - "unrs-resolver"
+  - "@tailwindcss/oxide"
+  - "esbuild"

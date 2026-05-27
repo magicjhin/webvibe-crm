@@ -1,0 +1,268 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* -----------------------------------------------------------
+   Tailwind theme tokens — exposed as bg-/text-/border- utilities
+   ----------------------------------------------------------- */
+@theme inline {
+  /* shadcn semantic tokens (required by shadcn/ui components) */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Webvibe extras (UI-DESIGN.md) */
+  --color-background-elevated: var(--background-elevated);
+  --color-background-overlay: var(--background-overlay);
+  --color-border-strong: var(--border-strong);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-foreground-subtle: var(--foreground-subtle);
+  --color-accent-from: var(--accent-from);
+  --color-accent-to: var(--accent-to);
+  --color-accent-solid: var(--accent-solid);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-danger: var(--danger);
+  --color-accent-ring: var(--accent-ring);
+  --color-status-draft: var(--status-draft);
+  --color-status-active: var(--status-active);
+  --color-status-pending: var(--status-pending);
+  --color-status-paid: var(--status-paid);
+  --color-status-overdue: var(--status-overdue);
+  --color-status-cancelled: var(--status-cancelled);
+
+  /* Fonts (loaded via next/font in app/layout.tsx) */
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-inter);
+
+  /* Radii scale (UI-DESIGN.md) */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 22px;
+}
+
+/* -----------------------------------------------------------
+   LIGHT theme (fallback). Project is dark-first; light is opt-in.
+   Values stay as shadcn defaults — usable but not the primary skin.
+   ----------------------------------------------------------- */
+:root {
+  --background: hsl(0 0% 100%);
+  --background-elevated: hsl(240 20% 98%);
+  --background-overlay: hsl(240 15% 96%);
+  --foreground: hsl(240 10% 8%);
+  --foreground-muted: hsl(240 5% 40%);
+  --foreground-subtle: hsl(240 5% 60%);
+
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(240 10% 8%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(240 10% 8%);
+
+  --primary: hsl(220 90% 50%);
+  --primary-foreground: hsl(0 0% 98%);
+  --secondary: hsl(240 10% 96%);
+  --secondary-foreground: hsl(240 10% 8%);
+  --muted: hsl(240 10% 96%);
+  --muted-foreground: hsl(240 5% 40%);
+  --accent: hsl(240 10% 96%);
+  --accent-foreground: hsl(240 10% 8%);
+  --destructive: hsl(0 72% 50%);
+
+  --border: hsl(240 10% 90%);
+  --border-strong: hsl(240 10% 80%);
+  --input: hsl(240 10% 90%);
+  --ring: hsl(220 90% 50% / 0.4);
+
+  /* Webvibe accent (gradient) */
+  --accent-from: hsl(192 95% 50%);
+  --accent-to: hsl(270 90% 55%);
+  --accent-solid: hsl(220 90% 50%);
+
+  /* Semantic */
+  --success: hsl(142 70% 40%);
+  --warning: hsl(38 92% 50%);
+  --info: hsl(210 90% 55%);
+  --danger: hsl(0 72% 50%);
+  --accent-ring: hsl(220 90% 50% / 0.4);
+
+  /* Shadows (UI-DESIGN.md) */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.15);
+  --shadow-glow-accent: 0 0 0 1px hsl(220 90% 50% / 0.3),
+    0 8px 24px hsl(220 90% 50% / 0.15);
+
+  /* Status badges */
+  --status-draft: hsl(240 5% 50%);
+  --status-active: hsl(142 50% 45%);
+  --status-pending: hsl(38 80% 50%);
+  --status-paid: hsl(142 70% 40%);
+  --status-overdue: hsl(0 72% 50%);
+  --status-cancelled: hsl(240 5% 40%);
+
+  /* Charts (subdued) */
+  --chart-1: hsl(220 70% 55%);
+  --chart-2: hsl(192 80% 50%);
+  --chart-3: hsl(270 70% 60%);
+  --chart-4: hsl(142 60% 45%);
+  --chart-5: hsl(38 90% 55%);
+
+  /* Sidebar (mirrors core) */
+  --sidebar: hsl(240 20% 98%);
+  --sidebar-foreground: hsl(240 10% 8%);
+  --sidebar-primary: hsl(220 90% 50%);
+  --sidebar-primary-foreground: hsl(0 0% 98%);
+  --sidebar-accent: hsl(240 10% 94%);
+  --sidebar-accent-foreground: hsl(240 10% 8%);
+  --sidebar-border: hsl(240 10% 90%);
+  --sidebar-ring: hsl(220 90% 50% / 0.4);
+
+  --radius: 10px;
+}
+
+/* -----------------------------------------------------------
+   DARK theme — PRIMARY skin. <html class="dark"> is set in layout.tsx.
+   Palette is the dark surface stack from UI-DESIGN.md.
+   ----------------------------------------------------------- */
+.dark {
+  --background: hsl(240 10% 4%);
+  --background-elevated: hsl(240 8% 7%);
+  --background-overlay: hsl(240 6% 10%);
+  --foreground: hsl(0 0% 98%);
+  --foreground-muted: hsl(240 5% 65%);
+  --foreground-subtle: hsl(240 5% 45%);
+
+  --card: hsl(240 8% 7%);
+  --card-foreground: hsl(0 0% 98%);
+  --popover: hsl(240 6% 10%);
+  --popover-foreground: hsl(0 0% 98%);
+
+  --primary: hsl(220 90% 60%);
+  --primary-foreground: hsl(0 0% 98%);
+  --secondary: hsl(240 6% 14%);
+  --secondary-foreground: hsl(0 0% 98%);
+  --muted: hsl(240 6% 14%);
+  --muted-foreground: hsl(240 5% 65%);
+  --accent: hsl(240 6% 14%);
+  --accent-foreground: hsl(0 0% 98%);
+  --destructive: hsl(0 72% 55%);
+
+  --border: hsl(240 6% 14%);
+  --border-strong: hsl(240 6% 22%);
+  --input: hsl(240 6% 14%);
+  --ring: hsl(220 90% 60% / 0.4);
+
+  /* Webvibe accent (gradient) */
+  --accent-from: hsl(192 95% 60%);
+  --accent-to: hsl(270 90% 65%);
+  --accent-solid: hsl(220 90% 60%);
+
+  /* Semantic */
+  --success: hsl(142 70% 45%);
+  --warning: hsl(38 92% 55%);
+  --info: hsl(210 90% 60%);
+  --danger: hsl(0 72% 55%);
+  --accent-ring: hsl(220 90% 60% / 0.4);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --shadow-glow-accent: 0 0 0 1px hsl(220 90% 60% / 0.3),
+    0 8px 24px hsl(220 90% 60% / 0.15);
+
+  /* Status badges */
+  --status-draft: hsl(240 5% 50%);
+  --status-active: hsl(142 50% 50%);
+  --status-pending: hsl(38 80% 55%);
+  --status-paid: hsl(142 70% 45%);
+  --status-overdue: hsl(0 72% 55%);
+  --status-cancelled: hsl(240 5% 40%);
+
+  /* Charts */
+  --chart-1: hsl(220 90% 60%);
+  --chart-2: hsl(192 95% 60%);
+  --chart-3: hsl(270 90% 65%);
+  --chart-4: hsl(142 70% 45%);
+  --chart-5: hsl(38 92% 55%);
+
+  /* Sidebar */
+  --sidebar: hsl(240 8% 6%);
+  --sidebar-foreground: hsl(0 0% 98%);
+  --sidebar-primary: hsl(220 90% 60%);
+  --sidebar-primary-foreground: hsl(0 0% 98%);
+  --sidebar-accent: hsl(240 6% 14%);
+  --sidebar-accent-foreground: hsl(0 0% 98%);
+  --sidebar-border: hsl(240 6% 14%);
+  --sidebar-ring: hsl(220 90% 60% / 0.4);
+}
+
+/* -----------------------------------------------------------
+   Base layer — global element defaults.
+   ----------------------------------------------------------- */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  /* tabular-nums for any monospace number contexts */
+  .font-mono,
+  [data-tabular] {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* -----------------------------------------------------------
+   Webvibe accent gradient — use sparingly (KPI, primary CTA hover,
+   active nav indicator).
+   ----------------------------------------------------------- */
+.bg-accent-gradient {
+  background: linear-gradient(135deg, var(--accent-from) 0%, var(--accent-to) 100%);
+}
+.text-accent-gradient {
+  background: linear-gradient(135deg, var(--accent-from) 0%, var(--accent-to) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

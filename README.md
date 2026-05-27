@@ -22,44 +22,51 @@ Single-user, PWA-first, Next.js + TypeScript + Tailwind + Prisma + Neon Postgres
 
 ---
 
-> **Статус:** pre-Bootstrap. Сейчас в репозитории только planning-слой
-> (документация + project agents). Команды ниже станут рабочими после Итерации 0
-> (`pnpm create next-app` + установка зависимостей).
+> **Статус:** Iteration 0 (Bootstrap) выполнена. В репозитории Next.js 15
+> skeleton с dark-first Webvibe оформлением, shadcn/ui baseline, Prisma 7
+> пустая schema, PWA manifest и placeholder-иконки. Никакой бизнес-логики
+> (auth / CRM модули / PDF / подпись) пока нет — следует в Iterations 1+.
+> См. `ROADMAP.md` и `TASKS.md`.
 
 ---
 
 ## Prerequisites
 
 - Node.js ≥ 20
-- pnpm ≥ 9
-- Neon Postgres-проект (бесплатный tier)
-- Vercel Blob token (для PDF и подписей)
+- pnpm ≥ 11 (`corepack enable pnpm && corepack prepare pnpm@latest --activate`)
+- Neon Postgres-проект (подключение перед Iteration 1)
+- Vercel Blob token (нужен начиная с Iteration 4 — PDF / подпись)
 - GitHub CLI (`gh`) для пушей в `webvibe-work` organization
 
 ---
 
-## Local setup (после Bootstrap)
+## Local setup
 
 ```bash
 # 1. Установить зависимости
 pnpm install
 
-# 2. Скопировать env vars
+# 2. Скопировать env vars и заполнить
 cp .env.example .env
-# заполнить значения (см. ниже)
+# DATABASE_URL / DIRECT_URL пока placeholder — реальный Neon URL подставим в Iter 1
 
-# 3. Сгенерировать Prisma client + накатить схему
-pnpm prisma generate
-pnpm prisma migrate dev
-
-# 4. Создать первого admin user (запускается один раз)
-pnpm tsx prisma/seed.ts
-
-# 5. Запустить dev-сервер
+# 3. Запустить dev-сервер
 pnpm dev
 ```
 
-Открыть `http://localhost:3000` — редирект на `/login`.
+Открыть `http://localhost:3000` — текущая заглушка с AppShell skeleton.
+Auth, login и CRM-модули появятся в следующих итерациях.
+
+### Будущие шаги (Iterations 1+)
+
+```bash
+# Когда появятся Prisma модели:
+pnpm prisma generate
+pnpm prisma migrate dev
+
+# Когда будет seed для admin user:
+pnpm tsx prisma/seed.ts
+```
 
 ---
 

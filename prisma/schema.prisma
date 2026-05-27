@@ -1,0 +1,15 @@
+// Webvibe CRM — Prisma schema.
+// Bootstrap stage: datasource + generator only. Models land in iterations 1+.
+// See DATABASE.md for the planned schema.
+//
+// Prisma 7: connection URLs live in prisma.config.ts (datasource.url /
+// datasource.directUrl), NOT here.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

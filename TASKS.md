@@ -81,30 +81,45 @@ Codex review, Critical fixes, available checks, commit и push.
 
 ---
 
-## Следующая: Итерация 0 — Bootstrap (ждёт подтверждения владельца на старт)
+## Итерация 0 — Bootstrap (in progress, ждёт Codex review + commit)
 
-> Запускается после явного "да, начинаем Bootstrap" от владельца.
-> После Bootstrap — Codex review → commit → push (ADR-016).
+- [x] `pnpm create next-app .` — TS, Tailwind, App Router, ESLint, без src/, pnpm. **Note:** CLI отказался работать в непустой папке → backup planning docs в `/tmp/webvibe-planning-backup/` → run CLI → restore.
+- [x] Активирован pnpm 11.4.0 через `corepack enable pnpm` + `corepack prepare pnpm@latest --activate`.
+- [x] Установлены core deps: `@prisma/client zod react-hook-form @hookform/resolvers next-auth@beta @auth/prisma-adapter bcryptjs date-fns date-fns-tz @tanstack/react-table @react-pdf/renderer react-signature-canvas @vercel/blob lucide-react decimal.js clsx tailwind-merge class-variance-authority sonner`.
+- [x] Установлены dev deps: `prisma tsx`. **Note:** `@types/bcryptjs` опущен (deprecated — bcryptjs v3 имеет встроенные TS types). `sharp` добавлен как devDep для генерации placeholder PWA-иконок.
+- [x] `pnpm dlx shadcn@latest init --defaults --base radix` — initial config + button + globals.css. Завершилось с `--force` после approval `msw` в `pnpm-workspace.yaml`.
+- [x] Добавлены initial subset shadcn компонентов: `input label dialog sheet table select textarea badge card dropdown-menu sonner` (`form` отсутствует в shadcn 4 — используем RHF + Label/Input напрямую при создании первой формы).
+- [x] `app/globals.css` переписан под Webvibe tokens из `UI-DESIGN.md` (dark-first, HSL palette, accent gradient, status colors, radii scale, `.bg-accent-gradient` / `.text-accent-gradient` utility classes).
+- [x] `app/layout.tsx` — Inter + Geist Mono через `next/font/google`, `<html class="dark" lang="ru">`, manifest link, viewport themeColor, apple-web-app meta, Toaster.
+- [x] `components/layout/AppShell.tsx` — visual skeleton (sidebar 240px desktop / topbar 60px / bottom nav 64px mobile / FAB), placeholder links к 10 будущим разделам.
+- [x] `app/page.tsx` — заглушка в AppShell с приветствием и 6 placeholder cards.
+- [x] `app/offline/page.tsx` — offline shell (статичная страница, SW pending Iter 6).
+- [x] `prisma/schema.prisma` + `prisma.config.ts` — Prisma 7 init с output `lib/generated/prisma`. **Breaking change в Prisma 7:** `url`/`directUrl` теперь только в `prisma.config.ts`, не в schema.
+- [x] `.env` синхронизирован с `.env.example` (DATABASE_URL, DIRECT_URL, AUTH_SECRET, NEXTAUTH_URL, ADMIN_EMAIL, ADMIN_PASSWORD_HASH, BLOB_READ_WRITE_TOKEN, CRON_SECRET — все placeholders).
+- [x] `public/manifest.webmanifest` (валидный, ru, dark theme_color) + placeholder PWA-иконки (192/512/maskable/apple-touch — буква W на тёмном фоне с cyan→violet градиентом, сгенерированы через sharp).
+- [x] `scripts/hash-password.ts` — bcrypt CLI helper для будущего seed admin user.
+- [x] Удалены дефолтные Next.js placeholder SVG из `public/` (file.svg, globe.svg, next.svg, vercel.svg, window.svg).
+- [x] `.gitignore` сохранён + расширен (`lib/generated/`).
+- [x] `pnpm-workspace.yaml` — `onlyBuiltDependencies` + `allowBuilds` для native postinstall (prisma, sharp, esbuild, unrs-resolver, @tailwindcss/oxide).
+- [x] Available checks пройдены: `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm prisma format` — все ✓.
+- [x] Создан `CODEX-REVIEW-TASK.md` для Bootstrap module
+- [x] Codex Pass 1: verdict `With fixes`, 1 Critical (Next 16→15) + 6 Important + 4 Nice-to-have — все обработаны
+- [x] Все Critical и Important исправлены, кроме tablet breakpoint (перенесён в Iter 6)
+- [x] Codex Pass 2 (focused): verdict `Yes`, 0 Critical / 0 Important / 0 Nice в новом scope
+- [x] По ADR-018: третий проход не запускается, модуль accepted
+- [ ] Commit: `chore: bootstrap next.js project`
+- [ ] Push в `origin/main`
 
-- [ ] `pnpm create next-app .` — TS, Tailwind, App Router, ESLint, src/ — нет, pnpm — да
-- [ ] Установить core deps:
-      `pnpm add @prisma/client zod react-hook-form @hookform/resolvers
-       next-auth@beta @auth/prisma-adapter bcryptjs date-fns date-fns-tz
-       @tanstack/react-table @react-pdf/renderer react-signature-canvas
-       @vercel/blob lucide-react decimal.js clsx tailwind-merge
-       class-variance-authority sonner`
-- [ ] Установить dev deps:
-      `pnpm add -D prisma tsx @types/bcryptjs`
-- [ ] `pnpm dlx shadcn@latest init` — neutral, slate, CSS variables
-- [ ] Добавить начальный (initial subset) shadcn компонентов: `button input label dialog sheet table form select textarea badge card dropdown-menu sonner`. Полный набор по `UI-DESIGN.md` доустанавливается на соответствующих итерациях.
-- [ ] Tailwind tokens — цвета, шрифты, радиусы из `UI-DESIGN.md`
-- [ ] `app/layout.tsx` + `app/globals.css` + dark theme базовая
-- [ ] `components/layout/AppShell.tsx` (визуальный скелет, без auth)
-- [ ] `prisma/schema.prisma` — пустая с datasource + generator
-- [ ] `public/manifest.webmanifest` + базовые иконки 192/512/maskable (плейсхолдеры)
-- [ ] `app/offline/page.tsx` — заглушка для offline shell
-- [ ] Commit: `chore: bootstrap project`
-- [ ] Codex review → push в `origin/main` (по ADR-016)
+### Открытые вопросы / TODO для Iteration 1
+
+- **Реальный Neon URL** — подключить `DATABASE_URL` (pooled) и `DIRECT_URL` (direct) до миграций.
+- **Prisma 7 migrate с Neon direct connection** — `directUrl` дропнут из `defineConfig().datasource`. Перед первой миграцией подключить driver adapter (`@prisma/adapter-pg` или аналог) либо использовать другой механизм для direct connection. На Bootstrap миграций нет → не блокер.
+- **shadcn `form` компонент** отсутствует в новом регистре v4 — RHF + Label/Input/Button напрямую при создании первой формы.
+- **PWA Service Worker** — не регистрируется на Bootstrap (Iter 6 scope).
+
+### Перенесено в Iter 6 (mobile polish)
+
+- **Tablet breakpoint (640–1024px) collapsed sidebar 60px** — на Bootstrap sidebar показывается уже с `md` (≥768px) во весь width 240px. Это компромисс. По `UI-DESIGN.md` на tablet должен быть свёрнут в 60px иконки. Перенесено в Iteration 6 (mobile/responsive polish) — приоритет ниже, потому что dev в основном на desktop+mobile.
 
 ---
 
