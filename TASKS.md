@@ -26,6 +26,12 @@
 **Правило:** нельзя переходить к следующему модулю, пока текущий модуль не прошёл
 Codex review, Critical fixes, available checks, commit и push.
 
+**Лимит Codex review:** максимум **2 прохода** на модуль (ADR-018).
+- Pass 1 — полный review, исправляем все Critical.
+- Pass 2 — фокус только на Critical (запускается только при существенных изменениях после Pass 1).
+- Если после Pass 2 есть Critical → стоп, не коммитим, ждём решения владельца.
+- Если только Important/Nice-to-have → в `TASKS.md` и закрываем модуль.
+
 ---
 
 ## Сейчас: Итерация -1 — Planning docs (in progress)

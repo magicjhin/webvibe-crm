@@ -207,6 +207,45 @@ Codex review loop. Модуль нельзя считать завершённы
 - Если команда упала или `REVIEW-CODEX.md` не создан — review считается неуспешным,
   модуль закрывать нельзя, commit и push делать нельзя.
 
+### Лимит проходов: максимум 2 на модуль (ADR-018)
+
+Codex — внешний reviewer, не финальный owner. Не гоняемся за идеальной документацией
+бесконечно. Good-enough accepted state = 0 Critical issues + stable GitHub checkpoint.
+
+**Pass 1 — полный review:**
+- Codex проверяет всё (соответствие docs, security, types, edge cases, architecture).
+- Claude исправляет **все** Critical issues.
+- Important — либо исправить, либо перенести в `TASKS.md` как отдельные задачи.
+- Nice-to-have не блокируют закрытие модуля.
+
+**Pass 2 — проверка только Critical:**
+- Запускается **только если** в Pass 1 были существенные изменения (новый код, миграции, security-правки).
+- Если Pass 1 закрыл только Important/Nice-to-have правкой документации — Pass 2 не запускаем.
+- В `CODEX-REVIEW-TASK.md` для Pass 2 указать сфокусированный scope:
+  - исправлены ли Critical issues Pass 1
+  - не появились ли новые Critical из-за исправлений
+  - нет ли блокеров для следующего этапа
+
+**Stop condition (модуль accepted):**
+- unresolved Critical issues = 0
+- Important исправлены или перенесены в `TASKS.md`
+- Nice-to-have не блокируют работу
+- доступные проверки пройдены
+- commit + push выполнены
+
+**Если после Pass 2 остаются Critical:**
+- **остановиться**, не делать commit/push
+- показать владельцу список unresolved Critical issues
+- ждать его решения
+
+**Если после Pass 2 только Important/Nice-to-have:**
+- **третий проход не запускаем**
+- Important — в `TASKS.md` (если полезны)
+- commit + push
+- двигаемся дальше
+
+Это правило защищает от бесконечной полировки docs за счёт скорости delivery.
+
 ---
 
 ## GitHub checkpoint workflow

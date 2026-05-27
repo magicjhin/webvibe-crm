@@ -82,10 +82,12 @@ Scope = модуль: `auth`, `clients`, `projects`, `invoices`, `pdf`, `pwa`, `
 
 ## Module delivery loop (обязательно)
 
-Каждый модуль закрывается **только** через этот loop:
+Каждый модуль закрывается **только** через этот loop. Codex review ограничен
+**максимум 2 проходами на модуль** (ADR-018) — следить, чтобы `qa-reviewer`
+не запускал третий проход.
 
-1. Codex review выполнен (`qa-reviewer` инициирует, `REVIEW-CODEX.md` существует).
-2. Critical issues исправлены.
+1. Codex review выполнен (`qa-reviewer` инициирует, `REVIEW-CODEX.md` существует, не более 2 проходов).
+2. Critical issues исправлены (unresolved Critical = 0 — обязательное условие закрытия).
 3. Important issues исправлены или перенесены в `TASKS.md` как отдельные задачи.
 4. `TASKS.md` обновлён (отмечен прогресс, добавлены перенесённые задачи).
 5. Запущены доступные проверки:

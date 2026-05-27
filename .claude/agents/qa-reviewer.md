@@ -118,7 +118,7 @@ tools: Read, Grep, Glob, Bash, WebFetch
    - Codex проверяет правильные файлы
    - Codex сравнивает с правильными project docs
    - Codex явно ограничен — может создать только `REVIEW-CODEX.md` и `CODEX-LAST-OUTPUT.md`
-3. Запустить:
+3. Запустить **Pass 1** (полный review):
    ```bash
    codex exec --cd . --sandbox workspace-write --output-last-message CODEX-LAST-OUTPUT.md \
      "Прочитай CODEX-REVIEW-TASK.md и выполни независимое ревью. Создай REVIEW-CODEX.md. Не меняй другие файлы проекта."
@@ -129,10 +129,13 @@ tools: Read, Grep, Glob, Bash, WebFetch
    - **Critical** — блокеры, обязательны к исправлению
    - **Important** — важные правки, либо чиним сразу, либо переносим в `TASKS.md`
    - **Nice-to-have** — улучшения, опционально в `TASKS.md`
-7. Не считать модуль принятым, если есть unresolved Critical issues.
-8. Не закрывать задачу, если `REVIEW-CODEX.md` отсутствует.
-9. Не закрывать задачу, если `codex exec` упал.
-10. Передать `delivery-manager` сигнал, что модуль можно коммитить только после успешного review и проверок.
+7. Исправить Critical. Important — fix или перенос.
+8. **Pass 2 — только если** в Pass 1 были существенные изменения (код, миграции, security). Иначе пропускаем.
+   - В `CODEX-REVIEW-TASK.md` для Pass 2 явно сузить scope: проверить только Pass 1 Critical fixes и отсутствие новых Critical.
+9. **Третий проход НЕ запускаем** (ADR-018). После Pass 2 оставшиеся Important — в `TASKS.md`.
+10. Не считать модуль принятым, если есть unresolved Critical issues после Pass 2 → остановиться и передать владельцу.
+11. Не закрывать задачу, если `REVIEW-CODEX.md` отсутствует или `codex exec` упал.
+12. Передать `delivery-manager` сигнал, что модуль можно коммитить только при 0 Critical.
 
 ## Что ты НЕ делаешь
 
