@@ -34,6 +34,7 @@ export function MobileNav() {
       </SheetTrigger>
       <SheetContent
         side="left"
+        showCloseButton={false}
         className="w-[280px] gap-0 border-r border-border bg-sidebar p-0"
       >
         <SheetHeader className="flex h-[60px] flex-row items-center justify-between border-b border-border px-5">

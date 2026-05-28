@@ -37,7 +37,10 @@ export function IncomeExpenseChart({ data }: { data: ChartPoint[] }) {
   const minWidth = Math.max(360, data.length * 36);
 
   return (
-    <div className="w-full overflow-x-auto">
+    <div
+      className="w-full overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--foreground-muted)]/40 [&::-webkit-scrollbar-thumb]:hover:bg-[var(--foreground-muted)]/60 [&::-webkit-scrollbar-track]:bg-transparent"
+      style={{ scrollbarColor: "var(--foreground-muted) transparent", scrollbarWidth: "thin" }}
+    >
       <div className="h-[260px]" style={{ minWidth }}>
         <ResponsiveContainer width="100%" height="100%">
         <BarChart
@@ -47,33 +50,37 @@ export function IncomeExpenseChart({ data }: { data: ChartPoint[] }) {
         >
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="hsl(var(--border))"
+            stroke="var(--border)"
             vertical={false}
           />
           <XAxis
             dataKey="label"
             tickLine={false}
             axisLine={false}
-            stroke="hsl(var(--foreground-muted))"
+            stroke="var(--foreground-muted)"
+            tick={{ fill: "var(--foreground-muted)" }}
             style={{ fontSize: 11 }}
           />
           <YAxis
             tickFormatter={(v: number) => fmtEur(v)}
             tickLine={false}
             axisLine={false}
-            stroke="hsl(var(--foreground-muted))"
+            stroke="var(--foreground-muted)"
+            tick={{ fill: "var(--foreground-muted)" }}
             style={{ fontSize: 11 }}
             width={56}
           />
           <Tooltip
-            cursor={{ fill: "hsl(var(--secondary))", opacity: 0.3 }}
+            cursor={{ fill: "var(--secondary)", opacity: 0.3 }}
             contentStyle={{
-              backgroundColor: "hsl(var(--background-elevated))",
-              border: "1px solid hsl(var(--border))",
+              backgroundColor: "var(--background-elevated)",
+              border: "1px solid var(--border)",
               borderRadius: 8,
               fontSize: 12,
+              color: "var(--foreground)",
             }}
-            labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600 }}
+            labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
+            itemStyle={{ color: "var(--foreground)" }}
             formatter={(value, name) => [
               typeof value === "number" ? fmtEurFull(value) : String(value),
               name === "income" ? "Доход" : "Расход",
