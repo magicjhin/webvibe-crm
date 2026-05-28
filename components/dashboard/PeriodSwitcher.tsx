@@ -33,13 +33,13 @@ export function PeriodSwitcher({ period, label, prevCursor, nextCursor, cursor }
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       {/* Period tabs */}
-      <div className="inline-flex items-center rounded-md border border-border bg-background-elevated p-0.5 text-sm">
+      <div className="flex items-center rounded-md border border-border bg-background-elevated p-0.5 text-sm sm:inline-flex">
         {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
           <Link
             key={p}
             href={hrefFor(p, today)}
             className={cn(
-              "rounded px-3 py-1.5 transition-colors",
+              "flex-1 rounded px-3 py-1.5 text-center transition-colors sm:flex-none sm:text-left",
               p === period
                 ? "bg-foreground text-background"
                 : "text-foreground-muted hover:text-foreground",
@@ -51,7 +51,7 @@ export function PeriodSwitcher({ period, label, prevCursor, nextCursor, cursor }
       </div>
 
       {/* Navigation */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-center gap-2 sm:justify-start">
         <Button asChild variant="outline" size="icon-sm" aria-label="Предыдущий период">
           <Link href={hrefFor(period, prevCursor)}>
             <ChevronLeft className="size-4" />
