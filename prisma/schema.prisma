@@ -1,10 +1,16 @@
 // Webvibe CRM — Prisma schema.
 // Iteration 1: User (single admin) + Settings (singleton).
+// Iteration 2: Client, Lead, Project, Task + enums.
 // See DATABASE.md for the full planned schema and conventions.
 //
 // Prisma 7 specifics:
 //   - URLs live in prisma.config.ts (datasource.url for runtime, migrate.adapter for CLI).
 //   - Driver adapters are standard in Prisma 7; no preview flag needed.
+//
+// Iter 2 scope note: back-relations from Client / Project / Lead to future
+// models (Invoice / Contract / Proposal / Payment / Maintenance / Reminder)
+// are intentionally omitted here — those models land in Iter 3+. Adding them
+// now would break `prisma format` because the target models don't exist yet.
 
 generator client {
   provider = "prisma-client"
@@ -68,4 +74,206 @@ model Settings {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------
+// Client — individual или company. Owner of leads/projects/...
+// Back-relations to invoices/contracts/proposals/payments/maintenance/
+// reminders are added in Iter 3+ together with those models.
+// ---------------------------------------------------------------
+model Client {
+  id      String     @id @default(cuid())
+  kind    ClientKind @default(individual)
+  name    String
+  email   String?
+  phone   String?
+  website String?
+
+  // Реквизиты (для PDF) — заполняются позднее, могут быть пустыми
+  vatId     String?
+  regNumber String?
+  address   String?
+
+  language String       @default("lt")
+  status   ClientStatus @default(active)
+  source   String?
+  notes    String?
+
+  leads    Lead[]
+  projects Project[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([kind])
+}
+
+enum ClientKind {
+  individual
+  company
+}
+
+enum ClientStatus {
+  active
+  archived
+}
+
+// ---------------------------------------------------------------
+// Lead — pre-client touchpoint. Full UI in Iter 5; defined here
+// so Project.convertedFromLeadId FK can compile.
+// ---------------------------------------------------------------
+model Lead {
+  id            String      @id @default(cuid())
+  name          String
+  company       String?
+  contact       String
+  task          String
+  budget        Decimal?    @db.Decimal(12, 2)
+  urgency       LeadUrgency @default(normal)
+  source        String?
+  status        LeadStatus  @default(new)
+  nextContactAt DateTime?
+  notes         String?
+
+  // Repeat-leads can reference an existing client; deleting the client
+  // detaches the lead but doesn't destroy its history.
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  // Конверсия в проект
+  convertedToProjectId String?
+  convertedToProject   Project? @relation("LeadConvertedProject", fields: [convertedToProjectId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([nextContactAt])
+  @@index([clientId])
+  @@index([convertedToProjectId])
+}
+
+enum LeadUrgency {
+  low
+  normal
+  high
+}
+
+enum LeadStatus {
+  new
+  to_contact
+  discussion
+  awaiting_proposal
+  proposal_sent
+  thinking
+  accepted
+  declined
+  postponed
+}
+
+// ---------------------------------------------------------------
+// Project — main work unit. Belongs to a Client.
+// Stages stored as JSON for flexibility (see DATABASE.md note).
+// Tasks cascade-delete with the project.
+// ---------------------------------------------------------------
+model Project {
+  id       String        @id @default(cuid())
+  title    String
+  clientId String
+  client   Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  type     ProjectType
+  stack    String?
+  status   ProjectStatus @default(idea)
+
+  price    Decimal @default(0) @db.Decimal(12, 2)
+  advance  Decimal @default(0) @db.Decimal(12, 2)
+  currency String  @default("EUR")
+
+  startedAt   DateTime?
+  deadlineAt  DateTime?
+  completedAt DateTime?
+
+  // Ссылки (JSON): { github, vercel, figma, drive, site, wpAdmin, prodAdmin, ... }
+  links Json?
+
+  // Этапы как чеклист (JSON): [{ name, done, order, dueAt? }]
+  stages Json?
+
+  hasMaintenance Boolean @default(false)
+  notes          String?
+
+  tasks          Task[]
+  leadsConverted Lead[] @relation("LeadConvertedProject")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([clientId])
+  @@index([deadlineAt])
+}
+
+enum ProjectType {
+  landing
+  website
+  corporate
+  wordpress
+  headless_wp
+  nextjs
+  crm_dashboard
+  booking
+  quiz_funnel
+  maintenance
+  other
+}
+
+enum ProjectStatus {
+  idea
+  estimating
+  awaiting_advance
+  in_progress
+  waiting_client
+  review
+  revisions
+  ready
+  paid
+  archived
+}
+
+// ---------------------------------------------------------------
+// Task — inline в карточке проекта, отдельной страницы нет.
+// ---------------------------------------------------------------
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  projectId   String
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  status      TaskStatus   @default(todo)
+  priority    TaskPriority @default(normal)
+  dueAt       DateTime?
+  description String?
+  checklist   Json? // [{ text, done }]
+  order       Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+  @@index([dueAt])
+}
+
+enum TaskStatus {
+  todo
+  in_progress
+  waiting_client
+  review
+  done
+}
+
+enum TaskPriority {
+  low
+  normal
+  high
+  urgent
 }
