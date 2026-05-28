@@ -25,11 +25,13 @@ export const settingsSchema = z.object({
   // Brand / requisites
   companyName: requiredText("Название компании"),
   ownerName: requiredText("Имя владельца"),
+  personalCode: optionalText,
   vatId: optionalText,
   regNumber: optionalText,
   address: requiredText("Адрес", 500),
   iban: requiredText("IBAN", 64),
   swift: optionalText,
+  bankNote: optionalText,
   email: z.string().trim().email("Невалидный email"),
   phone: optionalText,
   website: optionalUrl,
@@ -51,6 +53,7 @@ export const settingsSchema = z.object({
   defaultCurrency: z.literal("EUR"),
   documentLanguage: z.literal("lt"),
   pdfFooterNote: optionalText,
+  defaultPaymentDays: z.number().int().min(0).max(180),
 });
 
 export type SettingsInput = z.infer<typeof settingsSchema>;

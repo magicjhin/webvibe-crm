@@ -22,11 +22,13 @@ export default async function SettingsProfilePage() {
   const initial: SettingsInput = {
     companyName: row.companyName,
     ownerName: row.ownerName,
+    personalCode: row.personalCode ?? null,
     vatId: row.vatId ?? null,
     regNumber: row.regNumber ?? null,
     address: row.address,
     iban: row.iban,
     swift: row.swift ?? null,
+    bankNote: row.bankNote ?? null,
     email: row.email,
     phone: row.phone ?? null,
     website: row.website ?? null,
@@ -44,6 +46,7 @@ export default async function SettingsProfilePage() {
     defaultCurrency: "EUR",
     documentLanguage: "lt",
     pdfFooterNote: row.pdfFooterNote ?? null,
+    defaultPaymentDays: row.defaultPaymentDays,
   };
 
   return (

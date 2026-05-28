@@ -26,6 +26,8 @@ function toData(input: ClientInput) {
     vatId: input.vatId ?? null,
     regNumber: input.regNumber ?? null,
     address: input.address ?? null,
+    representative: input.representative ?? null,
+    technicalContactName: input.technicalContactName ?? null,
     language: input.language,
     status: input.status,
     source: input.source ?? null,

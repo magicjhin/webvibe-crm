@@ -40,6 +40,8 @@ export const clientSchema = z.object({
   vatId: optionalText(64),
   regNumber: optionalText(64),
   address: optionalText(500),
+  representative: optionalText(200),
+  technicalContactName: optionalText(200),
   language: z.string().trim().min(2).max(8),
   status: z.enum(CLIENT_STATUSES),
   source: optionalText(120),

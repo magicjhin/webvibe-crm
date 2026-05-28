@@ -11,6 +11,10 @@
 // models (Invoice / Contract / Proposal / Payment / Maintenance / Reminder)
 // are intentionally omitted here — those models land in Iter 3+. Adding them
 // now would break `prisma format` because the target models don't exist yet.
+//
+// Iter 3 update: Invoice / Payment / Expense added below. Client and Project
+// now back-reference Invoice and Payment. Contract / Proposal / Maintenance /
+// Reminder are still deferred — Iter 4 and Iter 5 respectively.
 
 generator client {
   provider = "prisma-client"
@@ -43,11 +47,13 @@ model Settings {
   // Brand / requisites
   companyName  String
   ownerName    String
+  personalCode String? // Asmens kodas — для §1 ŠALYS договора (Iter 4)
   vatId        String?
-  regNumber    String?
+  regNumber    String? // Individualios veiklos pažymos Nr.
   address      String
   iban         String
   swift        String?
+  bankNote     String? // Свободный текст про банк (например про Wise + Belgija)
   email        String
   phone        String?
   website      String?
@@ -70,7 +76,8 @@ model Settings {
   documentLanguage String @default("lt")
 
   // PDF
-  pdfFooterNote String?
+  pdfFooterNote      String?
+  defaultPaymentDays Int     @default(1) // Apmokėti iki = issuedAt + N дней (ADR-025)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -90,9 +97,11 @@ model Client {
   website String?
 
   // Реквизиты (для PDF) — заполняются позднее, могут быть пустыми
-  vatId     String?
-  regNumber String?
-  address   String?
+  vatId                String? // PVM mokėtojo kodas
+  regNumber            String? // Įmonės kodas
+  address              String?
+  representative       String? // "Atstovaujama direktoriaus N" — для §1 договора и бокса счёта
+  technicalContactName String? // "Techninis kontaktas: ..." — для бокса счёта
 
   language String       @default("lt")
   status   ClientStatus @default(active)
@@ -101,6 +110,8 @@ model Client {
 
   leads    Lead[]
   projects Project[]
+  invoices Invoice[]
+  payments Payment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -204,7 +215,9 @@ model Project {
   notes          String?
 
   tasks          Task[]
-  leadsConverted Lead[] @relation("LeadConvertedProject")
+  leadsConverted Lead[]    @relation("LeadConvertedProject")
+  invoices       Invoice[]
+  payments       Payment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -276,4 +289,151 @@ enum TaskPriority {
   normal
   high
   urgent
+}
+
+// ---------------------------------------------------------------
+// Invoice + InvoiceItem (Iter 3). Numbering: WV-001, transactional.
+// No PVM. Single currency (EUR) per ADR-007/ADR-014.
+// ---------------------------------------------------------------
+model Invoice {
+  id        String      @id @default(cuid())
+  number    String      @unique
+  kind      InvoiceKind @default(advance)
+  clientId  String
+  client    Client      @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  projectId String?
+  project   Project?    @relation(fields: [projectId], references: [id], onDelete: Restrict)
+
+  issuedAt DateTime
+  dueAt    DateTime?
+  status   InvoiceStatus @default(draft)
+
+  currency String  @default("EUR")
+  subtotal Decimal @db.Decimal(12, 2)
+  total    Decimal @db.Decimal(12, 2) // = subtotal (no PVM)
+
+  // Maintenance idempotency: 'YYYY-MM' for kind=maintenance, null otherwise.
+  // Combined with maintenanceId (Iter 5) — guarantees one invoice per period
+  // even on cron retry / double run. maintenanceId column is added in Iter 5
+  // along with the Maintenance model.
+  periodKey String?
+
+  notes  String?
+  pdfUrl String? // reserved for Phase 2 PDF cache; в Iter 3 рендерим каждый запрос на лету (см. ROADMAP «Out of MVP»)
+
+  items    InvoiceItem[]
+  payments Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([projectId])
+  @@index([status])
+  @@index([dueAt])
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  qty         Decimal @default(1) @db.Decimal(12, 2)
+  unitPrice   Decimal @db.Decimal(12, 2)
+  total       Decimal @db.Decimal(12, 2) // = qty * unitPrice
+  order       Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([invoiceId])
+}
+
+enum InvoiceKind {
+  advance
+  final
+  full
+  maintenance
+}
+
+enum InvoiceStatus {
+  draft
+  sent
+  paid
+  cancelled
+}
+
+// Note: `overdue` is NOT a stored status — it's derived as
+//   status='sent' AND dueAt < now().
+// Dashboard and filters compute it on the fly.
+
+// ---------------------------------------------------------------
+// Payment (Iter 3). Tracks money received. May or may not link to an invoice.
+// ---------------------------------------------------------------
+model Payment {
+  id        String      @id @default(cuid())
+  clientId  String
+  client    Client      @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  projectId String?
+  project   Project?    @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  invoiceId String?
+  invoice   Invoice?    @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  kind      PaymentKind
+  amount    Decimal     @db.Decimal(12, 2)
+  currency  String      @default("EUR")
+  paidAt    DateTime
+  note      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([projectId])
+  @@index([invoiceId])
+  @@index([paidAt])
+}
+
+enum PaymentKind {
+  advance
+  final
+  full
+  maintenance
+  other
+}
+
+// ---------------------------------------------------------------
+// Expense (Iter 3). Tracks money spent. Optional attached file (Vercel Blob).
+// `recurring/recurrence` are storage-only in MVP per ADR-017 — the actual
+// recurring expense automation is Phase 2.
+// ---------------------------------------------------------------
+model Expense {
+  id          String          @id @default(cuid())
+  category    ExpenseCategory
+  vendor      String?
+  amount      Decimal         @db.Decimal(12, 2)
+  currency    String          @default("EUR")
+  occurredAt  DateTime
+  description String
+  fileUrl     String? // Vercel Blob URL when a receipt is attached
+  fileName    String? // Original filename for download
+  recurring   Boolean         @default(false)
+  recurrence  String? // 'monthly' | 'yearly' | null
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([occurredAt])
+  @@index([category])
+}
+
+enum ExpenseCategory {
+  ai_tools
+  hosting
+  domains
+  software
+  hardware
+  ads
+  transport
+  other
 }

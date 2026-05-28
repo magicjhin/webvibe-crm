@@ -56,6 +56,8 @@ const EMPTY: ClientInput = {
   vatId: null,
   regNumber: null,
   address: null,
+  representative: null,
+  technicalContactName: null,
   language: "lt",
   status: "active",
   source: null,
@@ -187,10 +189,10 @@ export function ClientForm(props: Props) {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <Field id="vatId" label="VAT ID" error={errors.vatId?.message}>
+          <Field id="vatId" label="PVM mokėtojo kodas" error={errors.vatId?.message}>
             <Input id="vatId" {...register("vatId")} className="font-mono" />
           </Field>
-          <Field id="regNumber" label="Рег. номер" error={errors.regNumber?.message}>
+          <Field id="regNumber" label="Įmonės kodas" error={errors.regNumber?.message}>
             <Input id="regNumber" {...register("regNumber")} className="font-mono" />
           </Field>
           <Field
@@ -200,6 +202,22 @@ export function ClientForm(props: Props) {
             error={errors.address?.message}
           >
             <Textarea id="address" rows={2} {...register("address")} />
+          </Field>
+          <Field
+            id="representative"
+            label="Представитель"
+            hint="Например «direktorės Irenos Ulienės»"
+            error={errors.representative?.message}
+          >
+            <Input id="representative" {...register("representative")} />
+          </Field>
+          <Field
+            id="technicalContactName"
+            label="Технический контакт"
+            hint="Имя — попадёт в реквизиты счёта"
+            error={errors.technicalContactName?.message}
+          >
+            <Input id="technicalContactName" {...register("technicalContactName")} />
           </Field>
           <Field id="language" label="Язык документов" hint="ISO-код (lt, en, ru)" error={errors.language?.message}>
             <Input id="language" {...register("language")} className="font-mono uppercase" />

@@ -70,11 +70,23 @@ export function SettingsForm({ initial }: Props) {
           <Field id="ownerName" label="Имя владельца" required error={errors.ownerName?.message}>
             <Input id="ownerName" {...register("ownerName")} />
           </Field>
-          <Field id="vatId" label="VAT ID" error={errors.vatId?.message}>
-            <Input id="vatId" {...register("vatId")} />
+          <Field
+            id="personalCode"
+            label="Asmens kodas"
+            hint="Только для §1 договора (Iter 4)"
+            error={errors.personalCode?.message}
+          >
+            <Input id="personalCode" {...register("personalCode")} className="font-mono" />
           </Field>
-          <Field id="regNumber" label="Регистрационный номер" error={errors.regNumber?.message}>
-            <Input id="regNumber" {...register("regNumber")} />
+          <Field id="vatId" label="PVM mokėtojo kodas" error={errors.vatId?.message}>
+            <Input id="vatId" {...register("vatId")} className="font-mono" />
+          </Field>
+          <Field
+            id="regNumber"
+            label="Individualios veiklos pažymos Nr."
+            error={errors.regNumber?.message}
+          >
+            <Input id="regNumber" {...register("regNumber")} className="font-mono" />
           </Field>
           <Field
             id="address"
@@ -85,11 +97,20 @@ export function SettingsForm({ initial }: Props) {
           >
             <Textarea id="address" rows={2} {...register("address")} />
           </Field>
-          <Field id="iban" label="IBAN" required error={errors.iban?.message}>
+          <Field id="iban" label="Банковский счёт (IBAN / Wise)" required error={errors.iban?.message}>
             <Input id="iban" {...register("iban")} className="font-mono" />
           </Field>
           <Field id="swift" label="SWIFT/BIC" error={errors.swift?.message}>
             <Input id="swift" {...register("swift")} className="font-mono" />
+          </Field>
+          <Field
+            id="bankNote"
+            label="Заметка о банке"
+            className="sm:col-span-2"
+            hint="Например про Wise/Belgija — попадёт в Pastabos счёта"
+            error={errors.bankNote?.message}
+          >
+            <Textarea id="bankNote" rows={2} {...register("bankNote")} />
           </Field>
           <Field id="email" label="Email" required error={errors.email?.message}>
             <Input id="email" type="email" {...register("email")} />
@@ -145,6 +166,22 @@ export function SettingsForm({ initial }: Props) {
           </Field>
           <Field id="documentLanguage" label="Язык документов">
             <Input id="documentLanguage" value="lt" disabled readOnly />
+          </Field>
+          <Field
+            id="defaultPaymentDays"
+            label="Срок оплаты (дней)"
+            hint="Apmokėti iki = issuedAt + N дней. Можно переопределить на каждом счёте."
+            error={errors.defaultPaymentDays?.message}
+          >
+            <Input
+              id="defaultPaymentDays"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={180}
+              {...register("defaultPaymentDays", { valueAsNumber: true })}
+              className="font-mono"
+            />
           </Field>
           <Field
             id="pdfFooterNote"

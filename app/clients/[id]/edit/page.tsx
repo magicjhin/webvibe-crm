@@ -36,6 +36,8 @@ export default async function EditClientPage({
     vatId: c.vatId,
     regNumber: c.regNumber,
     address: c.address,
+    representative: c.representative,
+    technicalContactName: c.technicalContactName,
     language: c.language,
     status: c.status,
     source: c.source,
