@@ -15,7 +15,7 @@ PostgreSQL @ Neon (region: AWS eu-central-1, Frankfurt), ORM — Prisma 7
 |---|---|---|---|
 | `User` | 1 ✅ | `20260528134455_init_user_settings` | Single admin, runtime invariant в auth (ADR-021) |
 | `Settings` | 1 ✅ | `20260528134455_init_user_settings` | Singleton id=1, seed создаёт |
-| `Client`, `Lead`, `Project`, `Task` | **2 next** | — | enums тоже в этой миграции |
+| `Client`, `Lead`, `Project`, `Task` | 2 ✅ | `20260528144353_add_clients_projects_tasks` | Back-relations на Invoice/Contract/Proposal/Payment/Maintenance/Reminder появятся вместе с этими моделями в Iter 3+ |
 | `Invoice`, `InvoiceItem`, `Payment`, `Expense` | 3 | — | |
 | `Contract`, `Proposal` | 4 | — | |
 | `Maintenance`, `Reminder`, `FileAsset` | 5 | — | |

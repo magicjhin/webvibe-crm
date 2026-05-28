@@ -7,9 +7,12 @@
 
 ## Где мы сейчас
 
-**HEAD:** `fef6f39 docs: confirm iter 1 manual smoke test passed`
-**Branch:** `main → origin/main`, working tree clean
+**HEAD:** `fef6f39 docs: confirm iter 1 manual smoke test passed` (Iter 2 code ready, ждёт commit/push)
+**Branch:** `main → origin/main`
 **Repo:** https://github.com/webvibe-work/webvibe-crm
+
+> Iter 2 закрыт по коду: Codex Pass 1 (0 Critical, 7 Important → все исправлены) + Pass 2 focused (2 Critical → оба исправлены). `typecheck` / `lint` / `build` / `prisma format` — ✓. Миграция `20260528144353_add_clients_projects_tasks` применена на Neon.
+> Осталось: commit-серия + push + manual smoke test от владельца → перейти к Iter 3.
 
 ### Iterations status
 
@@ -17,8 +20,8 @@
 |---|---|---|---|
 | 0 | Bootstrap | ✅ Done | `3cec00a` |
 | 1 | Auth + Settings skeleton | ✅ Done | `ebd4044` |
-| 2 | Clients + Projects + Tasks | ⏳ **next** | — |
-| 3 | Invoices + Payments + Expenses + Dashboard KPI | planned | — |
+| 2 | Clients + Projects + Tasks | 🟡 code ready, commits pending | — |
+| 3 | Invoices + Payments + Expenses + Dashboard KPI | **next** | — |
 | 4 | Contracts + Proposals + Signature | planned | — |
 | 5 | Leads + Reminders + Maintenance + Cron | planned | — |
 | 6 | PWA + Mobile polish | planned | — |
@@ -114,7 +117,11 @@ pnpm dev
 
 - **`normalizeCallbackUrl` — ужесточить** в `lib/actions/auth.ts`: `^\/login(\/.*)?$/` не ловит `/login?x=1` и `/login#x`. Middleware всё равно редиректит залогиненных с `/login`, поэтому лоопа нет.
 - **`Field` fragment edge case** в `components/forms/Field.tsx`: `isValidElement()` true для фрагментов — кастомные сложные children словят cloneElement вместо fallback. Текущие usages передают один input, ОК.
+- **`Field` не пробрасывает aria в `Controller`-обёртки** (Pass 1 nice-to-have): когда `<Field>` оборачивает `<Controller render={...}>`, aria-invalid не доходит до реального `SelectTrigger`. Косметика a11y, не блокирует.
+- **`MoneyDisplay` принимает `number`** (Pass 1 nice-to-have): сужать API до `Decimal | string` или явно задокументировать derived-only сценарии.
 - **Tablet collapsed sidebar (640–1024px)** — сейчас sidebar показывается с `md:` (≥768px) во всю ширину. По `UI-DESIGN.md` на tablet должен быть свёрнут в 60px иконки. → **Iter 6 (mobile polish)**.
+- **Sticky save button на mobile в формах** (Pass 1 nice-to-have): сейчас sticky только с `md:`. → **Iter 6**.
+- **`createTask` order race** (Pass 1 nice-to-have): `aggregate` + `create` без транзакции; для single-user риск низкий, но при параллельных add теоретически возможен дубль `order`. Использовать `$transaction` или unique constraint при необходимости.
 - **`@prisma/adapter-neon`** — оптимизация для Vercel Edge runtime. Не нужна пока (мы используем Node runtime). Если станет нужно — заменить в `lib/db.ts` + `prisma.config.ts`.
 - **Финальные PWA иконки** из webvibe-логотипа (сейчас placeholder W). → **перед production deploy**.
 - **Подбор юридического текста договора (LT)** для Iter 4. → собирать референсы заранее.
@@ -136,6 +143,26 @@ Auth.js v5 split config (Edge-safe `lib/auth.config.ts` для middleware + Node
 **Critical fix Pass 2:** `lib/auth.ts` authorize теперь проверяет `findMany({ take: 2 })` всей таблицы User, требует exactly 1 row + exact email match перед `bcrypt.compare` — runtime ADR-002 invariant.
 
 **Codex:** Pass 1 — 0 Critical, 4 Important, 5 Nice. Pass 2 — 1 Critical (auth invariant) → исправлен. Manual smoke test passed.
+
+### Iter 2 — Clients + Projects + Tasks (code ready)
+
+Schema: `Client`, `Lead`, `Project`, `Task` + 8 enums (`ClientKind/Status`, `LeadUrgency/Status`, `ProjectType/Status`, `TaskStatus/Priority`). Back-relations на Invoice/Contract/Proposal/Payment/Maintenance/Reminder намеренно опущены — добавим в Iter 3+. Миграция `20260528144353_add_clients_projects_tasks` (Restrict Client→Project, Cascade Project→Task, SetNull Lead.clientId/convertedToProjectId).
+
+Validators (`lib/validators/{client,lead,project,task}.ts`): RHF-friendly без `.default()` на required-полях; money — `string` с regex + `nonNegativeMoneyString` для project price/advance; `links` — `record` со значениями-union (`"" | URL`) и transform который дропает пустые; `lib/money/parseDecimal.ts` использует `decimal.js` напрямую (не Prisma) чтобы не тащить runtime в client bundle.
+
+Dates: `lib/dates/parse.ts` — `parseDateOnly`/`formatDateOnly` через `Europe/Vilnius` (date-fns-tz). `DateDisplay` теперь форматирует через `formatInTimeZone` — runtime TZ деплоя не сдвигает день.
+
+Server actions (`lib/actions/{clients,projects,tasks}.ts`): `auth()` guard, Zod safeParse, Result<T>; обработка P2003/P2014/P2025; Json-поля через `Prisma.JsonNull`. `updateProject` ловит P2003 (несуществующий clientId). `createTask` назначает `order = max + 1` (см. backlog про race).
+
+UI primitives: `components/data/{DataTable,EmptyState,StatusBadge,DateDisplay,MoneyDisplay,DeleteConfirm}.tsx`, `components/layout/PageHeader.tsx`. DataTable — тонкая обёртка над TanStack (`overflow-x-auto` для mobile). Добавлены shadcn `tabs` + `checkbox`.
+
+Clients: `/clients` (фильтры status/kind + поиск), `/clients/new`, `/clients/[id]` (табы Детали/Проекты/Документы-stub/Платежи-stub), `/clients/[id]/edit`. Удаление блокируется по проектам.
+
+Projects: `/projects` (фильтры status/type + поиск), `/projects/new` (поддерживает `?clientId=...`), `/projects/[id]` (header + KPI cards + links chips + stages + tasks + notes), `/projects/[id]/edit`. Удаление — каскад tasks. Stages — JSON чеклист с optimistic+rollback. Tasks inline — add/toggle/dropdown edit/delete с optimistic+rollback и edit-dialog с remount по `key={task.id}`. Links: 6 typed-полей (site/github/vercel/figma/drive/wpAdmin), пустые не сохраняются, отображаются как chips.
+
+Action items на mobile видны по умолчанию (`opacity-70 md:opacity-0 md:group-hover:opacity-100`) — Codex Pass 1 fix.
+
+**Codex:** Pass 1 — 0 Critical, 7 Important (все исправлены), 5 Nice-to-have (перенесены в Backlog или Iter 6). Pass 2 focused — 2 Critical (linksRecord URL до transform + DateDisplay runtime TZ) → оба исправлены. Третий проход не запускался по ADR-018. Manual smoke test от владельца — pending.
 
 ### Servicing iterations
 
