@@ -452,11 +452,11 @@ function KpiCard({
 }) {
   const accentClass =
     accent === "positive"
-      ? "text-[hsl(var(--color-status-paid,142_70%_45%))]"
+      ? "text-[var(--color-status-paid)]"
       : accent === "negative"
-        ? "text-[hsl(var(--color-status-overdue,0_75%_60%))]"
+        ? "text-[var(--color-status-overdue)]"
         : danger
-          ? "text-[hsl(var(--danger))]"
+          ? "text-[var(--danger)]"
           : "";
 
   const content = (

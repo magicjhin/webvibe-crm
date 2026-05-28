@@ -81,12 +81,12 @@ export function IncomeExpenseChart({ data }: { data: ChartPoint[] }) {
           />
           <Bar
             dataKey="income"
-            fill="hsl(var(--color-status-paid, 142 70% 45%))"
+            fill="var(--color-status-paid)"
             radius={[3, 3, 0, 0]}
           />
           <Bar
             dataKey="expense"
-            fill="hsl(var(--color-status-overdue, 0 75% 60%))"
+            fill="var(--color-status-overdue)"
             radius={[3, 3, 0, 0]}
           />
         </BarChart>
