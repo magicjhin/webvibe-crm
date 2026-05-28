@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { formatInTimeZone } from "date-fns-tz";
 import {
   AlertTriangle,
+  ArrowDownRight,
   ArrowUpRight,
   FileText,
   FolderKanban,
   Receipt,
+  TrendingDown,
+  TrendingUp,
   Wallet,
 } from "lucide-react";
 
@@ -22,8 +24,18 @@ import { Button } from "@/components/ui/button";
 import { MoneyDisplay } from "@/components/data/MoneyDisplay";
 import { DateDisplay } from "@/components/data/DateDisplay";
 import { EmptyState } from "@/components/data/EmptyState";
+import { PeriodSwitcher } from "@/components/dashboard/PeriodSwitcher";
+import {
+  IncomeExpenseChart,
+  type ChartPoint,
+} from "@/components/dashboard/IncomeExpenseChart";
 import { prisma } from "@/lib/db";
-import { parseDateOnly, PROJECT_TZ } from "@/lib/dates/parse";
+import {
+  getPeriodBounds,
+  isValidPeriod,
+  todayCursor,
+  type Period,
+} from "@/lib/dashboard/periodBounds";
 import { EXPENSE_CATEGORIES } from "@/lib/validators/expense";
 
 export const metadata = { title: "Dashboard" };
@@ -40,49 +52,53 @@ const CATEGORY_LABEL: Record<(typeof EXPENSE_CATEGORIES)[number], string> = {
   other: "Другое",
 };
 
-// First-of-this-month and first-of-next-month, both in Vilnius TZ, as UTC Dates.
-function monthBounds(): { start: Date; end: Date } {
-  const now = new Date();
-  const yyyy = Number(formatInTimeZone(now, PROJECT_TZ, "yyyy"));
-  const mm = Number(formatInTimeZone(now, PROJECT_TZ, "MM"));
-  const start = parseDateOnly(`${yyyy}-${String(mm).padStart(2, "0")}-01`)!;
-  const nextY = mm === 12 ? yyyy + 1 : yyyy;
-  const nextM = mm === 12 ? 1 : mm + 1;
-  const end = parseDateOnly(`${nextY}-${String(nextM).padStart(2, "0")}-01`)!;
-  return { start, end };
+type SearchParams = Promise<{ period?: string; cursor?: string }>;
+
+function bucketIndex(
+  date: Date,
+  buckets: { start: Date; end: Date }[],
+): number {
+  // Бары упорядочены хронологически — простой линейный поиск (max 31 итерация для месяца).
+  for (let i = 0; i < buckets.length; i++) {
+    const b = buckets[i]!;
+    if (date >= b.start && date < b.end) return i;
+  }
+  return -1;
 }
 
-function sumDecimal(values: { toString(): string }[]): number {
-  return values.reduce<number>((acc, v) => acc + Number(v.toString()), 0);
-}
-
-export default async function DashboardPage() {
-  const { start, end } = monthBounds();
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const params = await searchParams;
+  const period: Period = isValidPeriod(params.period) ? params.period : "month";
+  const cursor = params.cursor ?? todayCursor();
+  const bounds = getPeriodBounds(period, cursor);
   const now = new Date();
 
+  // Все aggregates за период + non-period-dependent блоки в parallel
   const [
-    paymentsThisMonth,
-    expensesThisMonth,
+    payments,
+    expenses,
     sentInvoices,
     activeProjectsCount,
     recentPayments,
     overdueInvoices,
   ] = await Promise.all([
     prisma.payment.findMany({
-      where: { paidAt: { gte: start, lt: end } },
-      select: { amount: true },
+      where: { paidAt: { gte: bounds.start, lt: bounds.end } },
+      select: { amount: true, paidAt: true },
     }),
     prisma.expense.findMany({
-      where: { occurredAt: { gte: start, lt: end } },
-      select: { amount: true, category: true },
+      where: { occurredAt: { gte: bounds.start, lt: bounds.end } },
+      select: { amount: true, category: true, occurredAt: true },
     }),
     prisma.invoice.findMany({
       where: { status: "sent" },
       include: {
-        client: { select: { id: true, name: true } },
         payments: { select: { amount: true } },
       },
-      orderBy: { dueAt: "asc" },
     }),
     prisma.project.count({
       where: { status: { notIn: ["paid", "archived"] } },
@@ -103,20 +119,45 @@ export default async function DashboardPage() {
     }),
   ]);
 
-  const incomeMonth = sumDecimal(paymentsThisMonth.map((p) => p.amount));
-  const expenseMonth = sumDecimal(expensesThisMonth.map((e) => e.amount));
-  const netMonth = incomeMonth - expenseMonth;
+  // KPI summary
+  const income = payments.reduce<number>(
+    (acc, p) => acc + Number(p.amount.toString()),
+    0,
+  );
+  const expense = expenses.reduce<number>(
+    (acc, e) => acc + Number(e.amount.toString()),
+    0,
+  );
+  const net = income - expense;
 
-  // Outstanding = sum of (invoice.total - paid) for sent invoices
+  // Chart data — бары по бакетам
+  const chartData: ChartPoint[] = bounds.buckets.map((b) => ({
+    label: b.label,
+    income: 0,
+    expense: 0,
+  }));
+  for (const p of payments) {
+    const idx = bucketIndex(p.paidAt, bounds.buckets);
+    if (idx >= 0) chartData[idx]!.income += Number(p.amount.toString());
+  }
+  for (const e of expenses) {
+    const idx = bucketIndex(e.occurredAt, bounds.buckets);
+    if (idx >= 0) chartData[idx]!.expense += Number(e.amount.toString());
+  }
+
+  // Outstanding (период-независимое)
   const outstandingTotal = sentInvoices.reduce<number>((acc, inv) => {
-    const paid = sumDecimal(inv.payments.map((p) => p.amount));
+    const paid = inv.payments.reduce<number>(
+      (s, p) => s + Number(p.amount.toString()),
+      0,
+    );
     return acc + Math.max(0, Number(inv.total.toString()) - paid);
   }, 0);
   const overdueCount = overdueInvoices.length;
 
-  // Top categories this month
+  // Top categories за период
   const byCategory = new Map<string, number>();
-  for (const e of expensesThisMonth) {
+  for (const e of expenses) {
     byCategory.set(
       e.category,
       (byCategory.get(e.category) ?? 0) + Number(e.amount.toString()),
@@ -126,25 +167,88 @@ export default async function DashboardPage() {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
-  const monthLabel = formatInTimeZone(new Date(), PROJECT_TZ, "LLLL yyyy");
-
   return (
     <AppShell>
       <div className="flex flex-col gap-6">
         <PageHeader
           title="Dashboard"
-          description={`Текущий месяц: ${monthLabel}. Чистые цифры по работе.`}
+          description={`Финансовая сводка. ${bounds.label}.`}
         />
 
-        {/* KPI row */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <PeriodSwitcher
+          period={bounds.period}
+          label={bounds.label}
+          prevCursor={bounds.prevCursor}
+          nextCursor={bounds.nextCursor}
+          cursor={bounds.cursor}
+        />
+
+        {/* Period-dependent KPI */}
+        <div className="grid gap-4 sm:grid-cols-3">
           <KpiCard
-            icon={<Wallet className="size-4" />}
-            label="Доход за месяц"
-            value={<MoneyDisplay value={incomeMonth} />}
-            hint={`Чистыми: ${netMonth >= 0 ? "+" : ""}${netMonth.toFixed(2)} EUR`}
-            href="/payments"
+            icon={<TrendingUp className="size-4" />}
+            label="Доход"
+            value={<MoneyDisplay value={income} />}
+            hint={`${payments.length} платежей`}
+            accent="positive"
           />
+          <KpiCard
+            icon={<TrendingDown className="size-4" />}
+            label="Расход"
+            value={<MoneyDisplay value={expense} />}
+            hint={`${expenses.length} записей`}
+            accent="negative"
+          />
+          <KpiCard
+            icon={
+              net >= 0 ? (
+                <ArrowUpRight className="size-4" />
+              ) : (
+                <ArrowDownRight className="size-4" />
+              )
+            }
+            label="Чистыми"
+            value={
+              <>
+                {net >= 0 ? "+" : ""}
+                <MoneyDisplay value={net} />
+              </>
+            }
+            hint={
+              net >= 0 ? "Прибыль за период" : "Убыток за период"
+            }
+            accent={net >= 0 ? "positive" : "negative"}
+            big
+          />
+        </div>
+
+        {/* Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Доход vs Расход</CardTitle>
+            <CardDescription>
+              {period === "month"
+                ? "По дням"
+                : period === "quarter"
+                  ? "По месяцам квартала"
+                  : "По месяцам года"}
+              . Зелёные бары — поступления, красные — расходы.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {income === 0 && expense === 0 ? (
+              <EmptyState
+                title="Данных за период нет"
+                description="Добавь платежи и расходы — появятся в виде диаграммы."
+              />
+            ) : (
+              <IncomeExpenseChart data={chartData} />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Non-period blocks */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <KpiCard
             icon={<FileText className="size-4" />}
             label="Неоплаченные счета"
@@ -165,10 +269,17 @@ export default async function DashboardPage() {
             href="/projects"
           />
           <KpiCard
+            icon={<Wallet className="size-4" />}
+            label="Свежие платежи"
+            value={String(recentPayments.length)}
+            hint="последние 5"
+            href="/payments"
+          />
+          <KpiCard
             icon={<Receipt className="size-4" />}
-            label="Расходы за месяц"
-            value={<MoneyDisplay value={expenseMonth} />}
-            hint={`${expensesThisMonth.length} записей`}
+            label="Расходов в периоде"
+            value={String(expenses.length)}
+            hint="клик → все расходы"
             href="/expenses"
           />
         </div>
@@ -185,16 +296,11 @@ export default async function DashboardPage() {
                 )}
                 Просроченные счета
               </CardTitle>
-              <CardDescription>
-                Status=sent, дата оплаты прошла.
-              </CardDescription>
+              <CardDescription>Status=sent, дата оплаты прошла.</CardDescription>
             </CardHeader>
             <CardContent>
               {overdueInvoices.length === 0 ? (
-                <EmptyState
-                  title="Всё чисто"
-                  description="Просроченных счетов нет."
-                />
+                <EmptyState title="Всё чисто" description="Просроченных счетов нет." />
               ) : (
                 <ul className="flex flex-col gap-2">
                   {overdueInvoices.map((inv) => (
@@ -269,12 +375,12 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Expense categories */}
+          {/* Top categories за период */}
           <Card className="lg:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Расходы по категориям</CardTitle>
-                <CardDescription>{monthLabel}</CardDescription>
+                <CardDescription>{bounds.label}</CardDescription>
               </div>
               <Button asChild variant="ghost" size="sm">
                 <Link href="/expenses">
@@ -286,13 +392,13 @@ export default async function DashboardPage() {
             <CardContent>
               {topCategories.length === 0 ? (
                 <EmptyState
-                  title="Расходов в этом месяце нет"
+                  title="Расходов в периоде нет"
                   description="Записи появятся, когда добавишь первый расход."
                 />
               ) : (
                 <ul className="flex flex-col gap-2">
                   {topCategories.map(([cat, sum]) => {
-                    const pct = expenseMonth > 0 ? (sum / expenseMonth) * 100 : 0;
+                    const pct = expense > 0 ? (sum / expense) * 100 : 0;
                     return (
                       <li key={cat} className="flex flex-col gap-1">
                         <div className="flex items-center justify-between text-sm">
@@ -332,36 +438,59 @@ function KpiCard({
   hint,
   href,
   danger,
+  accent,
+  big,
 }: {
   icon: React.ReactNode;
   label: string;
   value: React.ReactNode;
   hint?: string;
-  href: string;
+  href?: string;
   danger?: boolean;
+  accent?: "positive" | "negative";
+  big?: boolean;
 }) {
-  return (
-    <Link
-      href={href}
-      className="group block rounded-lg border border-border bg-card p-4 transition-colors hover:border-foreground/20"
-    >
+  const accentClass =
+    accent === "positive"
+      ? "text-[hsl(var(--color-status-paid,142_70%_45%))]"
+      : accent === "negative"
+        ? "text-[hsl(var(--color-status-overdue,0_75%_60%))]"
+        : danger
+          ? "text-[hsl(var(--danger))]"
+          : "";
+
+  const content = (
+    <>
       <div className="flex items-center justify-between text-xs text-foreground-muted">
         <span className="inline-flex items-center gap-2">
           {icon}
           {label}
         </span>
-        <ArrowUpRight className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
+        {href ? (
+          <ArrowUpRight className="size-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
+        ) : null}
       </div>
       <div
-        className={`mt-2 text-2xl font-semibold tabular-nums ${
-          danger ? "text-[hsl(var(--danger))]" : ""
-        }`}
+        className={`mt-2 font-semibold tabular-nums ${big ? "text-3xl" : "text-2xl"} ${accentClass}`}
       >
         {value}
       </div>
       {hint ? (
         <p className="mt-1 text-xs text-foreground-subtle">{hint}</p>
       ) : null}
-    </Link>
+    </>
   );
+
+  const baseClass = "block rounded-lg border border-border bg-card p-4";
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={`group ${baseClass} transition-colors hover:border-foreground/20`}
+      >
+        {content}
+      </Link>
+    );
+  }
+  return <div className={baseClass}>{content}</div>;
 }
