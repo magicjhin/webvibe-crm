@@ -12,6 +12,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { ClientHeader } from "@/components/clients/ClientHeader";
+import { InvoiceStatusBadge } from "@/components/invoices/InvoiceStatusBadge";
 import { EmptyState } from "@/components/data/EmptyState";
 import { StatusBadge } from "@/components/data/StatusBadge";
 import { MoneyDisplay } from "@/components/data/MoneyDisplay";
@@ -51,6 +52,27 @@ export default async function ClientPage({
           type: true,
           price: true,
           deadlineAt: true,
+        },
+      },
+      invoices: {
+        orderBy: [{ issuedAt: "desc" }, { number: "desc" }],
+        select: {
+          id: true,
+          number: true,
+          status: true,
+          total: true,
+          issuedAt: true,
+          dueAt: true,
+        },
+      },
+      payments: {
+        orderBy: { paidAt: "desc" },
+        select: {
+          id: true,
+          amount: true,
+          paidAt: true,
+          kind: true,
+          invoice: { select: { id: true, number: true } },
         },
       },
     },
@@ -95,9 +117,11 @@ export default async function ClientPage({
                   <CardTitle>Реквизиты</CardTitle>
                 </CardHeader>
                 <CardContent className="grid gap-3 text-sm">
-                  <Row label="VAT ID" value={client.vatId} mono />
-                  <Row label="Рег. номер" value={client.regNumber} mono />
+                  <Row label="PVM kodas" value={client.vatId} mono />
+                  <Row label="Įmonės kodas" value={client.regNumber} mono />
                   <Row label="Адрес" value={client.address} />
+                  <Row label="Представитель" value={client.representative} />
+                  <Row label="Тех. контакт" value={client.technicalContactName} />
                   <Row label="Язык документов" value={client.language?.toUpperCase()} mono />
                 </CardContent>
               </Card>
@@ -178,19 +202,87 @@ export default async function ClientPage({
           </TabsContent>
 
           <TabsContent value="documents" className="mt-4">
-            <EmptyState
-              icon={FileText}
-              title="Документы"
-              description="КП, договоры и счета появятся здесь в Iter 3 / Iter 4."
-            />
+            {client.invoices.length === 0 ? (
+              <EmptyState
+                icon={FileText}
+                title="Счетов пока нет"
+                description="КП и договоры появятся в Iter 4. Счета можно создавать уже сейчас."
+                action={
+                  <Button asChild>
+                    <Link href={`/invoices/new?clientId=${client.id}`}>
+                      <Plus className="size-4" />
+                      Создать счёт
+                    </Link>
+                  </Button>
+                }
+              />
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {client.invoices.map((inv) => (
+                  <li key={inv.id}>
+                    <Link
+                      href={`/invoices/${inv.id}`}
+                      className="flex items-center justify-between gap-4 rounded-md border border-border bg-background-elevated p-3 transition-colors hover:border-foreground/20"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono font-medium">{inv.number}</span>
+                        <span className="text-xs text-foreground-muted">
+                          <DateDisplay date={inv.issuedAt} />
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <MoneyDisplay value={inv.total} />
+                        <InvoiceStatusBadge status={inv.status} dueAt={inv.dueAt} />
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </TabsContent>
 
           <TabsContent value="payments" className="mt-4">
-            <EmptyState
-              icon={Wallet}
-              title="Платежи"
-              description="Платежи появятся здесь в Iter 3."
-            />
+            {client.payments.length === 0 ? (
+              <EmptyState
+                icon={Wallet}
+                title="Платежей пока нет"
+                description="Когда поступит оплата от клиента — добавь её, привязать к счёту опционально."
+                action={
+                  <Button asChild>
+                    <Link href={`/payments/new?clientId=${client.id}`}>
+                      <Plus className="size-4" />
+                      Добавить платёж
+                    </Link>
+                  </Button>
+                }
+              />
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {client.payments.map((p) => (
+                  <li
+                    key={p.id}
+                    className="flex items-center justify-between gap-4 rounded-md border border-border bg-background-elevated p-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <DateDisplay date={p.paidAt} />
+                      {p.invoice ? (
+                        <Link
+                          href={`/invoices/${p.invoice.id}`}
+                          className="font-mono text-xs text-foreground-muted hover:underline"
+                        >
+                          {p.invoice.number}
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-foreground-subtle">без счёта</span>
+                      )}
+                    </div>
+                    <span className="font-medium">
+                      <MoneyDisplay value={p.amount} />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </TabsContent>
         </Tabs>
       </div>
