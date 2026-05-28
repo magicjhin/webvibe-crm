@@ -31,9 +31,15 @@ const fmtEurFull = (n: number) =>
   }).format(n);
 
 export function IncomeExpenseChart({ data }: { data: ChartPoint[] }) {
+  // На мобиле даём min-width пропорционально количеству баров (для месяца — 31×36 = ~1100px).
+  // Outer wrapper скроллится, чтобы пользователь свайпом видел весь период.
+  // Для короткой шкалы (квартал = 3 бара) дефолт 360px чтобы не плющилось.
+  const minWidth = Math.max(360, data.length * 36);
+
   return (
-    <div className="h-[260px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="w-full overflow-x-auto">
+      <div className="h-[260px]" style={{ minWidth }}>
+        <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
           margin={{ top: 4, right: 4, left: 4, bottom: 0 }}
@@ -91,6 +97,7 @@ export function IncomeExpenseChart({ data }: { data: ChartPoint[] }) {
           />
         </BarChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 }

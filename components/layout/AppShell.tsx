@@ -1,48 +1,9 @@
 import Link from "next/link";
-import {
-  LayoutDashboard,
-  Users,
-  Sparkles,
-  FolderKanban,
-  FileText,
-  Wallet,
-  Receipt,
-  Wrench,
-  Bell,
-  Settings,
-  Menu,
-  MoreHorizontal,
-  Plus,
-} from "lucide-react";
 import { auth } from "@/lib/auth";
 import { SignOutButton } from "@/components/auth/SignOutButton";
-
-type NavItem = {
-  href: string;
-  label: string;
-  icon: typeof LayoutDashboard;
-};
-
-const NAV: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/clients", label: "Clients", icon: Users },
-  { href: "/leads", label: "Leads", icon: Sparkles },
-  { href: "/projects", label: "Projects", icon: FolderKanban },
-  { href: "/documents", label: "Documents", icon: FileText },
-  { href: "/payments", label: "Payments", icon: Wallet },
-  { href: "/expenses", label: "Expenses", icon: Receipt },
-  { href: "/maintenance", label: "Maintenance", icon: Wrench },
-  { href: "/reminders", label: "Reminders", icon: Bell },
-  { href: "/settings/profile", label: "Settings", icon: Settings },
-];
-
-const MOBILE_TABS: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/projects", label: "Projects", icon: FolderKanban },
-  { href: "/clients", label: "Clients", icon: Users },
-  { href: "/documents", label: "Documents", icon: FileText },
-  { href: "/more", label: "More", icon: MoreHorizontal },
-];
+import { MobileNav } from "@/components/layout/MobileNav";
+import { QuickAddFab } from "@/components/layout/QuickAddFab";
+import { NAV, MOBILE_TABS } from "@/components/layout/nav-items";
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -107,13 +68,7 @@ function Topbar({ user }: { user?: { email: string; name: string } | null }) {
       className="fixed inset-x-0 top-0 z-20 flex h-[50px] items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur md:left-[240px] md:h-[60px] md:px-6"
     >
       <div className="flex items-center gap-3 md:hidden">
-        <button
-          type="button"
-          aria-label="Open menu"
-          className="inline-flex size-11 items-center justify-center rounded-md text-foreground-muted hover:bg-secondary hover:text-foreground"
-        >
-          <Menu className="size-5" />
-        </button>
+        <MobileNav />
         <span className="text-sm font-semibold tracking-tight">
           <span className="text-accent-gradient">webvibe</span>
           <span className="text-foreground-muted"> / CRM</span>
@@ -169,14 +124,3 @@ function MobileBottomNav() {
   );
 }
 
-function QuickAddFab() {
-  return (
-    <button
-      type="button"
-      aria-label="Quick add"
-      className="fixed bottom-20 right-4 z-40 inline-flex size-14 items-center justify-center rounded-full text-white shadow-lg bg-accent-gradient md:hidden"
-    >
-      <Plus className="size-6" strokeWidth={2.25} />
-    </button>
-  );
-}
