@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { renderInvoicePdf } from "@/lib/pdf/renderInvoice";
 
 export const runtime = "nodejs";
@@ -7,7 +8,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   const session = await auth();
@@ -16,14 +17,30 @@ export async function GET(
   }
 
   const { id } = await ctx.params;
+  // ?download=1 → attachment (браузер скачает файл).
+  // Без параметра → inline (нужно для iframe preview на карточке счёта).
+  const download = new URL(req.url).searchParams.get("download") === "1";
 
   try {
+    // Берём number отдельным запросом — он нужен для имени файла, даже если
+    // renderInvoicePdf успешно вернётся. Дешевле, чем парсить buffer.
+    const inv = await prisma.invoice.findUnique({
+      where: { id },
+      select: { number: true },
+    });
+    if (!inv) {
+      return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
+    }
+
     const buffer = await renderInvoicePdf(id);
+    const filename = `${inv.number}.pdf`;
+    const disposition = download ? "attachment" : "inline";
+
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="saskaita-${id}.pdf"`,
+        "Content-Disposition": `${disposition}; filename="${filename}"`,
         "Cache-Control": "private, no-store",
       },
     });

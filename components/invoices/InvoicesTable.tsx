@@ -163,9 +163,8 @@ export function InvoicesTable({ rows }: { rows: InvoiceRow[] }) {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <a
-                    href={`/api/invoices/${row.original.id}/pdf`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={`/api/invoices/${row.original.id}/pdf?download=1`}
+                    download={`${row.original.number}.pdf`}
                   >
                     Скачать PDF
                   </a>

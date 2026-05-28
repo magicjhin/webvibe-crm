@@ -242,22 +242,23 @@ export const pdfStyles = StyleSheet.create({
     paddingTop: 6,
   },
 
-  /* Watermark (vertical, faint) */
+  /* Watermark — большой диагональный фон по центру страницы, очень faint.
+     Рендерится первым в дереве + БЕЗ `fixed`, чтобы основной контент
+     (таблица paslaugos, totals) рисовался поверх него. */
   watermark: {
     position: "absolute",
     top: 0,
-    bottom: 0,
+    left: 0,
     right: 0,
-    width: 60,
+    bottom: 0,
     alignItems: "center",
     justifyContent: "center",
-    opacity: 0.06,
+    opacity: 0.04,
   },
   watermarkText: {
-    fontSize: 90,
+    fontSize: 140,
     fontWeight: 700,
-    transform: "rotate(-90deg)",
-    width: 600,
-    textAlign: "center",
+    transform: "rotate(-30deg)",
+    letterSpacing: -2,
   },
 });

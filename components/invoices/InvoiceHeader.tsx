@@ -66,9 +66,8 @@ export function InvoiceHeader({
       <div className="flex items-center gap-2">
         <Button asChild variant="outline">
           <a
-            href={`/api/invoices/${id}/pdf`}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={`/api/invoices/${id}/pdf?download=1`}
+            download={`${number}.pdf`}
           >
             <Download className="size-4" />
             PDF
