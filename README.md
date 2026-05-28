@@ -22,11 +22,10 @@ Single-user, PWA-first, Next.js + TypeScript + Tailwind + Prisma + Neon Postgres
 
 ---
 
-> **Статус:** Iteration 0 (Bootstrap) выполнена. В репозитории Next.js 15
-> skeleton с dark-first Webvibe оформлением, shadcn/ui baseline, Prisma 7
-> пустая schema, PWA manifest и placeholder-иконки. Никакой бизнес-логики
-> (auth / CRM модули / PDF / подпись) пока нет — следует в Iterations 1+.
-> См. `ROADMAP.md` и `TASKS.md`.
+> **Статус:** Iteration 1 — Auth + Settings skeleton.
+> Auth.js v5 (Credentials), middleware-whitelist, `/settings/profile` форма
+> поверх Settings singleton, single-admin user через seed. CRM-модули
+> (clients/leads/projects/invoices/contracts/PDF) — Iter 2+.
 
 ---
 
@@ -48,25 +47,34 @@ pnpm install
 
 # 2. Скопировать env vars и заполнить
 cp .env.example .env
-# DATABASE_URL / DIRECT_URL пока placeholder — реальный Neon URL подставим в Iter 1
 
-# 3. Запустить dev-сервер
+# 3. Поля .env:
+#    - DATABASE_URL  — Neon pooled connection string (с -pooler. в host)
+#    - DIRECT_URL    — Neon direct connection string (без -pooler.)
+#    - AUTH_SECRET   — `openssl rand -base64 32`
+#    - ADMIN_EMAIL   — твой email для логина
+#    - ADMIN_PASSWORD_HASH — bcrypt-хеш пароля:
+#                            pnpm tsx scripts/hash-password.ts
+#                            (запустит интерактивный prompt без эха)
+
+# 4. Применить миграцию (создаст User + Settings в Neon)
+pnpm prisma migrate dev
+
+# 5. Засидить admin user + Settings singleton (id=1)
+pnpm tsx prisma/seed.ts
+
+# 6. Запустить dev-сервер
 pnpm dev
 ```
 
-Открыть `http://localhost:3000` — текущая заглушка с AppShell skeleton.
-Auth, login и CRM-модули появятся в следующих итерациях.
+Открыть `http://localhost:3000` — редирект на `/login` (если не залогинен)
+или `/dashboard` (если уже сессия). После логина: `/settings/profile`
+показывает реальные данные из БД, изменения сохраняются.
 
-### Будущие шаги (Iterations 1+)
+### Будущие шаги (Iterations 2+)
 
-```bash
-# Когда появятся Prisma модели:
-pnpm prisma generate
-pnpm prisma migrate dev
-
-# Когда будет seed для admin user:
-pnpm tsx prisma/seed.ts
-```
+CRM-модули (clients / leads / projects / invoices / contracts / PDF /
+подпись / maintenance) — следующие итерации, см. `ROADMAP.md` и `TASKS.md`.
 
 ---
 

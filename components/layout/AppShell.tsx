@@ -14,14 +14,9 @@ import {
   MoreHorizontal,
   Plus,
 } from "lucide-react";
+import { auth } from "@/lib/auth";
+import { SignOutButton } from "@/components/auth/SignOutButton";
 
-/**
- * AppShell — visual skeleton for the protected app area.
- *
- * Bootstrap version: layout only. No auth check, no active-link logic,
- * no real navigation handlers. The skeleton exists so subsequent
- * iterations can drop pages in without rewiring the chrome.
- */
 type NavItem = {
   href: string;
   label: string;
@@ -49,11 +44,14 @@ const MOBILE_TABS: NavItem[] = [
   { href: "/more", label: "More", icon: MoreHorizontal },
 ];
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export async function AppShell({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  const user = session?.user;
+
   return (
     <div className="min-h-dvh bg-background text-foreground">
       <Sidebar />
-      <Topbar />
+      <Topbar user={user} />
       <main className="pt-[50px] pb-[80px] md:pt-[60px] md:pb-6 md:pl-[240px]">
         <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6">
           {children}
@@ -96,13 +94,13 @@ function Sidebar() {
         </ul>
       </nav>
       <div className="border-t border-border px-5 py-3 text-xs text-foreground-subtle">
-        v0.1.0 • bootstrap
+        v0.1.0 • iter 1
       </div>
     </aside>
   );
 }
 
-function Topbar() {
+function Topbar({ user }: { user?: { email: string; name: string } | null }) {
   return (
     <header
       aria-label="Top bar"
@@ -125,9 +123,28 @@ function Topbar() {
         {/* Breadcrumbs / page header slot — filled by pages in later iterations */}
       </div>
       <div className="flex items-center gap-2">
-        {/* Account / theme switcher / search — added in later iterations */}
+        {user ? <UserBadge name={user.name} email={user.email} /> : null}
+        {user ? <SignOutButton /> : null}
       </div>
     </header>
+  );
+}
+
+function UserBadge({ name, email }: { name: string; email: string }) {
+  const initial = (name?.[0] ?? email[0] ?? "?").toUpperCase();
+  return (
+    <div
+      className="flex items-center gap-2 rounded-full border border-border bg-card pl-1 pr-3 py-1"
+      title={email}
+    >
+      <span
+        aria-hidden
+        className="grid size-7 place-items-center rounded-full text-xs font-semibold text-white bg-accent-gradient"
+      >
+        {initial}
+      </span>
+      <span className="hidden text-xs text-foreground-muted sm:inline">{email}</span>
+    </div>
   );
 }
 

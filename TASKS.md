@@ -1,5 +1,49 @@
 # TASKS — Текущая итерация
 
+---
+
+## Backlog (non-blocking polish, from Iter 1 Codex Pass 2)
+
+- **`normalizeCallbackUrl` — ужесточить** в `lib/actions/auth.ts`: текущая проверка `^\/login(\/.*)?$/` не ловит `/login?x=1` и `/login#x`. Не блокирует на Iter 1, потому что `middleware.ts` редиректит залогиненных с `/login` на `/dashboard`. Стоит добавить URL parsing или `?`/`#` cases когда руки дойдут.
+- **`Field` fragment edge case** в `components/forms/Field.tsx`: `isValidElement()` true для фрагментов, поэтому передача `<>...</>` детьми не словит fallback. Текущие usages всегда передают один input, future hardening.
+
+---
+
+## Итерация 1 — Auth + Settings skeleton (✅ Done — commit pending)
+
+- [x] Установить `@prisma/adapter-pg` + `pg` + `@types/pg`
+- [x] `prisma/schema.prisma` — добавлены `User` и `Settings` модели (по `DATABASE.md`)
+- [x] `prisma.config.ts` — `datasource.url = DIRECT_URL` (для migrate), `migrations.seed = "tsx prisma/seed.ts"`
+- [x] `lib/db.ts` — singleton PrismaClient с `@prisma/adapter-pg` и `DATABASE_URL` (pooled)
+- [x] `prisma/seed.ts` — упсёртит admin user из `ADMIN_EMAIL`/`ADMIN_PASSWORD_HASH` + Settings singleton (id=1)
+- [x] `pnpm prisma migrate dev --name init-user-settings` — применено к Neon (миграция в `prisma/migrations/20260528134455_init_user_settings/`)
+- [x] `pnpm tsx prisma/seed.ts` — User + Settings созданы
+- [x] Smoke test через DATABASE_URL pooled adapter: `{users:1, settings:1}`
+- [x] `lib/auth.config.ts` — edge-compatible NextAuth config (без Prisma/bcrypt) для middleware
+- [x] `lib/auth.ts` — full NextAuth v5 + Credentials provider + bcrypt + Prisma
+- [x] `next-auth.d.ts` — module augmentation: `session.user.id`, `JWT.id`
+- [x] `app/api/auth/[...nextauth]/route.ts` — handlers + `runtime = "nodejs"`
+- [x] `lib/actions/auth.ts` — `signInAction` / `signOutAction` с Result pattern
+- [x] `middleware.ts` — whitelist regex + `callbackUrl` сохранение + редирект `/login → /dashboard` если уже залогинен
+- [x] `app/(auth)/layout.tsx` + `app/(auth)/login/page.tsx` + `components/auth/LoginForm.tsx`
+- [x] `components/auth/SignOutButton.tsx` (server action `signOutAction`)
+- [x] `lib/validators/settings.ts` — Zod schema (brand + numbering + locked currency/language)
+- [x] `lib/actions/settings.ts` — `updateSettings` с `auth()` check, Zod parse, Result pattern
+- [x] `components/forms/Field.tsx` (общий wrapper) + `components/forms/SettingsForm.tsx`
+- [x] `app/settings/profile/page.tsx` — Server Component читает `Settings(id=1)`, рендерит `SettingsForm`
+- [x] `components/layout/AppShell.tsx` — Topbar теперь async, показывает `<UserBadge>` (avatar+email) + `<SignOutButton>`
+- [x] `README.md` обновлён под Iter 1 (real `migrate` + `seed` команды)
+- [x] Checks: `pnpm typecheck` ✓, `pnpm lint` ✓, `pnpm prisma format` ✓, `pnpm build` ✓ (16 routes)
+- [x] `CODEX-REVIEW-TASK.md` для Iter 1
+- [x] Codex Pass 1: `With fixes` — 0 Critical, 4 Important, 5 Nice. Все Important + 4 Nice исправлены
+- [x] Codex Pass 2 (focused): найден 1 Critical (runtime auth invariant в `lib/auth.ts` сканировал по email, а не по count всей таблицы) — исправлен по варианту A владельца
+- [x] По ADR-018: Pass 3 НЕ запускается; Nice-to-have из Pass 2 (`normalizeCallbackUrl` polish, `Field` fragment edge case) перенесены в Backlog
+- [ ] Commit + push
+- [ ] Manual smoke test от владельца (login → dashboard → settings → save → signout)
+
+---
+
+
 Живой список задач прямо сейчас. После завершения итерации — обновлять.
 Полный план итераций — в `ROADMAP.md`.
 

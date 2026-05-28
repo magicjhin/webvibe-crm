@@ -1,9 +1,10 @@
 // Webvibe CRM — Prisma schema.
-// Bootstrap stage: datasource + generator only. Models land in iterations 1+.
-// See DATABASE.md for the planned schema.
+// Iteration 1: User (single admin) + Settings (singleton).
+// See DATABASE.md for the full planned schema and conventions.
 //
-// Prisma 7: connection URLs live in prisma.config.ts (datasource.url /
-// datasource.directUrl), NOT here.
+// Prisma 7 specifics:
+//   - URLs live in prisma.config.ts (datasource.url for runtime, migrate.adapter for CLI).
+//   - Driver adapters are standard in Prisma 7; no preview flag needed.
 
 generator client {
   provider = "prisma-client"
@@ -12,4 +13,59 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ---------------------------------------------------------------
+// User — single admin (ADR-002: no multi-user, no roles).
+// ---------------------------------------------------------------
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------
+// Settings — singleton (id = 1). Brand, numbering, document defaults.
+// Created in prisma/seed.ts.
+// ---------------------------------------------------------------
+model Settings {
+  id Int @id @default(1)
+
+  // Brand / requisites
+  companyName  String
+  ownerName    String
+  vatId        String?
+  regNumber    String?
+  address      String
+  iban         String
+  swift        String?
+  email        String
+  phone        String?
+  website      String?
+  logoUrl      String?
+  signatureUrl String?
+
+  // Numbering (ADR-011)
+  invoicePrefix   String @default("WV")
+  invoiceCounter  Int    @default(0)
+  invoicePadding  Int    @default(3)
+  contractPrefix  String @default("WVS")
+  contractCounter Int    @default(0)
+  contractPadding Int    @default(6)
+  proposalPrefix  String @default("WVP")
+  proposalCounter Int    @default(0)
+  proposalPadding Int    @default(3)
+
+  // Currency / language (MVP: single-currency EUR, lt documents — ADR-014)
+  defaultCurrency  String @default("EUR")
+  documentLanguage String @default("lt")
+
+  // PDF
+  pdfFooterNote String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
