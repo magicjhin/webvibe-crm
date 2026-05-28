@@ -1,35 +1,29 @@
+import path from "node:path";
 import { StyleSheet, Font } from "@react-pdf/renderer";
 
 /**
- * Inter (latin + latin-ext) для PDF. Файлы шрифтов идут из публичного CDN
- * Google Fonts — @react-pdf/renderer прокидывает их в Node runtime во время
- * генерации. Регистрация делается при первом импорте этого модуля.
+ * Inter TTF для PDF — лежат локально в assets/fonts/. Шрифты содержат
+ * latin + latin-ext, обязательно для литовских диакритик (ą, č, ę, ė, į,
+ * š, ų, ū, ž) — без них рендерятся .notdef прямоугольники.
  *
- * Latin-Ext важен — без него литовские диакритики (ą, č, ę, ė, į, š, ų, ū, ž)
- * будут отображаться как .notdef прямоугольники.
+ * Ранее грузились с fonts.gstatic.com, но Google ротирует hash в URL'ах →
+ * 404 в production. Локальные файлы гарантируют детерминизм.
+ *
+ * Файлы взяты из @expo-google-fonts/inter (Google Fonts официальные TTF).
+ * См. assets/fonts/README.md (если будет).
  */
+const FONT_DIR = path.join(process.cwd(), "assets", "fonts");
+
 let fontsRegistered = false;
 export function ensureFontsRegistered() {
   if (fontsRegistered) return;
   Font.register({
     family: "Inter",
     fonts: [
-      {
-        src: "https://fonts.gstatic.com/s/inter/v19/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZhrib2Bg-4.ttf",
-        fontWeight: 400,
-      },
-      {
-        src: "https://fonts.gstatic.com/s/inter/v19/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYMZhrib2Bg-4.ttf",
-        fontWeight: 500,
-      },
-      {
-        src: "https://fonts.gstatic.com/s/inter/v19/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYMZhrib2Bg-4.ttf",
-        fontWeight: 600,
-      },
-      {
-        src: "https://fonts.gstatic.com/s/inter/v19/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuiMZhrib2Bg-4.ttf",
-        fontWeight: 700,
-      },
+      { src: path.join(FONT_DIR, "Inter-Regular.ttf"), fontWeight: 400 },
+      { src: path.join(FONT_DIR, "Inter-Medium.ttf"), fontWeight: 500 },
+      { src: path.join(FONT_DIR, "Inter-SemiBold.ttf"), fontWeight: 600 },
+      { src: path.join(FONT_DIR, "Inter-Bold.ttf"), fontWeight: 700 },
     ],
   });
   fontsRegistered = true;
