@@ -150,14 +150,20 @@ skeleton scroll-area`
 
 | Компонент | Назначение |
 |---|---|
-| `<MoneyDisplay value={...} currency="EUR" />` | tabular-nums, format `1 234,56 €` (lt-LT) |
-| `<DateDisplay date={...} format="short\|long\|relative" />` | формат через date-fns, локаль lt |
-| `<StatusBadge kind="invoice\|project\|task\|..." value="..." />` | приглушённый pill с цветной точкой |
-| `<EmptyState icon title description action />` | для пустых списков |
-| `<DataTable />` | TanStack + фильтры + сортировка + пагинация |
-| `<PageHeader title actions />` | breadcrumbs + actions row |
-| `<KpiCard label value delta />` | KPI карточка dashboard |
-| `<QuickAddFab />` | FAB на mobile |
+| `<MoneyDisplay value={...} currency="EUR" />` | tabular-nums, format `1 234,56 €` (lt-LT) — **Iter 3** |
+| `<DateDisplay date={...} format="short\|long\|relative" />` | формат через date-fns, локаль lt — **Iter 2** |
+| `<StatusBadge kind="invoice\|project\|task\|..." value="..." />` | приглушённый pill с цветной точкой — **Iter 2+** |
+| `<EmptyState icon title description action />` | для пустых списков — **Iter 2** |
+| `<DataTable />` | TanStack + фильтры + сортировка + пагинация — **Iter 2** |
+| `<PageHeader title actions />` | breadcrumbs + actions row — **Iter 2** |
+| `<KpiCard label value delta />` | KPI карточка dashboard — **Iter 3** |
+| `<QuickAddFab />` | FAB на mobile (skeleton уже в AppShell, логика — Iter 6) |
+| `<Field id label hint? error? required? />` ✅ | shadcn `form` отсутствует в v4 → собственный wrapper Label+control+error с `aria-invalid` + `aria-describedby` через `cloneElement`. Реализован в Iter 1 |
+| `<UserBadge name email />` ✅ | W-инициал на accent gradient + email на ≥sm. Iter 1 |
+| `<SignOutButton />` ✅ | Server-action form. Iter 1 |
+| `<LoginForm />` ✅ | RHF+Zod+server action+toast. Iter 1 |
+| `<SettingsForm initial />` ✅ | RHF+Zod, live numbering preview через `useWatch`. Iter 1 |
+| `<ComingSoon name iteration />` ✅ | Placeholder в AppShell для будущих routes. Iter 0 |
 
 ---
 

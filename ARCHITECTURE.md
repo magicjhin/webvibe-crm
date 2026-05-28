@@ -274,9 +274,12 @@ styles/
 ## Auth strategy
 
 - **Auth.js v5** (NextAuth) Credentials provider.
-- Один user, читаем из БД (`User` table).
-- Password verification: `bcryptjs` compare.
-- Session: JWT strategy (быстрее, не требует таблицы sessions).
+- Один user, читаем из БД (`User` table). Runtime ADR-002 invariant: `findMany({ take: 2 })` всей таблицы, требуем `length === 1` и точное совпадение email перед `bcrypt.compare` (ADR-021).
+- Password verification: `bcryptjs` compare (cost 12).
+- Session: JWT strategy (ADR-008) — быстрее, не требует таблицы sessions, Edge-compatible для middleware.
+- **Split config (ADR-020):** middleware запускается на Edge runtime, который несовместим с Prisma/bcrypt. Два файла:
+  - **`lib/auth.config.ts`** — Edge-safe (только session/pages/trustHost/callbacks), пустой `providers: []`. Импорт: middleware.
+  - **`lib/auth.ts`** — Node-only, расширяет `authConfig`, добавляет Credentials + Prisma + bcrypt. Экспорт: `handlers`, `signIn`, `signOut`, `auth`. Импорт: server actions, route handlers, RSC.
 - **Route groups в Next.js (`(app)`, `(auth)`) НЕ попадают в URL** — нельзя защитить
   через `path.startsWith('/(app)')`. Защита делается через **whitelist публичных путей**
   в `middleware.ts`:
@@ -299,9 +302,17 @@ styles/
 
   export default auth((req) => {
     const { pathname } = req.nextUrl;
-    if (PUBLIC.some((re) => re.test(pathname))) return;
+    if (PUBLIC.some((re) => re.test(pathname))) {
+      // already-authed user landing on /login → bounce to /dashboard
+      if (req.auth && /^\/login(\/.*)?$/.test(pathname)) {
+        return NextResponse.redirect(new URL('/dashboard', req.url));
+      }
+      return;
+    }
     if (!req.auth) {
-      return Response.redirect(new URL('/login', req.url));
+      const url = new URL('/login', req.url);
+      url.searchParams.set('callbackUrl', pathname + search);
+      return NextResponse.redirect(url);
     }
   });
 
@@ -310,6 +321,9 @@ styles/
     matcher: ['/((?!_next/static|_next/image|.*\\..*).*)'],
   };
   ```
+
+  > Note: фактическая реализация в `middleware.ts` импортирует `NextAuth` напрямую
+  > с `authConfig`, **НЕ** `auth` из `lib/auth.ts` (см. ADR-020).
 
 - `/sign/[token]` — публичный, защищён собственным механизмом токенов (sha256 hash + TTL + one-time).
 - `/api/cron/*` — защищены `Authorization: Bearer ${CRON_SECRET}`.

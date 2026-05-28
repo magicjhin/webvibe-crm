@@ -1,6 +1,24 @@
 # DATABASE — Webvibe CRM
 
-PostgreSQL @ Neon, ORM — Prisma. Без activity log, без user roles.
+PostgreSQL @ Neon (region: AWS eu-central-1, Frankfurt), ORM — Prisma 7
+с driver adapter `@prisma/adapter-pg` (см. ADR-019).
+
+- **Runtime** (`lib/db.ts`): pooled `DATABASE_URL`
+- **CLI migrate** (`prisma.config.ts`): direct `DIRECT_URL`
+- **Generated client:** `lib/generated/prisma/` (gitignored), импорт `@/lib/generated/prisma/client`
+
+Без activity log, без user roles (ADR-002).
+
+## Implementation status
+
+| Model | Iter | Migration | Note |
+|---|---|---|---|
+| `User` | 1 ✅ | `20260528134455_init_user_settings` | Single admin, runtime invariant в auth (ADR-021) |
+| `Settings` | 1 ✅ | `20260528134455_init_user_settings` | Singleton id=1, seed создаёт |
+| `Client`, `Lead`, `Project`, `Task` | **2 next** | — | enums тоже в этой миграции |
+| `Invoice`, `InvoiceItem`, `Payment`, `Expense` | 3 | — | |
+| `Contract`, `Proposal` | 4 | — | |
+| `Maintenance`, `Reminder`, `FileAsset` | 5 | — | |
 
 ---
 

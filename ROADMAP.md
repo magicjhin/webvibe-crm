@@ -67,28 +67,15 @@ MVP — это узкий рабочий конвейер, не клон HubSpot
 > Codex review → commit → push в `origin/main` (см. ADR-015, ADR-016).
 > Push после каждого модуля — обязательный safe rollback point.
 
-### Итерация 0 — Bootstrap (планирование завершено, код впереди)
+### Итерация 0 — Bootstrap ✅ Done (`3cec00a`)
 
-- [ ] `pnpm create next-app` с TS + Tailwind + App Router + ESLint
-- [ ] Установить shadcn/ui, инициализировать
-- [ ] Установить Prisma, Auth.js v5, lucide, react-hook-form, zod, date-fns, tanstack-table, decimal.js
-- [ ] Tailwind tokens — цвета, радиусы, шрифты из `UI-DESIGN.md`
-- [ ] `AppShell` (sidebar + topbar + mobile bottom nav, без логики)
-- [ ] Базовая dark theme + переключатель
-- [ ] Prisma init, подключение к Neon
-- [ ] `manifest.webmanifest` + базовые иконки
-- **Commit:** `chore: bootstrap project`
-- **Codex review → push в `origin/main`** (см. ADR-016).
+Next.js 15 + TS strict + Tailwind v4 + shadcn/ui + Prisma 7 init + pnpm 11. Dark-first Webvibe theme. AppShell skeleton (sidebar 240/topbar 50-60/bottom nav 64/FAB). 11 placeholder routes через ComingSoon. PWA manifest + placeholder W-иконки. `app/globals.css` с CSS-vars (HSL palette, accent gradient, status colors, shadows, radii). Inter + Geist Mono через `next/font`. shadcn initial subset.
 
-### Итерация 1 — Auth + Settings skeleton
+### Итерация 1 — Auth + Settings skeleton ✅ Done (`ebd4044`)
 
-- [ ] Auth.js v5 Credentials provider, login page
-- [ ] Middleware с matcher по реальным URL путям (защищает /dashboard, /clients, /projects, /invoices, /contracts, /proposals, /payments, /expenses, /maintenance, /reminders, /documents, /settings; не трогает /login, /sign, /api/auth, /api/cron, /_next, /icons, /manifest.webmanifest)
-- [ ] Logout
-- [ ] `User` модель, seed скрипт для одного admin
-- [ ] `Settings` модель + страница (реквизиты, нумерация, валюта)
-- [ ] Dashboard placeholder
-- **Commit:** `feat(auth): single-user credentials login`
+Auth.js v5 split config (Edge-safe `lib/auth.config.ts` + Node-only `lib/auth.ts`). Credentials + bcrypt + JWT session. Middleware с whitelist regex + `callbackUrl`. Login page с RHF+Zod+toast+ARIA. SignOut server action. `User` + `Settings(id=1)` модели + первая миграция + idempotent seed с ADR-002 guard. Settings page с реальной формой (live numbering preview). AppShell async, Topbar с user-аватаром.
+
+Runtime ADR-002 invariant (ADR-021): `findMany({ take: 2 })` всей User таблицы + exact email match перед `bcrypt.compare`.
 
 ### Итерация 2 — Clients + Projects + Tasks
 

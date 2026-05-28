@@ -1,182 +1,145 @@
-# TASKS — Текущая итерация
+# TASKS — Webvibe CRM
+
+> Живой документ. Если читаешь холодным — начни с раздела **«Где мы сейчас»** ниже.
+> Полный план итераций — `ROADMAP.md`.
 
 ---
 
-## Backlog (non-blocking polish, from Iter 1 Codex Pass 2)
+## Где мы сейчас
 
-- **`normalizeCallbackUrl` — ужесточить** в `lib/actions/auth.ts`: текущая проверка `^\/login(\/.*)?$/` не ловит `/login?x=1` и `/login#x`. Не блокирует на Iter 1, потому что `middleware.ts` редиректит залогиненных с `/login` на `/dashboard`. Стоит добавить URL parsing или `?`/`#` cases когда руки дойдут.
-- **`Field` fragment edge case** в `components/forms/Field.tsx`: `isValidElement()` true для фрагментов, поэтому передача `<>...</>` детьми не словит fallback. Текущие usages всегда передают один input, future hardening.
+**HEAD:** `fef6f39 docs: confirm iter 1 manual smoke test passed`
+**Branch:** `main → origin/main`, working tree clean
+**Repo:** https://github.com/webvibe-work/webvibe-crm
 
----
+### Iterations status
 
-## Итерация 1 — Auth + Settings skeleton (✅ Done — commit `ebd4044`)
+| Iter | Название | Статус | Commit |
+|---|---|---|---|
+| 0 | Bootstrap | ✅ Done | `3cec00a` |
+| 1 | Auth + Settings skeleton | ✅ Done | `ebd4044` |
+| 2 | Clients + Projects + Tasks | ⏳ **next** | — |
+| 3 | Invoices + Payments + Expenses + Dashboard KPI | planned | — |
+| 4 | Contracts + Proposals + Signature | planned | — |
+| 5 | Leads + Reminders + Maintenance + Cron | planned | — |
+| 6 | PWA + Mobile polish | planned | — |
+| 7 | Polish + a11y + README | planned | — |
 
-- [x] Установить `@prisma/adapter-pg` + `pg` + `@types/pg`
-- [x] `prisma/schema.prisma` — добавлены `User` и `Settings` модели (по `DATABASE.md`)
-- [x] `prisma.config.ts` — `datasource.url = DIRECT_URL` (для migrate), `migrations.seed = "tsx prisma/seed.ts"`
-- [x] `lib/db.ts` — singleton PrismaClient с `@prisma/adapter-pg` и `DATABASE_URL` (pooled)
-- [x] `prisma/seed.ts` — упсёртит admin user из `ADMIN_EMAIL`/`ADMIN_PASSWORD_HASH` + Settings singleton (id=1)
-- [x] `pnpm prisma migrate dev --name init-user-settings` — применено к Neon (миграция в `prisma/migrations/20260528134455_init_user_settings/`)
-- [x] `pnpm tsx prisma/seed.ts` — User + Settings созданы
-- [x] Smoke test через DATABASE_URL pooled adapter: `{users:1, settings:1}`
-- [x] `lib/auth.config.ts` — edge-compatible NextAuth config (без Prisma/bcrypt) для middleware
-- [x] `lib/auth.ts` — full NextAuth v5 + Credentials provider + bcrypt + Prisma
-- [x] `next-auth.d.ts` — module augmentation: `session.user.id`, `JWT.id`
-- [x] `app/api/auth/[...nextauth]/route.ts` — handlers + `runtime = "nodejs"`
-- [x] `lib/actions/auth.ts` — `signInAction` / `signOutAction` с Result pattern
-- [x] `middleware.ts` — whitelist regex + `callbackUrl` сохранение + редирект `/login → /dashboard` если уже залогинен
-- [x] `app/(auth)/layout.tsx` + `app/(auth)/login/page.tsx` + `components/auth/LoginForm.tsx`
-- [x] `components/auth/SignOutButton.tsx` (server action `signOutAction`)
-- [x] `lib/validators/settings.ts` — Zod schema (brand + numbering + locked currency/language)
-- [x] `lib/actions/settings.ts` — `updateSettings` с `auth()` check, Zod parse, Result pattern
-- [x] `components/forms/Field.tsx` (общий wrapper) + `components/forms/SettingsForm.tsx`
-- [x] `app/settings/profile/page.tsx` — Server Component читает `Settings(id=1)`, рендерит `SettingsForm`
-- [x] `components/layout/AppShell.tsx` — Topbar теперь async, показывает `<UserBadge>` (avatar+email) + `<SignOutButton>`
-- [x] `README.md` обновлён под Iter 1 (real `migrate` + `seed` команды)
-- [x] Checks: `pnpm typecheck` ✓, `pnpm lint` ✓, `pnpm prisma format` ✓, `pnpm build` ✓ (16 routes)
-- [x] `CODEX-REVIEW-TASK.md` для Iter 1
-- [x] Codex Pass 1: `With fixes` — 0 Critical, 4 Important, 5 Nice. Все Important + 4 Nice исправлены
-- [x] Codex Pass 2 (focused): найден 1 Critical (runtime auth invariant в `lib/auth.ts` сканировал по email, а не по count всей таблицы) — исправлен по варианту A владельца
-- [x] По ADR-018: Pass 3 НЕ запускается; Nice-to-have из Pass 2 (`normalizeCallbackUrl` polish, `Field` fragment edge case) перенесены в Backlog
-- [x] Commit + push — `ebd4044 fix(auth): enforce single-user runtime invariant`
-- [x] Manual smoke test от владельца — **passed** (login → wrong password rejected → /dashboard → /settings/profile load → save → reload → numbering preview → signout → /login)
+### Что работает сейчас (по факту)
 
----
+- Next.js 15 App Router + TS strict + Tailwind v4 + shadcn/ui + Prisma 7 + Neon Postgres + pnpm 11
+- Auth.js v5 Credentials (JWT session) — single-admin login на `/login`
+- Middleware whitelist regex защищает все пути кроме public (login/sign/api-auth/cron/offline/manifest/icons/favicon)
+- Prisma 7 driver adapter `@prisma/adapter-pg`:
+  - runtime: `DATABASE_URL` pooled (`lib/db.ts` singleton)
+  - migrate: `DIRECT_URL` direct (`prisma.config.ts`)
+  - generated client в `lib/generated/prisma/client` (в `.gitignore`)
+- Модели: `User` (single admin, ADR-002 invariant в seed + runtime auth), `Settings` (singleton id=1)
+- `/settings/profile` — реальная форма (RHF + Zod) с live numbering preview
+- AppShell с user-аватаром и SignOut
+- PWA manifest + placeholder W-иконки (SW регистрация — Iter 6)
+- 11 placeholder routes через `ComingSoon` (чтобы nav не давал 404)
 
+### Окружение для запуска
 
-Живой список задач прямо сейчас. После завершения итерации — обновлять.
-Полный план итераций — в `ROADMAP.md`.
+`.env` локальный (не в git) должен содержать:
+- `DATABASE_URL` — Neon pooled (`-pooler.` в host)
+- `DIRECT_URL` — Neon direct (без `-pooler.`)
+- `AUTH_SECRET` — `openssl rand -base64 32`
+- `NEXTAUTH_URL` — `http://localhost:3000` локально
+- `ADMIN_EMAIL` — твой email
+- `ADMIN_PASSWORD_HASH` — bcrypt-хеш, генерируется через `pnpm tsx scripts/hash-password.ts` (interactive prompt, без эха)
+- `BLOB_READ_WRITE_TOKEN`, `CRON_SECRET` — пока пустые (нужны с Iter 4 и Iter 5)
 
----
-
-## Definition of Done для крупного модуля
-
-Каждый крупный модуль закрывается только когда выполнено всё:
-
-- [ ] module implemented according to `TASKS.md`
-- [ ] related docs updated if needed
-- [ ] `CODEX-REVIEW-TASK.md` created (по `CODEX-REVIEW-TEMPLATE.md`)
-- [ ] Codex review executed through `codex exec`
-- [ ] `REVIEW-CODEX.md` created
-- [ ] Codex review processed (findings classified Critical / Important / Nice-to-have)
-- [ ] Critical issues fixed
-- [ ] Important issues fixed or moved to `TASKS.md`
-- [ ] available checks passed (`typecheck`, `lint`, `build` — те, что уже существуют)
-- [ ] commit created (Conventional Commits)
-- [ ] pushed to `origin/main`
-- [ ] `git status` clean after push
-- [ ] rollback checkpoint available on GitHub
-
-**Правило:** нельзя переходить к следующему модулю, пока текущий модуль не прошёл
-Codex review, Critical fixes, available checks, commit и push.
-
-**Лимит Codex review:** максимум **2 прохода** на модуль (ADR-018).
-- Pass 1 — полный review, исправляем все Critical.
-- Pass 2 — фокус только на Critical (запускается только при существенных изменениях после Pass 1).
-- Если после Pass 2 есть Critical → стоп, не коммитим, ждём решения владельца.
-- Если только Important/Nice-to-have → в `TASKS.md` и закрываем модуль.
+Команды для cold-start локально:
+```bash
+pnpm install
+pnpm prisma migrate dev          # применяет существующие миграции
+pnpm tsx prisma/seed.ts          # idempotent
+pnpm dev
+```
 
 ---
 
-## Сейчас: Итерация -1 — Planning docs (in progress)
+## Следующая: Iteration 2 — Clients + Projects + Tasks
 
-- [x] Утвердить Ultraplan
-- [x] Создать `CLAUDE.md`
-- [x] Создать `README.md`
-- [x] Создать `.env.example`
-- [x] Создать `.gitignore`
-- [x] Создать `ROADMAP.md`
-- [x] Создать `TASKS.md`
-- [x] Создать `ARCHITECTURE.md`
-- [x] Создать `DATABASE.md`
-- [x] Создать `UI-DESIGN.md`
-- [x] Создать `WORKFLOW.md`
-- [x] Создать `DECISIONS.md`
-- [x] Создать 7 project agents в `.claude/agents/`
-- [x] `git init` + первый коммит `chore: add project planning docs`
-- [x] Проверить `gh auth status`, доступ к `webvibe-work`
-- [x] Создать private repo `webvibe-work/webvibe-crm` через `gh repo create`
-- [x] Push в GitHub
-- [ ] Add Codex review and GitHub checkpoint workflow
-  - [x] Обновить `CLAUDE.md` (Codex + GitHub checkpoint sections)
-  - [x] Обновить `TASKS.md` (Definition of Done + новая задача)
-  - [x] Обновить `DECISIONS.md` (два новых ADR)
-  - [x] Обновить `README.md` (раздел про review/delivery)
-  - [x] Обновить `.claude/agents/qa-reviewer.md`
-  - [x] Обновить `.claude/agents/delivery-manager.md`
-  - [x] Создать `CODEX-REVIEW-TEMPLATE.md`
-  - [x] Обновить `.gitignore` (эфемерные codex-файлы)
-  - [x] Создать `CODEX-REVIEW-TASK.md` для проверки планировочного слоя
-  - [x] Запустить `codex exec` и дождаться `REVIEW-CODEX.md` (4 прохода)
-  - [x] Обработать findings:
-        Pass 1: 3 Critical (push policy, auth middleware, onDelete) + 10 Important + 4 Nice-to-have — все исправлены
-        Pass 2: 0 Critical + 6 Important (delivery-manager checklist, cron pattern, sign atomic consume, allowed files, InvoiceItem timestamps, backend-data timezone) — все исправлены
-        Pass 3: 0 Critical + 6 Important (sign API whitelist, agent atomic consume, Mark as paid race, Lead.client policy, Expense scope, forms list) — все исправлены
-        Pass 4: 0 Critical + 5 Important (overdue derived, Contract status, Expense ADR-017, FK indexes, sign workflow wording) — все исправлены
-  - [x] Commit `chore: add codex review and github checkpoint workflow` (`81c3c4b`)
-  - [x] Push в `origin/main` (выполнен после `81c3c4b`)
-  - [x] Проверка git status clean (подтверждено `git status` после push)
-- [x] **Add 2-pass Codex review limit (ADR-018)** — модуль закрыт
-  - [x] CLAUDE.md + TASKS.md + DECISIONS.md (ADR-018) + qa-reviewer.md + delivery-manager.md
-  - [x] Codex Pass 1 — verdict `Yes`, 0 Critical, 0 Important, 3 Nice-to-have (косметика)
-  - [x] Pass 2 не запускался (Pass 1 — только docs touch-ups, по правилу ADR-018)
-  - [x] Commit `chore: limit codex review loop passes` (`1c492e9`)
-  - [x] Push в `origin/main` (HEAD → origin/main up to date)
+Цель: создать три CRM-сущности первого уровня. Никаких документов/платежей/PDF в Iter 2 — это Iter 3+.
 
----
+### Scope
 
-## Итерация 0 — Bootstrap (✅ Done — commit `3cec00a`)
+- Prisma модели: `Client`, `Lead` (только определение для FK; полный UI Leads — Iter 5), `Project`, `Task` + соответствующие enums (`ClientKind`, `ClientStatus`, `LeadUrgency`, `LeadStatus`, `ProjectType`, `ProjectStatus`, `TaskStatus`, `TaskPriority`) — см. `DATABASE.md`
+- Миграция `add-clients-projects-tasks` к Neon
+- CRUD страницы для Clients и Projects:
+  - `/clients` — список (TanStack Table, фильтры по status/kind)
+  - `/clients/new`, `/clients/[id]`, `/clients/[id]/edit`
+  - карточка клиента с вкладками (Детали / Проекты / Documents-stub / Payments-stub) — Documents и Payments tabs пустые до Iter 3
+  - `/projects` — список (фильтры по status/type)
+  - `/projects/new`, `/projects/[id]`, `/projects/[id]/edit`
+  - карточка проекта: ссылки (Figma/GitHub/Vercel/Drive — JSON), stages-чеклист (JSON), inline tasks
+- Tasks — inline в карточке проекта, отдельной страницы нет
+- Server actions: `clients.ts`, `projects.ts`, `tasks.ts` с `auth()` guard + Zod + Result pattern
+- Zod schemas: `lib/validators/{client,lead,project,task}.ts` — пока Lead схема минимальна (полная UI Leads — Iter 5)
+- Обновить `<DataTable>` wrapper (если ещё нет) над TanStack Table — общий для всех списков
+- Replace `app/clients/page.tsx` и `app/projects/page.tsx` ComingSoon на реальные страницы
+- `app/leads/page.tsx` остаётся ComingSoon (полная фича — Iter 5; модель появляется сейчас только для FK на `Project.convertedFromLeadId`)
 
-- [x] `pnpm create next-app .` — TS, Tailwind, App Router, ESLint, без src/, pnpm. **Note:** CLI отказался работать в непустой папке → backup planning docs в `/tmp/webvibe-planning-backup/` → run CLI → restore.
-- [x] Активирован pnpm 11.4.0 через `corepack enable pnpm` + `corepack prepare pnpm@latest --activate`.
-- [x] Установлены core deps: `@prisma/client zod react-hook-form @hookform/resolvers next-auth@beta @auth/prisma-adapter bcryptjs date-fns date-fns-tz @tanstack/react-table @react-pdf/renderer react-signature-canvas @vercel/blob lucide-react decimal.js clsx tailwind-merge class-variance-authority sonner`.
-- [x] Установлены dev deps: `prisma tsx`. **Note:** `@types/bcryptjs` опущен (deprecated — bcryptjs v3 имеет встроенные TS types). `sharp` добавлен как devDep для генерации placeholder PWA-иконок.
-- [x] `pnpm dlx shadcn@latest init --defaults --base radix` — initial config + button + globals.css. Завершилось с `--force` после approval `msw` в `pnpm-workspace.yaml`.
-- [x] Добавлены initial subset shadcn компонентов: `input label dialog sheet table select textarea badge card dropdown-menu sonner` (`form` отсутствует в shadcn 4 — используем RHF + Label/Input напрямую при создании первой формы).
-- [x] `app/globals.css` переписан под Webvibe tokens из `UI-DESIGN.md` (dark-first, HSL palette, accent gradient, status colors, radii scale, `.bg-accent-gradient` / `.text-accent-gradient` utility classes).
-- [x] `app/layout.tsx` — Inter + Geist Mono через `next/font/google`, `<html class="dark" lang="ru">`, manifest link, viewport themeColor, apple-web-app meta, Toaster.
-- [x] `components/layout/AppShell.tsx` — visual skeleton (sidebar 240px desktop / topbar 60px / bottom nav 64px mobile / FAB), placeholder links к 10 будущим разделам.
-- [x] `app/page.tsx` — заглушка в AppShell с приветствием и 6 placeholder cards.
-- [x] `app/offline/page.tsx` — offline shell (статичная страница, SW pending Iter 6).
-- [x] `prisma/schema.prisma` + `prisma.config.ts` — Prisma 7 init с output `lib/generated/prisma`. **Breaking change в Prisma 7:** `url`/`directUrl` теперь только в `prisma.config.ts`, не в schema.
-- [x] `.env` синхронизирован с `.env.example` (DATABASE_URL, DIRECT_URL, AUTH_SECRET, NEXTAUTH_URL, ADMIN_EMAIL, ADMIN_PASSWORD_HASH, BLOB_READ_WRITE_TOKEN, CRON_SECRET — все placeholders).
-- [x] `public/manifest.webmanifest` (валидный, ru, dark theme_color) + placeholder PWA-иконки (192/512/maskable/apple-touch — буква W на тёмном фоне с cyan→violet градиентом, сгенерированы через sharp).
-- [x] `scripts/hash-password.ts` — bcrypt CLI helper для будущего seed admin user.
-- [x] Удалены дефолтные Next.js placeholder SVG из `public/` (file.svg, globe.svg, next.svg, vercel.svg, window.svg).
-- [x] `.gitignore` сохранён + расширен (`lib/generated/`).
-- [x] `pnpm-workspace.yaml` — `onlyBuiltDependencies` + `allowBuilds` для native postinstall (prisma, sharp, esbuild, unrs-resolver, @tailwindcss/oxide).
-- [x] Available checks пройдены: `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm prisma format` — все ✓.
-- [x] Создан `CODEX-REVIEW-TASK.md` для Bootstrap module
-- [x] Codex Pass 1: verdict `With fixes`, 1 Critical (Next 16→15) + 6 Important + 4 Nice-to-have — все обработаны
-- [x] Все Critical и Important исправлены, кроме tablet breakpoint (перенесён в Iter 6)
-- [x] Codex Pass 2 (focused): verdict `Yes`, 0 Critical / 0 Important / 0 Nice в новом scope
-- [x] По ADR-018: третий проход не запускается, модуль accepted
-- [x] Commit: `chore: bootstrap next.js project` (`3cec00a`)
-- [x] Push в `origin/main` (выполнен; `git ls-remote origin main` = `3cec00a...`, working tree clean)
+### НЕ входит в Iter 2
 
-### Открытые вопросы / TODO для Iteration 1
+- Invoices, Contracts, Proposals, Payments, Expenses, Maintenance, Reminders, Documents page, Dashboard real KPI, PDF, Signature, PWA SW, Email, Vercel deploy, реальный Leads UI
 
-- **Реальный Neon URL** — подключить `DATABASE_URL` (pooled) и `DIRECT_URL` (direct) до миграций.
-- **Prisma 7 migrate с Neon direct connection** — `directUrl` дропнут из `defineConfig().datasource`. Перед первой миграцией подключить driver adapter (`@prisma/adapter-pg` или аналог) либо использовать другой механизм для direct connection. На Bootstrap миграций нет → не блокер.
-- **shadcn `form` компонент** отсутствует в новом регистре v4 — RHF + Label/Input/Button напрямую при создании первой формы.
-- **PWA Service Worker** — не регистрируется на Bootstrap (Iter 6 scope).
+### Open questions (решить до старта Iter 2)
 
-### Перенесено в Iter 6 (mobile polish)
+- **Backlog / non-blocking items** ниже — фиксить в Iter 2 или оставить?
+- **Подсчёт totals** на проекте (`price`, `advance`) — Decimal через Prisma. UI отображение через `Intl.NumberFormat('lt-LT', { currency: 'EUR' })` — создать `<MoneyDisplay>` компонент.
+- **DataTable** — копируем shadcn data-table рецепт или строим тонкую обёртку?
+- **Project stages** — захардкоженный template или сразу свободный JSON через UI?
 
-- **Tablet breakpoint (640–1024px) collapsed sidebar 60px** — на Bootstrap sidebar показывается уже с `md` (≥768px) во весь width 240px. Это компромисс. По `UI-DESIGN.md` на tablet должен быть свёрнут в 60px иконки. Перенесено в Iteration 6 (mobile/responsive polish) — приоритет ниже, потому что dev в основном на desktop+mobile.
+### Done criteria для Iter 2
+
+- [ ] Миграция applied, schema validates
+- [ ] CRUD `/clients` работает (create / read / update / delete)
+- [ ] CRUD `/projects` работает
+- [ ] Tasks inline create/update/delete внутри карточки проекта
+- [ ] Все формы — RHF + Zod, server actions с `auth()` + Result<T>
+- [ ] Все списки — TanStack Table с empty/loading/error states
+- [ ] `pnpm typecheck` / `lint` / `build` / `prisma format` — ✓
+- [ ] Codex review Pass 1 (+ Pass 2 если существенные изменения) — 0 Critical
+- [ ] Commit + push, working tree clean
+- [ ] Manual smoke test от владельца: создать клиента → создать проект для него → добавить задачу → отметить done → удалить задачу
 
 ---
 
-## Дальше
+## Backlog (non-blocking polish)
 
-См. `ROADMAP.md`, итерации 1–7.
+Из Codex review предыдущих итераций, не блокируют дальнейшую работу:
+
+- **`normalizeCallbackUrl` — ужесточить** в `lib/actions/auth.ts`: `^\/login(\/.*)?$/` не ловит `/login?x=1` и `/login#x`. Middleware всё равно редиректит залогиненных с `/login`, поэтому лоопа нет.
+- **`Field` fragment edge case** в `components/forms/Field.tsx`: `isValidElement()` true для фрагментов — кастомные сложные children словят cloneElement вместо fallback. Текущие usages передают один input, ОК.
+- **Tablet collapsed sidebar (640–1024px)** — сейчас sidebar показывается с `md:` (≥768px) во всю ширину. По `UI-DESIGN.md` на tablet должен быть свёрнут в 60px иконки. → **Iter 6 (mobile polish)**.
+- **`@prisma/adapter-neon`** — оптимизация для Vercel Edge runtime. Не нужна пока (мы используем Node runtime). Если станет нужно — заменить в `lib/db.ts` + `prisma.config.ts`.
+- **Финальные PWA иконки** из webvibe-логотипа (сейчас placeholder W). → **перед production deploy**.
+- **Подбор юридического текста договора (LT)** для Iter 4. → собирать референсы заранее.
 
 ---
 
-## Открытые вопросы / TODO позже
+## Done iterations (compact)
 
-- Сгенерировать финальный набор PWA-иконок из webvibe-логотипа
-- Решить, использовать ли `next-pwa` или ручной SW (предварительно: ручной)
-- Подобрать шрифты: Inter + Geist Mono (через `next/font/google`)
-- Подготовить логотип и подпись (PNG/SVG) для встраивания в PDF
-- Определить точные тексты юридических разделов договора (LT)
+### Iter 0 — Bootstrap (`3cec00a`)
+
+Next.js 15 + TS strict + Tailwind v4 + shadcn/ui + Prisma 7 + pnpm 11. Dark-first Webvibe theme (HSL palette, accent gradient, status colors, shadows). AppShell skeleton (sidebar 240/topbar 50-60/bottom nav 64/FAB). 11 placeholder routes через ComingSoon. PWA manifest + placeholder W-иконки. Prisma пустая schema. `app/globals.css` с CSS-vars. Inter + Geist Mono через `next/font`. shadcn initial subset: button, input, label, dialog, sheet, table, select, textarea, badge, card, dropdown-menu, sonner.
+
+**Codex:** Pass 1 — 1 Critical (Next 16→15) + 6 Important + 4 Nice — все обработаны. Pass 2 — 0 Critical.
+
+### Iter 1 — Auth + Settings skeleton (`ebd4044`)
+
+Auth.js v5 split config (Edge-safe `lib/auth.config.ts` для middleware + Node-only `lib/auth.ts` с Credentials + bcrypt + Prisma). JWT session. Middleware с whitelist regex + `callbackUrl` сохранение + редирект `/login → /dashboard` для залогиненных. Login page `(auth)/login` с RHF + Zod + toast + ARIA + `useTransition`. SignOut server action. `User` + `Settings(id=1)` модели + первая миграция + seed (idempotent с ADR-002 guard). Settings page с реальной формой (3 Card секции, live numbering preview через `useWatch`). Custom `Field` helper (shadcn `form` отсутствует в v4). AppShell async теперь, Topbar показывает user-аватар + email + SignOut.
+
+**Critical fix Pass 2:** `lib/auth.ts` authorize теперь проверяет `findMany({ take: 2 })` всей таблицы User, требует exactly 1 row + exact email match перед `bcrypt.compare` — runtime ADR-002 invariant.
+
+**Codex:** Pass 1 — 0 Critical, 4 Important, 5 Nice. Pass 2 — 1 Critical (auth invariant) → исправлен. Manual smoke test passed.
+
+### Servicing iterations
+
+- `00dbea0` planning docs
+- `81c3c4b` Codex review + GitHub checkpoint workflow + 17 docs/agents
+- `1c492e9` 2-pass Codex review limit (ADR-018)
+- `e6c4513`, `66e96f1`, `fef6f39` — TASKS.md sync commits
