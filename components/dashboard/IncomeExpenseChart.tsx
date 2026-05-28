@@ -81,12 +81,12 @@ export function IncomeExpenseChart({ data }: { data: ChartPoint[] }) {
           />
           <Bar
             dataKey="income"
-            fill="var(--color-status-paid)"
+            fill="var(--chart-income)"
             radius={[3, 3, 0, 0]}
           />
           <Bar
             dataKey="expense"
-            fill="var(--color-status-overdue)"
+            fill="var(--chart-expense)"
             radius={[3, 3, 0, 0]}
           />
         </BarChart>
