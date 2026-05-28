@@ -7,12 +7,20 @@
 
 ## Где мы сейчас
 
-**HEAD:** `20a2702 fix(clients,projects): drop duplicate "new" button from table toolbar` (Iter 2 закрыт; Iter 3 code ready, ждёт Codex review + commit/push)
+**HEAD:** `d7d27fb fix(mobile,chart): dedupe sheet close + readable chart text/scrollbar` (+ незакоммиченные правки сессии 2026-05-28, см. ниже)
 **Branch:** `main → origin/main`
 **Repo:** https://github.com/webvibe-work/webvibe-crm
 
-> Iter 3 закрыт по коду: schema + миграция `20260528164725_iter3_invoices_payments_expenses` применена. Invoices/Payments/Expenses CRUD + транзакционная нумерация (WV-001) + литовский PDF без PVM + Vercel Blob upload для чеков + Dashboard KPI (доход/расход за месяц, неоплаченные с overdue, активные проекты, top-категории). `typecheck` / `lint` / `build` — ✓.
-> Осталось: Codex review Pass 1 (+ Pass 2 если существенные изменения) → commit-серия → push → manual smoke test.
+> **Iter 3 полностью закоммичен** (схема + CRUD invoices/payments/expenses + литовский PDF + Dashboard KPI). После него вперёд вытянули кусок **Iter 6 (dashboard + mobile polish)**: страница Documents с табами, dashboard period switcher (месяц/квартал/год) + income/expense bar chart, рабочий бургер-меню + quick-add FAB + скроллящийся график на мобильном.
+
+> **Сессия 2026-05-28 (последнее что делали — НЕ закоммичено):**
+> 1. `PeriodSwitcher.tsx` — на мобильном табы Месяц/Квартал/Год растягиваются на всю ширину (`flex-1`), навигация месяца центрируется; на `sm:` прежнее поведение.
+> 2. `nav-items.ts` — все пункты меню переведены на русский (Дашборд/Клиенты/Лиды/Проекты/Документы/Платежи/Расходы/Поддержка/Напоминания/Настройки/Ещё).
+> 3. `app/more/page.tsx` — заголовок `More` → `Ещё`.
+>
+> `typecheck` / `lint` — ✓. Эти 3 файла в working tree, ждут commit + push.
+>
+> **Продолжить завтра с:** решить, делаем ли полноценный Iter 4 (Contracts + Proposals + Signature) или сначала добиваем Iter 6 mobile polish (tablet collapsed sidebar 640–1024px, sticky save на mobile, финальные PWA иконки). Перед Iter 4 — собрать референсы юридического текста договора (LT). Также висит мелкий артефакт нумерации `WVS-000027` → должно быть `WVS000027` (фиксить вместе с Contracts).
 
 ### Iterations status
 
@@ -21,10 +29,10 @@
 | 0 | Bootstrap | ✅ Done | `3cec00a` |
 | 1 | Auth + Settings skeleton | ✅ Done | `ebd4044` |
 | 2 | Clients + Projects + Tasks | ✅ Done | `20a2702` |
-| 3 | Invoices + Payments + Expenses + Dashboard KPI | 🟡 code ready, ждёт Codex + commits | — |
+| 3 | Invoices + Payments + Expenses + Dashboard KPI | ✅ Done | `df8f14e` |
 | 4 | Contracts + Proposals + Signature | **next** | — |
 | 5 | Leads + Reminders + Maintenance + Cron | planned | — |
-| 6 | PWA + Mobile polish | planned | — |
+| 6 | PWA + Mobile polish | 🟡 частично (dashboard chart, burger/FAB mobile, period switcher, RU-меню) | `27a6c35`..`d7d27fb` |
 | 7 | Polish + a11y + README (+ CSV export) | planned | — |
 
 ### Что работает сейчас (по факту)
@@ -40,7 +48,9 @@
 - `/settings/profile` — реальная форма (RHF + Zod) с live numbering preview
 - AppShell с user-аватаром и SignOut
 - PWA manifest + placeholder W-иконки (SW регистрация — Iter 6)
-- 11 placeholder routes через `ComingSoon` (чтобы nav не давал 404)
+- Реальные страницы: `/clients`, `/projects` (+ tasks), `/invoices` (+ PDF), `/payments`, `/expenses`, `/dashboard` (KPI + period switcher + income/expense chart), `/documents`, `/settings/profile`
+- `ComingSoon` остаётся на: `/leads`, `/maintenance`, `/reminders`, `/more` (Ещё) — реальные фичи в Iter 4–6
+- Меню (бургер + нижние табы + sidebar) полностью на русском (`nav-items.ts`)
 
 ### Окружение для запуска
 
