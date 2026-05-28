@@ -7,12 +7,12 @@
 
 ## Где мы сейчас
 
-**HEAD:** `fef6f39 docs: confirm iter 1 manual smoke test passed` (Iter 2 code ready, ждёт commit/push)
+**HEAD:** `20a2702 fix(clients,projects): drop duplicate "new" button from table toolbar` (Iter 2 закрыт; Iter 3 code ready, ждёт Codex review + commit/push)
 **Branch:** `main → origin/main`
 **Repo:** https://github.com/webvibe-work/webvibe-crm
 
-> Iter 2 закрыт по коду: Codex Pass 1 (0 Critical, 7 Important → все исправлены) + Pass 2 focused (2 Critical → оба исправлены). `typecheck` / `lint` / `build` / `prisma format` — ✓. Миграция `20260528144353_add_clients_projects_tasks` применена на Neon.
-> Осталось: commit-серия + push + manual smoke test от владельца → перейти к Iter 3.
+> Iter 3 закрыт по коду: schema + миграция `20260528164725_iter3_invoices_payments_expenses` применена. Invoices/Payments/Expenses CRUD + транзакционная нумерация (WV-001) + литовский PDF без PVM + Vercel Blob upload для чеков + Dashboard KPI (доход/расход за месяц, неоплаченные с overdue, активные проекты, top-категории). `typecheck` / `lint` / `build` — ✓.
+> Осталось: Codex review Pass 1 (+ Pass 2 если существенные изменения) → commit-серия → push → manual smoke test.
 
 ### Iterations status
 
@@ -20,12 +20,12 @@
 |---|---|---|---|
 | 0 | Bootstrap | ✅ Done | `3cec00a` |
 | 1 | Auth + Settings skeleton | ✅ Done | `ebd4044` |
-| 2 | Clients + Projects + Tasks | 🟡 code ready, commits pending | — |
-| 3 | Invoices + Payments + Expenses + Dashboard KPI | **next** | — |
-| 4 | Contracts + Proposals + Signature | planned | — |
+| 2 | Clients + Projects + Tasks | ✅ Done | `20a2702` |
+| 3 | Invoices + Payments + Expenses + Dashboard KPI | 🟡 code ready, ждёт Codex + commits | — |
+| 4 | Contracts + Proposals + Signature | **next** | — |
 | 5 | Leads + Reminders + Maintenance + Cron | planned | — |
 | 6 | PWA + Mobile polish | planned | — |
-| 7 | Polish + a11y + README | planned | — |
+| 7 | Polish + a11y + README (+ CSV export) | planned | — |
 
 ### Что работает сейчас (по факту)
 
@@ -144,7 +144,27 @@ Auth.js v5 split config (Edge-safe `lib/auth.config.ts` для middleware + Node
 
 **Codex:** Pass 1 — 0 Critical, 4 Important, 5 Nice. Pass 2 — 1 Critical (auth invariant) → исправлен. Manual smoke test passed.
 
-### Iter 2 — Clients + Projects + Tasks (code ready)
+### Iter 3 — Invoices + Payments + Expenses + Dashboard KPI (code ready)
+
+**Schema:** миграция `20260528164725_iter3_invoices_payments_expenses` добавляет 4 модели (`Invoice`, `InvoiceItem`, `Payment`, `Expense`) + 4 enum'а (`InvoiceKind`, `InvoiceStatus`, `PaymentKind`, `ExpenseCategory`). Settings расширен `personalCode`, `bankNote`, `defaultPaymentDays`. Client расширен `representative`, `technicalContactName`. Back-relations `invoices` / `payments` добавлены на Client и Project. `Invoice.maintenanceId` + `@@unique([maintenanceId, periodKey])` отложены до Iter 5 (поле `periodKey` уже есть, индекс появится с Maintenance моделью).
+
+**Validators** (`lib/validators/{invoice,payment,expense}.ts`): money — `string` с regex (`MONEY_STRING_RE`), Decimal через `decimal.js` в server actions, не в browser bundle. RHF-friendly без `.default()` на required. `recurrence` — чистый `z.enum().nullable()` без литерала `""` (RHF + `zodResolver` не дружит с output≠input типами на literal unions; для текстовых полей `optionalText` с `""→null` работает, но для enum'а — нет).
+
+**Numbering** (`lib/numbering/issueNumber.ts`): три explicit функции (`issueInvoiceNumber`, `issueContractNumber`, `issueProposalNumber`). Каждая делает атомарный `tx.settings.update({ data: { invoiceCounter: { increment: 1 } } })` внутри `prisma.$transaction` с INSERT документа. Никогда не `MAX(number)+1`. Известный мелкий артефакт: `WVS` prefix даёт `WVS-000027` вместо целевого `WVS000027` (см. backlog, фиксится в Iter 4 вместе с Contracts).
+
+**PDF** (`lib/pdf/renderInvoice.tsx` + `components/pdf/`): `@react-pdf/renderer` в Node runtime. Inter font c subset `latin + latin-ext` — обязательно для литовских диакритик (ąčęėįšųūž), без него рендерятся `.notdef` боксы. Layout — точная реплика WV-022: title, meta, две PartyBox (Pardavėjas/Pirkėjas), items table, totals (Tarpinė / PVM 0,00 / Iš viso apmokėti), Pastabos, watermark, footer с page numbers. Route `/api/invoices/[id]/pdf` — `runtime = "nodejs"`, `maxDuration = 30`. `pdfUrl` сбрасывается при edit'е счёта (cache invalidation).
+
+**Server actions** (`lib/actions/{invoices,payments,expenses}.ts`): `auth()` guard, Zod safeParse, Result<T>. `updateInvoice` блокирует edit для paid/cancelled, заменяет items wholesale (deleteMany + create). `deleteInvoice` — только drafts (P2003 защищает от удаления при наличии платежей). `uploadExpenseFile` — Vercel Blob `put()` с `addRandomSuffix`, валидирует MIME (PDF/JPEG/PNG/WebP/HEIC) + 8MB max, friendly degradation если нет `BLOB_READ_WRITE_TOKEN`. `deleteExpense` — best-effort `del()` (warn, не error).
+
+**UI**: 
+- Invoices: `/invoices` (фильтры status+kind, derived overdue badge), `/invoices/new` (поддерживает `?clientId`, `?projectId`; EmptyState если нет клиентов; default dueAt = today + `defaultPaymentDays`), `/invoices/[id]` (PDF iframe preview, sum/paid/timing cards, items, payments с кнопкой «Добавить платёж» при остатке > 0), `/invoices/[id]/edit` (drafts only — редирект если не draft).
+- Payments: `/payments` (фильтры kind, поиск), `/payments/new` (поддерживает `?clientId`, `?projectId`, `?invoiceId`; автозаполнение суммы как остатка по счёту; cascade client → projects → invoices).
+- Expenses: `/expenses` (фильтр category, paperclip-индикатор файла), `/expenses/new`, `/expenses/[id]/edit`. ExpenseForm с inline file upload (uploadExpenseFile → fileUrl → submit).
+- Dashboard: 4 KPI-карточки (доход/расход за месяц в Vilnius TZ, неоплаченные с overdue counter, активные проекты) + 3 секции (просроченные счета, свежие 5 платежей, top-категории расходов с progress bars).
+
+**TZ bounds для dashboard**: `monthBounds()` использует `formatInTimeZone(now, 'Europe/Vilnius', 'yyyy')` + `parseDateOnly()` → UTC Dates, чтобы границы месяца не сдвигались при смене runtime TZ Vercel'а.
+
+### Iter 2 — Clients + Projects + Tasks (`20a2702`)
 
 Schema: `Client`, `Lead`, `Project`, `Task` + 8 enums (`ClientKind/Status`, `LeadUrgency/Status`, `ProjectType/Status`, `TaskStatus/Priority`). Back-relations на Invoice/Contract/Proposal/Payment/Maintenance/Reminder намеренно опущены — добавим в Iter 3+. Миграция `20260528144353_add_clients_projects_tasks` (Restrict Client→Project, Cascade Project→Task, SetNull Lead.clientId/convertedToProjectId).
 

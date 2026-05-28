@@ -16,7 +16,7 @@ PostgreSQL @ Neon (region: AWS eu-central-1, Frankfurt), ORM — Prisma 7
 | `User` | 1 ✅ | `20260528134455_init_user_settings` | Single admin, runtime invariant в auth (ADR-021) |
 | `Settings` | 1 ✅ | `20260528134455_init_user_settings` | Singleton id=1, seed создаёт |
 | `Client`, `Lead`, `Project`, `Task` | 2 ✅ | `20260528144353_add_clients_projects_tasks` | Back-relations на Invoice/Contract/Proposal/Payment/Maintenance/Reminder появятся вместе с этими моделями в Iter 3+ |
-| `Invoice`, `InvoiceItem`, `Payment`, `Expense` | 3 | — | |
+| `Invoice`, `InvoiceItem`, `Payment`, `Expense` | 3 ✅ | `20260528164725_iter3_invoices_payments_expenses` | + Settings (`personalCode`, `bankNote`, `defaultPaymentDays`) и Client (`representative`, `technicalContactName`) расширения; Invoice/Payment back-relations добавлены на Client и Project |
 | `Contract`, `Proposal` | 4 | — | |
 | `Maintenance`, `Reminder`, `FileAsset` | 5 | — | |
 
@@ -61,11 +61,13 @@ model Settings {
   // Бренд
   companyName     String
   ownerName       String
-  vatId           String?
-  regNumber       String?
+  personalCode    String?       // Asmens kodas (для §1 ŠALYS договора в Iter 4)
+  vatId           String?       // PVM mokėtojo kodas (опционально, я без PVM)
+  regNumber       String?       // Individualios veiklos pažymos Nr.
   address         String
   iban            String
   swift           String?
+  bankNote        String?       // Свободный текст про банк (например про Wise / Belgija)
   email           String
   phone           String?
   website         String?
@@ -88,7 +90,8 @@ model Settings {
   documentLanguage  String   @default("lt")     // язык PDF
 
   // PDF
-  pdfFooterNote     String?
+  pdfFooterNote      String?
+  defaultPaymentDays Int      @default(1)       // Apmokėti iki = issuedAt + N дней (ADR-025)
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -96,6 +99,7 @@ model Settings {
 ```
 
 > `id = 1` фиксировано — это singleton. Создаётся в seed.
+> Iter 3 расширения (`personalCode`, `bankNote`, `defaultPaymentDays`) опциональны — миграция добавила колонки nullable / с default'ом и не требует backfill.
 
 ---
 
@@ -111,9 +115,11 @@ model Client {
   website   String?
 
   // Реквизиты (для PDF)
-  vatId     String?
-  regNumber String?
-  address   String?
+  vatId               String?
+  regNumber           String?
+  address             String?
+  representative      String?   // Atstovas — для §1 ŠALYS договора (Iter 4)
+  technicalContactName String?  // тех. контакт по проекту (опц.)
 
   language  String     @default("lt")        // язык для документов клиента
   status    ClientStatus @default(active)
@@ -337,8 +343,8 @@ model Invoice {
   client     Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
   projectId  String?
   project    Project?      @relation(fields: [projectId], references: [id], onDelete: Restrict)
-  maintenanceId String?
-  maintenance Maintenance? @relation(fields: [maintenanceId], references: [id], onDelete: SetNull)
+  // maintenanceId + @@unique([maintenanceId, periodKey]) добавляются в Iter 5
+  // вместе с моделью Maintenance. На Iter 3 этого FK ещё нет.
 
   issuedAt   DateTime
   dueAt      DateTime?
@@ -349,7 +355,7 @@ model Invoice {
   total      Decimal       @db.Decimal(12, 2)        // = subtotal (нет PVM)
 
   // Idempotency для maintenance cron: 'YYYY-MM' для kind=maintenance, null для остальных.
-  // Уникально с maintenanceId — гарантирует один счёт на период даже при retry/двойном запуске.
+  // В Iter 3 поле уже есть, но unique constraint появится только с maintenanceId в Iter 5.
   periodKey  String?
 
   notes      String?
@@ -361,7 +367,6 @@ model Invoice {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  @@unique([maintenanceId, periodKey])               // idempotency для maintenance invoices
   @@index([clientId])
   @@index([projectId])
   @@index([status])
@@ -546,11 +551,13 @@ enum PaymentKind {
 model Expense {
   id          String         @id @default(cuid())
   category    ExpenseCategory
+  vendor      String?                          // Anthropic, OpenAI, Vercel, ...
   amount      Decimal        @db.Decimal(12, 2)
   currency    String         @default("EUR")
   occurredAt  DateTime
   description String
-  fileUrl     String?
+  fileUrl     String?                          // Vercel Blob public URL
+  fileName    String?                          // оригинальное имя при загрузке
   // recurring/recurrence — storage-only поля (ADR-017).
   // В MVP — индикатор повторяемости для ручного анализа.
   // Автоматизация повторов (cron + auto-create) — Phase 2.
