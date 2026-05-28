@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Plus, Search, UserPlus, Users } from "lucide-react";
+import { MoreHorizontal, Search, UserPlus, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -210,12 +210,6 @@ export function ClientsTable({ rows }: { rows: ClientRow[] }) {
             <SelectItem value="company">Компании</SelectItem>
           </SelectContent>
         </Select>
-        <Button asChild>
-          <Link href="/clients/new">
-            <Plus className="size-4" />
-            Новый клиент
-          </Link>
-        </Button>
       </div>
 
       <DataTable

@@ -219,12 +219,6 @@ export function ProjectsTable({ rows }: { rows: ProjectRow[] }) {
             ))}
           </SelectContent>
         </Select>
-        <Button asChild>
-          <Link href="/projects/new">
-            <Plus className="size-4" />
-            Новый проект
-          </Link>
-        </Button>
       </div>
 
       <DataTable
