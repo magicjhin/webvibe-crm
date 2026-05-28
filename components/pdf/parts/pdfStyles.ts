@@ -117,6 +117,7 @@ export const pdfStyles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 4,
     padding: 10,
+    backgroundColor: colors.bg, // перекрывает watermark
   },
   partyLabel: {
     fontSize: 8,
@@ -150,6 +151,7 @@ export const pdfStyles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 4,
     marginBottom: 12,
+    backgroundColor: colors.bg, // строки таблицы перекрывают watermark
   },
   itemsHeader: {
     flexDirection: "row",
@@ -188,6 +190,7 @@ export const pdfStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 4,
+    backgroundColor: colors.bg, // перекрывает watermark
   },
   totalsRow: {
     flexDirection: "row",
