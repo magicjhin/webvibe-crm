@@ -9,7 +9,7 @@
 
 ---
 
-## Итерация 1 — Auth + Settings skeleton (✅ Done — commit pending)
+## Итерация 1 — Auth + Settings skeleton (✅ Done — commit `ebd4044`)
 
 - [x] Установить `@prisma/adapter-pg` + `pg` + `@types/pg`
 - [x] `prisma/schema.prisma` — добавлены `User` и `Settings` модели (по `DATABASE.md`)
@@ -38,8 +38,8 @@
 - [x] Codex Pass 1: `With fixes` — 0 Critical, 4 Important, 5 Nice. Все Important + 4 Nice исправлены
 - [x] Codex Pass 2 (focused): найден 1 Critical (runtime auth invariant в `lib/auth.ts` сканировал по email, а не по count всей таблицы) — исправлен по варианту A владельца
 - [x] По ADR-018: Pass 3 НЕ запускается; Nice-to-have из Pass 2 (`normalizeCallbackUrl` polish, `Field` fragment edge case) перенесены в Backlog
-- [ ] Commit + push
-- [ ] Manual smoke test от владельца (login → dashboard → settings → save → signout)
+- [x] Commit + push — `ebd4044 fix(auth): enforce single-user runtime invariant`
+- [x] Manual smoke test от владельца — **passed** (login → wrong password rejected → /dashboard → /settings/profile load → save → reload → numbering preview → signout → /login)
 
 ---
 
