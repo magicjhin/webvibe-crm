@@ -17,8 +17,8 @@ PostgreSQL @ Neon (region: AWS eu-central-1, Frankfurt), ORM — Prisma 7
 | `Settings` | 1 ✅ | `20260528134455_init_user_settings` | Singleton id=1, seed создаёт |
 | `Client`, `Lead`, `Project`, `Task` | 2 ✅ | `20260528144353_add_clients_projects_tasks` | Back-relations на Invoice/Contract/Proposal/Payment/Maintenance/Reminder появятся вместе с этими моделями в Iter 3+ |
 | `Invoice`, `InvoiceItem`, `Payment`, `Expense` | 3 ✅ | `20260528164725_iter3_invoices_payments_expenses` | + Settings (`personalCode`, `bankNote`, `defaultPaymentDays`) и Client (`representative`, `technicalContactName`) расширения; Invoice/Payment back-relations добавлены на Client и Project |
-| `Contract`, `Proposal` | 4 | — | |
-| `Maintenance`, `Reminder`, `FileAsset` | 5 | — | |
+| `Contract`, `Proposal`, `Maintenance` | 4 ✅ | `20260531000000_iter4_contracts_proposals_maintenance` | + `ContractKind`/`ContractStatus`/`ProposalStatus`/`MaintenanceStatus` enums; back-relations `contracts`/`proposals`/`maintenance` на Client и Project; на Invoice добавлены `maintenanceId` + `@@unique([maintenanceId, periodKey])` + index. `Maintenance` promoted из Iter 5 (ADR-027) |
+| `Reminder`, `FileAsset` | 5 | — | |
 
 ---
 
@@ -343,8 +343,7 @@ model Invoice {
   client     Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
   projectId  String?
   project    Project?      @relation(fields: [projectId], references: [id], onDelete: Restrict)
-  // maintenanceId + @@unique([maintenanceId, periodKey]) добавляются в Iter 5
-  // вместе с моделью Maintenance. На Iter 3 этого FK ещё нет.
+  maintenance   Maintenance? @relation(fields: [maintenanceId], references: [id], onDelete: SetNull)
 
   issuedAt   DateTime
   dueAt      DateTime?
@@ -355,8 +354,10 @@ model Invoice {
   total      Decimal       @db.Decimal(12, 2)        // = subtotal (нет PVM)
 
   // Idempotency для maintenance cron: 'YYYY-MM' для kind=maintenance, null для остальных.
-  // В Iter 3 поле уже есть, но unique constraint появится только с maintenanceId в Iter 5.
-  periodKey  String?
+  // maintenanceId + @@unique([maintenanceId, periodKey]) добавлены в Iter 4 (ADR-027),
+  // когда появилась модель Maintenance. Сам cron-биллинг — Iter 5.
+  maintenanceId String?
+  periodKey     String?
 
   notes      String?
   pdfUrl     String?                                  // кеш PDF в Blob
@@ -419,7 +420,8 @@ enum InvoiceStatus {
 ```prisma
 model Contract {
   id          String         @id @default(cuid())
-  number      String         @unique                  // WVS000001
+  number      String         @unique                  // WVS000001 (без дефиса!)
+  kind        ContractKind   @default(STAGED)         // STAGED | ADVANCE | MAINTENANCE (ADR-027)
   clientId    String
   client      Client         @relation(fields: [clientId], references: [id], onDelete: Restrict)
   projectId   String?
@@ -428,21 +430,28 @@ model Contract {
   issuedAt    DateTime
   status      ContractStatus @default(draft)
 
-  // Структурированные поля договора (Json для гибкости шаблона)
-  terms       Json                                    // { subject, scope, milestones, paymentTerms, warranty, ... }
+  // Структурированные данные шаблона. Форма зависит от kind — формализована
+  // в Zod (lib/validators/contract.ts, discriminated union):
+  //   STAGED|ADVANCE: { subject, scope[], paymentTerms[], warranty?, termsNote?, excluded? }
+  //   MAINTENANCE:    { subject, monthlyAmount, includes?[], warranty?, termsNote?, excluded? }
+  // Суммы внутри terms — decimal-строки; канонический total — amount (Decimal).
+  terms       Json
   amount      Decimal        @db.Decimal(12, 2)
   currency    String         @default("EUR")
 
-  // Подпись
+  // Подпись (sha256 raw token, TTL 7 дней, one-time consume)
   signTokenHash      String?  @unique                 // sha256(raw token)
   signTokenExpiresAt DateTime?
   signedAt           DateTime?
   signerName         String?
   signerIp           String?
   signerUserAgent    String?
-  signatureUrl       String?                          // PNG в Blob
+  signatureUrl       String?                          // PNG в Vercel Blob
 
   pdfUrl      String?
+
+  // MAINTENANCE-договор порождает запись Maintenance при подписании.
+  maintenance Maintenance?
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -450,6 +459,12 @@ model Contract {
   @@index([clientId])
   @@index([projectId])
   @@index([status])
+}
+
+enum ContractKind {
+  STAGED        // поэтапная оплата (произвольный список платежей)
+  ADVANCE       // аванс 70% + остаток 30%
+  MAINTENANCE   // ежемесячная поддержка
 }
 
 enum ContractStatus {
@@ -587,12 +602,16 @@ enum ExpenseCategory {
 ### `Maintenance`
 
 ```prisma
+// Promoted из Iter 5 в Iter 4 (ADR-027): MAINTENANCE-договор при подписании
+// создаёт запись Maintenance. Рекуррентный биллинг/cron — по-прежнему Iter 5.
 model Maintenance {
   id              String             @id @default(cuid())
   clientId        String
   client          Client             @relation(fields: [clientId], references: [id], onDelete: Restrict)
-  projectId       String
-  project         Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId       String?                                // опционален — поддержка может быть без проекта
+  project         Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  contractId      String?            @unique              // один Maintenance на подписанный MAINTENANCE-договор
+  contract        Contract?          @relation(fields: [contractId], references: [id], onDelete: SetNull)
   monthlyAmount   Decimal            @db.Decimal(12, 2)
   currency        String             @default("EUR")
   includes        String?
@@ -711,7 +730,7 @@ type DocumentRow = {
 ## Целостность данных
 
 - **Удаление Client** — `Restrict`, если есть связанные projects/invoices/contracts/proposals/payments/maintenance. Лиды это **не блокируют** (Lead.clientId — `SetNull`), потому что лиды эфемерные и могут быть удалены вместе со старыми контактами. Перед удалением клиента — сначала архивировать документы или дождаться, пока все обязательства закроются.
-- **Удаление Project** — `Restrict` для invoices/contracts/proposals (документы важны для аудита; сначала удалить документы или оставить Project в архиве); `Cascade` для tasks и maintenance.
+- **Удаление Project** — `Restrict` для invoices/contracts/proposals (документы важны для аудита; сначала удалить документы или оставить Project в архиве); `Cascade` для tasks; `SetNull` для maintenance (ADR-027: `Maintenance.projectId` опционален, поддержка может жить без проекта).
 - **Удаление Invoice** — payments остаются с `SetNull` на `invoiceId`. Удалять только черновики (status=draft).
 - **Удаление Lead** — `convertedToProjectId` уже `SetNull`. Лиды можно удалять свободно.
 - **Уникальность номеров** — на уровне БД (`@unique` на `Invoice.number`, `Contract.number`, `Proposal.number`).

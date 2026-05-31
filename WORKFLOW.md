@@ -142,25 +142,30 @@ UX:
 
 ---
 
-## 4. Создание Contract
+## 4. Создание Contract (три типа — `Contract.kind`, ADR-027)
+
+Три шаблона, референс-текст LT — `CONTRACTS-LT-SOURCE.md`:
+- **STAGED** — поэтапный (как DSK): произвольный список платежей.
+- **ADVANCE** — тот же договор, оплата = аванс 70% + остаток 30% (автозаполняется, переопределяемо).
+- **MAINTENANCE** — поддержка (как Carenta): ежемесячный платёж, короткий бойлерплейт.
 
 UX:
-1. Из проекта → "Создать договор".
-2. Форма:
-   - Подтянуть Client из проекта (read-only поля имя/реквизиты).
-   - Подтянуть amount = `Project.price`.
-   - Subject (что делаем) — по умолчанию из `Project.type`/`title`.
-   - Scope (text).
-   - Milestones — взять из Proposal или ввести.
-   - Payment terms (например `[{ name: "Avansas 50%", percent: 50 }, { name: "Likutis 50%", percent: 50 }]`).
-   - Warranty (text).
-   - Effective date.
-3. Save → status `draft`, нумерация WVS000001.
-4. Preview PDF (на литовском).
-5. "Сгенерировать ссылку для подписи" → создаёт sign token, TTL 7 дней.
+1. Из проекта → "Создать договор" → **выбор kind**.
+2. Форма (поля подстраиваются под kind):
+   - Client — read-only из проекта (или quick-pick), реквизиты тянутся в §1.
+   - `amount` = `Project.price` по умолчанию.
+   - **Subject (§2, что делаем) — редактируемое всегда**, дефолт из `Project.type`/`title`.
+   - **Scope (§3, STAGED/ADVANCE)** — динамический список `[{ title, description? }]`, нумеруется 3.1.x; автокопируется из связанного Proposal при наличии.
+   - **Payment (§4)**:
+     - STAGED — список `[{ label, amount, dueLabel }]` (фикс-суммы, НЕ проценты; сумма == `amount`).
+     - ADVANCE — авто `[{label:"Avansas 70%", amount}, {label:"Likutis 30%", amount}]`, редактируемо.
+     - MAINTENANCE — `monthlyAmount` (= `amount`), `includes[]` (дефолт-буллеты §2).
+   - Warranty (§9, дефолт «12 mėnesių»), effective date.
+3. Save → status `draft`, нумерация **WVS000001** (без дефиса).
+4. Preview PDF (литовский).
+5. "Сгенерировать ссылку для подписи" → raw token ≥32 байта, в БД sha256-хеш, TTL 7 дней, status `sent`.
 6. Я отправляю ссылку клиенту (мессенджер).
-7. Status `sent`.
-8. После подписи → `signed`.
+7. После подписи → `signed`. **Если kind=MAINTENANCE** — в той же транзакции создаётся `Maintenance` (monthlyAmount, startedAt=signedAt, nextInvoiceAt=+1мес, status active). Рекуррентный биллинг — Iter 5.
 
 ---
 

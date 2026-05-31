@@ -102,17 +102,18 @@ Runtime ADR-002 invariant (ADR-021): `findMany({ take: 2 })` всей User та�
 - [ ] «Mark as Paid» → автосоздание Payment — отложено на Phase 2 (в MVP — explicit добавление платежа)
 - **Commits (planned):** `feat(db): iter 3 invoices + payments + expenses`, `feat(invoices): CRUD + transactional numbering + PDF`, `feat(payments): CRUD with invoice linkage`, `feat(expenses): CRUD + Vercel Blob upload`, `feat(dashboard): KPI cards + overdue + top categories`
 
-### Итерация 4 — Contracts + Proposals + Signature
+### Итерация 4 — Contracts + Proposals + Signature ✅ (done 2026-05-31)
 
-- [ ] Prisma модели Contract, Proposal
-- [ ] PDF-шаблон договора и КП (литовский)
-- [ ] Транзакционная нумерация договоров
-- [ ] Публичная страница `/sign/[token]`
-- [ ] react-signature-canvas, сохранение PNG → Blob
-- [ ] Вшивание подписи в финальный PDF
-- [ ] TTL и one-time use токенов подписи
-- [ ] Convert Proposal → Project
-- **Commits:** `feat(contracts): CRUD + PDF`, `feat(signature): canvas signing`, `feat(proposals): CRUD + PDF`
+- [x] Prisma модели Contract (+kind STAGED/ADVANCE/MAINTENANCE), Proposal, Maintenance (ADR-027)
+- [x] PDF-шаблоны договора (3 типа) и КП (литовский)
+- [x] Транзакционная нумерация договоров (`WVS000001`, баг с дефисом починен)
+- [x] Публичная страница `/sign/[token]` + token-scoped публичный PDF-preview
+- [x] react-signature-canvas, сохранение PNG → Vercel Blob (2 MB cap, server-side)
+- [x] Вшивание подписи в PDF (render-on-demand; immutable signed PDF в Blob → backlog)
+- [x] TTL (7 дней) и one-time atomic consume токенов подписи
+- [x] MAINTENANCE-договор при подписании создаёт запись Maintenance
+- [ ] Convert Proposal → Project — перенесено в backlog (TASKS.md), не блокер MVP
+- **Commits:** `feat(contracts): CRUD + PDF + signing`, `feat(proposals): CRUD + PDF`, `docs: ADR-027 + Iter 4 sync`
 
 ### Итерация 5 — Leads + Reminders + Maintenance + Cron
 

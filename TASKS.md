@@ -20,7 +20,9 @@
 >
 > `typecheck` / `lint` — ✓. Эти 3 файла в working tree, ждут commit + push.
 >
-> **Продолжить завтра с:** решить, делаем ли полноценный Iter 4 (Contracts + Proposals + Signature) или сначала добиваем Iter 6 mobile polish (tablet collapsed sidebar 640–1024px, sticky save на mobile, финальные PWA иконки). Перед Iter 4 — собрать референсы юридического текста договора (LT). Также висит мелкий артефакт нумерации `WVS-000027` → должно быть `WVS000027` (фиксить вместе с Contracts).
+> **Iter 4 — Contracts + Proposals + Signature — ✅ Done (2026-05-31, `dbe0fbf` код + docs-коммит).** Конвейер агентов (backend → PDF + frontend параллельно), Codex 2 прохода (Pass 1: 2 Critical + 8 Important → все Critical и большинство Important исправлены; Pass 2: Accept, 0 Critical). typecheck/lint/build зелёные. ADR-027: три типа договора (`STAGED`/`ADVANCE`/`MAINTENANCE`), §2 редактируемый, поддержка при подписи создаёт `Maintenance`. Баг нумерации `WVS-000027 → WVS000027` починен. Отложено в backlog: immutable signed-PDF в Blob, Proposal→Project conversion.
+>
+> **Следующее:** Iter 5 (Leads + Reminders + Maintenance UI + Cron) либо добор Iter 6 mobile-polish. Перед production — финальные PWA-иконки, BLOB_READ_WRITE_TOKEN на Vercel (нужен для подписи).
 
 ### Iterations status
 
@@ -30,7 +32,7 @@
 | 1 | Auth + Settings skeleton | ✅ Done | `ebd4044` |
 | 2 | Clients + Projects + Tasks | ✅ Done | `20a2702` |
 | 3 | Invoices + Payments + Expenses + Dashboard KPI | ✅ Done | `df8f14e` |
-| 4 | Contracts + Proposals + Signature | **next** | — |
+| 4 | Contracts + Proposals + Signature | ✅ Done | `dbe0fbf` |
 | 5 | Leads + Reminders + Maintenance + Cron | planned | — |
 | 6 | PWA + Mobile polish | 🟡 частично (dashboard chart, burger/FAB mobile, period switcher, RU-меню) | `27a6c35`..`d7d27fb` |
 | 7 | Polish + a11y + README (+ CSV export) | planned | — |
@@ -134,7 +136,13 @@ pnpm dev
 - **`createTask` order race** (Pass 1 nice-to-have): `aggregate` + `create` без транзакции; для single-user риск низкий, но при параллельных add теоретически возможен дубль `order`. Использовать `$transaction` или unique constraint при необходимости.
 - **`@prisma/adapter-neon`** — оптимизация для Vercel Edge runtime. Не нужна пока (мы используем Node runtime). Если станет нужно — заменить в `lib/db.ts` + `prisma.config.ts`.
 - **Финальные PWA иконки** из webvibe-логотипа (сейчас placeholder W). → **перед production deploy**.
-- **Подбор юридического текста договора (LT)** для Iter 4. → собирать референсы заранее.
+
+**Из Codex review Iter 4 (Important, перенесены — не блокеры):**
+- **Immutable signed PDF в Blob** — сейчас PDF договора рендерится on-demand из текущего кода/Settings; для подписанного договора это значит, что правка Settings/шаблона изменит вид уже подписанного документа. Решение: при `signContract` рендерить финальный PDF (с вшитой подписью) и сохранять в Vercel Blob → `Contract.pdfUrl`; для signed отдавать сохранённый PDF, для draft/sent — render-on-demand. (Подпись-PNG уже immutable через `signatureUrl`.)
+- **Proposal → Project conversion** — кнопка на accepted-КП ведёт на `/projects/new?proposalId=`, но `ProjectForm` пока читает только `clientId`; не предзаполняет проект из КП и не проставляет `Proposal.projectId`. Доделать предзаполнение (title/scope/price из КП) и связывание.
+- **SignaturePad bitmap/DPR** (nice-to-have) — canvas размер задан CSS, без синхронизации bitmap с devicePixelRatio → на мобильных подпись может быть размытой. Синхронизировать ширину/высоту canvas с контейнером × DPR.
+- **`signContractSchema.signaturePng`** принимает любой URL — при прямом server-action вызове можно записать не-Blob URL. Валидировать Blob-host/prefix или принимать data URL только в route.
+- **`/documents` единый data-layer** (nice-to-have) — сейчас invoices через прямой Prisma, contracts/proposals через server actions. Свести к одному server-side слою для virtual `Document`.
 
 ---
 
