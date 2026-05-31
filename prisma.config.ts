@@ -10,10 +10,15 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
-const directUrl = process.env["DIRECT_URL"];
-if (!directUrl) {
-  throw new Error("DIRECT_URL is required in .env for prisma migrate");
-}
+// DIRECT_URL нужен только для `prisma migrate`/`db seed` (DDL-команды, реальное
+// соединение). `prisma generate` НЕ коннектится к БД, поэтому здесь нельзя
+// жёстко падать — иначе `next build` на Vercel валится в `prisma generate`
+// ещё до того, как заданы env-переменные. Если URL не задан — подставляем
+// безопасный placeholder: generate отработает, а migrate/seed дадут понятную
+// ошибку соединения (и локально DIRECT_URL всегда есть в .env).
+const directUrl =
+  process.env["DIRECT_URL"] ||
+  "postgresql://placeholder:placeholder@localhost:5432/placeholder";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
