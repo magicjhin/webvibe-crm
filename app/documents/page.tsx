@@ -5,6 +5,12 @@ import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Tabs,
   TabsContent,
   TabsList,
@@ -96,12 +102,25 @@ export default async function DocumentsPage({
           title="Документы"
           description="Все счета, договоры и КП. Управляй статусами и скачивай PDF без захода в карточку клиента."
           actions={
-            <Button asChild>
-              <Link href="/invoices/new">
-                <Plus className="size-4" />
-                Новый счёт
-              </Link>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button>
+                  <Plus className="size-4" />
+                  Создать
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link href="/invoices/new">Счёт</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/contracts/new">Договор</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/proposals/new">КП</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           }
         />
 
