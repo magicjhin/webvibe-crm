@@ -13,6 +13,13 @@ import ws from "ws";
 // (local-only DDL/seed via DIRECT_URL — no serverless cold-start there).
 neonConfig.webSocketConstructor = ws;
 
+// Speed: route simple (non-transactional) queries over Neon's HTTP endpoint
+// instead of opening a WebSocket every cold invocation. Login is a single
+// findMany — over HTTP it skips the WS handshake and returns in ~1 round-trip.
+// Interactive transactions ($transaction, e.g. document numbering) still use
+// the WebSocket pool, so atomicity is unaffected.
+neonConfig.poolQueryViaFetch = true;
+
 declare global {
   var __prisma: PrismaClient | undefined;
 }
