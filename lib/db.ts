@@ -17,8 +17,16 @@ declare global {
   var __prisma: PrismaClient | undefined;
 }
 
+// Vercel env values are sometimes pasted with wrapping quotes or a trailing
+// newline/space. The Neon WS driver parses the string with `new URL()`, which
+// then throws "Invalid URL". Strip surrounding quotes + whitespace defensively
+// so a paste mistake in the dashboard can't break login again.
+function cleanConnectionString(raw: string): string {
+  return raw.trim().replace(/^['"]+|['"]+$/g, "").trim();
+}
+
 function createClient() {
-  const url = process.env.DATABASE_URL;
+  const url = cleanConnectionString(process.env.DATABASE_URL ?? "");
   if (!url) throw new Error("DATABASE_URL is required");
   const adapter = new PrismaNeon({ connectionString: url });
   return new PrismaClient({ adapter });
