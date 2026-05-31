@@ -19,8 +19,8 @@ export default function OfflinePage() {
         </div>
         <h1 className="text-2xl font-semibold tracking-tight">Нет соединения</h1>
         <p className="text-sm text-foreground-muted">
-          Webvibe CRM сейчас недоступна без сети. Проверь соединение и попробуй
-          ещё раз. Offline-режим с кешем добавим вместе с Service Worker позже.
+          Нет соединения с сетью. Ранее открытые страницы доступны из кеша;
+          для новых данных проверь соединение и попробуй ещё раз.
         </p>
         <Link
           href="/"

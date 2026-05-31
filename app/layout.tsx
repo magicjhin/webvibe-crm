@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { PwaRegister } from "@/components/pwa/PwaRegister";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import "./globals.css";
 
 const inter = Inter({
@@ -58,6 +60,8 @@ export default function RootLayout({
     >
       <body className="min-h-full bg-background text-foreground">
         {children}
+        <PwaRegister />
+        <InstallPrompt />
         <Toaster richColors position="top-right" closeButton />
       </body>
     </html>

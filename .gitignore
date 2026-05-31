@@ -63,10 +63,9 @@ pnpm-debug.log*
 storage/
 uploads/
 
-# PWA generated
-public/sw.js
+# PWA — public/sw.js рукописный (ADR-012, не генерируется) → коммитим.
+# Игнорим только артефакты, если когда-нибудь подключим генератор (workbox).
 public/workbox-*.js
-public/sw.js.map
 public/workbox-*.js.map
 
 # Misc
