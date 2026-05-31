@@ -1,5 +1,17 @@
 import { PrismaClient } from "@/lib/generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaNeon } from "@prisma/adapter-neon";
+import { neonConfig } from "@neondatabase/serverless";
+import ws from "ws";
+
+// ADR-019 (revised): runtime uses the Neon serverless driver over WebSocket,
+// not raw TCP (@prisma/adapter-pg). On Vercel serverless + Neon scale-to-zero
+// a plain TCP connect during compute wake-up fails with P1001
+// "Can't reach database server". The WS driver handles wake-up gracefully.
+//
+// Node runtimes (Vercel functions + local tsx) have no global WebSocket, so we
+// hand the driver the `ws` implementation. seed.ts stays on @prisma/adapter-pg
+// (local-only DDL/seed via DIRECT_URL — no serverless cold-start there).
+neonConfig.webSocketConstructor = ws;
 
 declare global {
   var __prisma: PrismaClient | undefined;
@@ -8,7 +20,7 @@ declare global {
 function createClient() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is required");
-  const adapter = new PrismaPg({ connectionString: url });
+  const adapter = new PrismaNeon({ connectionString: url });
   return new PrismaClient({ adapter });
 }
 
