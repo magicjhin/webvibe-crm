@@ -125,16 +125,17 @@ Runtime ADR-002 invariant (ADR-021): `findMany({ take: 2 })` всей User та�
 - [ ] Dashboard: лиды требуют ответа, напоминания, maintenance к выставлению
 - **Commits:** `feat(leads): ...`, `feat(maintenance): cron`, `feat(reminders): ...`
 
-### Итерация 6 — PWA + Mobile polish
+### Итерация 6 — PWA + Mobile polish ✅ (done 2026-05-31)
 
-- [ ] Service Worker (production-only)
-- [ ] Offline shell, кеш dashboard read-only
-- [ ] Bottom nav на мобиле
-- [ ] FAB quick-add (Client / Lead / Task / Reminder / Expense)
-- [ ] Bottom sheets вместо modals на mobile
-- [ ] Web Share API для PDF
-- [ ] Install prompt
-- **Commits:** `feat(pwa): manifest + sw + offline shell`, `feat(mobile): bottom nav + sheets`
+- [x] Service Worker (production-only, `public/sw.js`, рукописный — ADR-012)
+- [x] Offline shell (`/offline` precached); HTML НЕ кешируется (privacy — приватные данные клиента не остаются в Cache Storage)
+- [x] Bottom nav на мобиле (<640px) + свёрнутый sidebar 60px на планшете (640–1024)
+- [x] FAB quick-add (скрыт на sm+, синхронно с tablet-layout)
+- [x] Bottom sheets вместо modals на mobile (адаптивный `dialog` примитив)
+- [x] Web Share API для PDF (договор/счёт/КП — шарит файл через share sheet)
+- [x] Install prompt (beforeinstallprompt, скрытие в standalone/dismiss)
+- [x] Sticky-save на мобиле во всех формах + фикс трейсинга PDF-шрифтов для новых роутов
+- **Commits:** `feat(pwa): service worker + install prompt + offline`, `feat(mobile): bottom-sheets + sticky save + tablet sidebar + share pdf`
 
 ### Итерация 7 — Polish
 

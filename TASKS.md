@@ -22,7 +22,9 @@
 >
 > **Iter 4 — Contracts + Proposals + Signature — ✅ Done (2026-05-31, `dbe0fbf` код + docs-коммит).** Конвейер агентов (backend → PDF + frontend параллельно), Codex 2 прохода (Pass 1: 2 Critical + 8 Important → все Critical и большинство Important исправлены; Pass 2: Accept, 0 Critical). typecheck/lint/build зелёные. ADR-027: три типа договора (`STAGED`/`ADVANCE`/`MAINTENANCE`), §2 редактируемый, поддержка при подписи создаёт `Maintenance`. Баг нумерации `WVS-000027 → WVS000027` починен. Отложено в backlog: immutable signed-PDF в Blob, Proposal→Project conversion.
 >
-> **Следующее:** Iter 5 (Leads + Reminders + Maintenance UI + Cron) либо добор Iter 6 mobile-polish. Перед production — финальные PWA-иконки, BLOB_READ_WRITE_TOKEN на Vercel (нужен для подписи).
+> **Следующее:** Iter 5 (Leads + Reminders + Maintenance UI + Cron) — отложен по решению владельца как несрочный; затем Iter 7 (polish + a11y + 44px touch targets + README). Перед production — финальные PWA-иконки, `BLOB_READ_WRITE_TOKEN` + `CRON_SECRET` на Vercel.
+>
+> **Iter 6 (PWA + mobile polish) — ✅ Done (2026-05-31).** Service Worker (prod-only, рукописный `public/sw.js`), offline-оболочка (HTML не кешируется — privacy), install-prompt, bottom-sheets, sticky-save, свёрнутый tablet-sidebar, Web Share PDF, фикс трейсинга PDF-шрифтов. Codex 2 прохода (Pass 1: 1 Critical [sw.js в .gitignore] + 5 Important → исправлены/в backlog; Pass 2: remaining «Critical» = sw.js ещё не закоммичен, закрывается этим коммитом).
 
 ### Iterations status
 
@@ -34,7 +36,7 @@
 | 3 | Invoices + Payments + Expenses + Dashboard KPI | ✅ Done | `df8f14e` |
 | 4 | Contracts + Proposals + Signature | ✅ Done | `dbe0fbf` |
 | 5 | Leads + Reminders + Maintenance + Cron | planned | — |
-| 6 | PWA + Mobile polish | 🟡 частично (dashboard chart, burger/FAB mobile, period switcher, RU-меню) | `27a6c35`..`d7d27fb` |
+| 6 | PWA + Mobile polish | ✅ Done | Iter 6 commits 2026-05-31 |
 | 7 | Polish + a11y + README (+ CSV export) | planned | — |
 
 ### Что работает сейчас (по факту)
@@ -143,6 +145,13 @@ pnpm dev
 - **SignaturePad bitmap/DPR** (nice-to-have) — canvas размер задан CSS, без синхронизации bitmap с devicePixelRatio → на мобильных подпись может быть размытой. Синхронизировать ширину/высоту canvas с контейнером × DPR.
 - **`signContractSchema.signaturePng`** принимает любой URL — при прямом server-action вызове можно записать не-Blob URL. Валидировать Blob-host/prefix или принимать data URL только в route.
 - **`/documents` единый data-layer** (nice-to-have) — сейчас invoices через прямой Prisma, contracts/proposals через server actions. Свести к одному server-side слою для virtual `Document`.
+
+**Из Codex review Iter 6 (Important/nice-to-have, перенесены — не блокеры):**
+- **Touch targets 44px на мобиле** — основные действия (sticky-save submit, header PDF/Share/Edit) используют дефолтный `Button h-8` (32px), ниже UI-DESIGN-правила ≥44px. Сделать на мобиле крупнее (responsive size). → Iter 7 (a11y/polish pass).
+- **Группировка header-экшенов на мобиле** — после Share PDF действий стало больше; сейчас `flex-wrap` (overflow закрыт), но лучше icon-only / dropdown-группировка на узких экранах. → Iter 7.
+- **Install-prompt: устойчивый dismiss** — сейчас `DISMISS_KEY` пишется при X/appinstalled, но не при `userChoice.outcome==='dismissed'`. Добавить запись dismiss.
+- **SW + offline read-only dashboard** — намеренно НЕ кешируем авторизованный HTML (privacy). Если позже захотим offline-доступ к dashboard — кешировать только явно безопасные read-only данные с очисткой при logout.
+- **SharePdfButton revoke objectURL** — отложить через microtask/таймаут для кросс-браузерной совместимости (nice-to-have).
 
 ---
 
