@@ -245,6 +245,172 @@ export const pdfStyles = StyleSheet.create({
     paddingTop: 6,
   },
 
+  /* ---- Contract / Proposal clause layout ---- */
+
+  /* Заголовок документа по центру (договоры/КП) */
+  contractTitle: {
+    fontSize: 15,
+    fontWeight: 700,
+    textAlign: "center",
+    letterSpacing: -0.3,
+    marginBottom: 4,
+  },
+  contractSub: {
+    fontSize: 9.5,
+    fontWeight: 600,
+    textAlign: "center",
+    color: colors.text,
+  },
+  contractMeta: {
+    fontSize: 8.5,
+    textAlign: "center",
+    color: colors.textMuted,
+    marginBottom: 16,
+  },
+
+  /* Нумерованная секция §N */
+  clauseSection: {
+    marginBottom: 12,
+  },
+  clauseHeading: {
+    fontSize: 10,
+    fontWeight: 700,
+    marginBottom: 6,
+    color: colors.black,
+  },
+  /* Параграф пункта (4.1., 2.2. и т.д.) */
+  clausePara: {
+    fontSize: 9,
+    lineHeight: 1.5,
+    color: colors.text,
+    marginBottom: 5,
+  },
+  clauseParaInner: {
+    fontSize: 9,
+    lineHeight: 1.5,
+    color: colors.text,
+    marginBottom: 4,
+    paddingLeft: 12,
+  },
+  clauseStrong: {
+    fontWeight: 700,
+  },
+  /* Список scope: "3.1.N. title" + bullet description */
+  scopeItem: {
+    marginBottom: 6,
+  },
+  scopeTitle: {
+    fontSize: 9,
+    fontWeight: 600,
+    lineHeight: 1.45,
+    color: colors.text,
+  },
+  bulletRow: {
+    flexDirection: "row",
+    marginTop: 2,
+    paddingLeft: 14,
+  },
+  bulletDot: {
+    width: 10,
+    fontSize: 9,
+    lineHeight: 1.45,
+    color: colors.textMuted,
+  },
+  bulletText: {
+    flex: 1,
+    fontSize: 9,
+    lineHeight: 1.45,
+    color: colors.text,
+  },
+
+  /* §1 / §14 — две колонки сторон без рамки (компактнее, чем partyBox) */
+  partiesColRow: {
+    flexDirection: "row",
+    gap: 16,
+    marginBottom: 12,
+  },
+  partiesCol: {
+    flex: 1,
+  },
+
+  /* Сумма крупно (договор/КП) */
+  bigAmountWrap: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 6,
+    marginBottom: 10,
+  },
+  bigAmountBox: {
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 4,
+    backgroundColor: colors.bgEmphasis,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    alignItems: "flex-end",
+  },
+  bigAmountLabel: {
+    fontSize: 7.5,
+    color: colors.textMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  bigAmountValue: {
+    fontSize: 16,
+    fontWeight: 700,
+  },
+  beforePvm: {
+    fontSize: 7.5,
+    color: colors.textSubtle,
+    marginTop: 2,
+  },
+
+  /* Подписи (§14 / maintenance) */
+  signRow: {
+    flexDirection: "row",
+    gap: 24,
+    marginTop: 20,
+  },
+  signCol: {
+    flex: 1,
+  },
+  signRole: {
+    fontSize: 8,
+    color: colors.textMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+    marginBottom: 6,
+  },
+  signImage: {
+    height: 46,
+    width: 150,
+    objectFit: "contain",
+    marginBottom: 2,
+  },
+  signImagePlaceholder: {
+    height: 46,
+  },
+  signLine: {
+    borderTopWidth: 1,
+    borderTopColor: colors.borderStrong,
+    paddingTop: 3,
+    marginTop: 2,
+  },
+  signCaption: {
+    fontSize: 7.5,
+    color: colors.textMuted,
+  },
+  signName: {
+    fontSize: 9,
+    fontWeight: 600,
+    marginTop: 2,
+  },
+  signMeta: {
+    fontSize: 7.5,
+    color: colors.textMuted,
+    marginTop: 1,
+  },
+
   /* Watermark — большой диагональный фон по центру страницы, очень faint.
      Рендерится первым в дереве + БЕЗ `fixed`, чтобы основной контент
      (таблица paslaugos, totals) рисовался поверх него. */

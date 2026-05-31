@@ -108,10 +108,13 @@ model Client {
   source   String?
   notes    String?
 
-  leads    Lead[]
-  projects Project[]
-  invoices Invoice[]
-  payments Payment[]
+  leads       Lead[]
+  projects    Project[]
+  invoices    Invoice[]
+  payments    Payment[]
+  contracts   Contract[]
+  proposals   Proposal[]
+  maintenance Maintenance[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -215,9 +218,12 @@ model Project {
   notes          String?
 
   tasks          Task[]
-  leadsConverted Lead[]    @relation("LeadConvertedProject")
+  leadsConverted Lead[]        @relation("LeadConvertedProject")
   invoices       Invoice[]
   payments       Payment[]
+  contracts      Contract[]
+  proposals      Proposal[]
+  maintenance    Maintenance[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -313,10 +319,11 @@ model Invoice {
   total    Decimal @db.Decimal(12, 2) // = subtotal (no PVM)
 
   // Maintenance idempotency: 'YYYY-MM' for kind=maintenance, null otherwise.
-  // Combined with maintenanceId (Iter 5) — guarantees one invoice per period
-  // even on cron retry / double run. maintenanceId column is added in Iter 5
-  // along with the Maintenance model.
-  periodKey String?
+  // Combined with maintenanceId — guarantees one invoice per period
+  // even on cron retry / double run (Iter 4: Maintenance model now exists).
+  maintenanceId String?
+  maintenance   Maintenance? @relation(fields: [maintenanceId], references: [id], onDelete: SetNull)
+  periodKey     String?
 
   notes  String?
   pdfUrl String? // reserved for Phase 2 PDF cache; в Iter 3 рендерим каждый запрос на лету (см. ROADMAP «Out of MVP»)
@@ -327,10 +334,12 @@ model Invoice {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([maintenanceId, periodKey])
   @@index([clientId])
   @@index([projectId])
   @@index([status])
   @@index([dueAt])
+  @@index([maintenanceId])
 }
 
 model InvoiceItem {
@@ -436,4 +445,148 @@ enum ExpenseCategory {
   ads
   transport
   other
+}
+
+// ---------------------------------------------------------------
+// Contract (Iter 4). Numbering: WVS000001 (no dash), transactional.
+// `kind` discriminates the template/terms shape (see lib/validators/contract.ts).
+// Manual signature via /sign/[token] (ADR sign flow): we store sha256(token),
+// never the raw token. MAINTENANCE contracts spawn a Maintenance record on sign.
+// No PVM. Single currency (EUR).
+// ---------------------------------------------------------------
+model Contract {
+  id        String       @id @default(cuid())
+  number    String       @unique // WVS000001
+  kind      ContractKind @default(STAGED)
+  clientId  String
+  client    Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  projectId String?
+  project   Project?     @relation(fields: [projectId], references: [id], onDelete: Restrict)
+
+  issuedAt DateTime
+  status   ContractStatus @default(draft)
+
+  // Структурированные данные шаблона (форма зависит от kind — см. contractTermsSchema)
+  terms    Json
+  amount   Decimal @db.Decimal(12, 2)
+  currency String  @default("EUR")
+
+  // Подпись (sha256 raw token, TTL 7 дней, one-time consume)
+  signTokenHash      String?   @unique // sha256(raw token)
+  signTokenExpiresAt DateTime?
+  signedAt           DateTime?
+  signerName         String?
+  signerIp           String?
+  signerUserAgent    String?
+  signatureUrl       String? // PNG в Vercel Blob
+
+  pdfUrl String?
+
+  // MAINTENANCE-договор порождает запись Maintenance при подписании.
+  maintenance Maintenance?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([projectId])
+  @@index([status])
+}
+
+enum ContractKind {
+  STAGED
+  ADVANCE
+  MAINTENANCE
+}
+
+enum ContractStatus {
+  draft
+  sent
+  signed
+  cancelled
+}
+
+// ---------------------------------------------------------------
+// Proposal / КП (Iter 4). Numbering: WVP-001, transactional.
+// JSON fields keep the template flexible. No PVM. Single currency (EUR).
+// ---------------------------------------------------------------
+model Proposal {
+  id        String   @id @default(cuid())
+  number    String   @unique // WVP-001
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Restrict)
+
+  title      String
+  status     ProposalStatus @default(draft)
+  total      Decimal        @db.Decimal(12, 2)
+  currency   String         @default("EUR")
+  validUntil DateTime?
+
+  // Структура КП (JSON — см. proposalSchema)
+  scopeIncluded  Json // [{ title, description? }]
+  scopeExcluded  Json? // [{ title, description? }]
+  milestones     Json? // [{ name, deliverable?, dueLabel? }]
+  paymentPlan    Json? // [{ label, amount, dueLabel? }]
+  warranty       String?
+  portfolioLinks Json? // [{ label, url }]
+
+  pdfUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([projectId])
+  @@index([status])
+}
+
+enum ProposalStatus {
+  draft
+  sent
+  accepted
+  declined
+  revisions
+}
+
+// ---------------------------------------------------------------
+// Maintenance (Iter 4 — promoted from Iter 5 to back MAINTENANCE contracts).
+// projectId optional (support без проекта). contractId optional + unique
+// (one Maintenance per signed MAINTENANCE contract). Monthly invoices linked
+// via Invoice.maintenanceId + periodKey idempotency.
+// ---------------------------------------------------------------
+model Maintenance {
+  id         String    @id @default(cuid())
+  clientId   String
+  client     Client    @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  projectId  String?
+  project    Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  contractId String?   @unique
+  contract   Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+
+  monthlyAmount Decimal           @db.Decimal(12, 2)
+  currency      String            @default("EUR")
+  includes      String?
+  startedAt     DateTime
+  nextInvoiceAt DateTime
+  status        MaintenanceStatus @default(active)
+  notes         String?
+
+  invoices Invoice[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([nextInvoiceAt])
+  @@index([clientId])
+  @@index([projectId])
+}
+
+enum MaintenanceStatus {
+  active
+  paused
+  cancelled
+  overdue_payment
 }

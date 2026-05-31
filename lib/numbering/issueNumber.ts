@@ -9,9 +9,24 @@ import type { Prisma } from "@/lib/generated/prisma/client";
  * не получат один и тот же номер.
  */
 
-function format(prefix: string, counter: number, padding: number) {
+/**
+ * Per-type separator between prefix and padded counter:
+ *   - Invoice  → "WV" + "-" + "001"  = "WV-001"
+ *   - Proposal → "WVP" + "-" + "001" = "WVP-001"
+ *   - Contract → "WVS" + ""  + "000001" = "WVS000001"  (NO dash)
+ *
+ * The separator is explicit per issuer (not derived from the prefix), so a
+ * prefix без дефиса не приводит к ошибочной вставке "-" в номер договора.
+ * Если prefix уже заканчивается на разделитель — не дублируем его.
+ */
+function format(
+  prefix: string,
+  counter: number,
+  padding: number,
+  separator: string,
+) {
   const padded = String(counter).padStart(padding, "0");
-  const sep = prefix.endsWith("-") ? "" : "-";
+  const sep = separator && prefix.endsWith(separator) ? "" : separator;
   return `${prefix}${sep}${padded}`;
 }
 
@@ -27,7 +42,7 @@ export async function issueInvoiceNumber(
       invoicePadding: true,
     },
   });
-  return format(s.invoicePrefix, s.invoiceCounter, s.invoicePadding);
+  return format(s.invoicePrefix, s.invoiceCounter, s.invoicePadding, "-");
 }
 
 export async function issueContractNumber(
@@ -42,7 +57,8 @@ export async function issueContractNumber(
       contractPadding: true,
     },
   });
-  return format(s.contractPrefix, s.contractCounter, s.contractPadding);
+  // Договор без дефиса: WVS000001.
+  return format(s.contractPrefix, s.contractCounter, s.contractPadding, "");
 }
 
 export async function issueProposalNumber(
@@ -57,5 +73,5 @@ export async function issueProposalNumber(
       proposalPadding: true,
     },
   });
-  return format(s.proposalPrefix, s.proposalCounter, s.proposalPadding);
+  return format(s.proposalPrefix, s.proposalCounter, s.proposalPadding, "-");
 }

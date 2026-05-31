@@ -12,7 +12,7 @@ const { auth } = NextAuth(authConfig);
 const PUBLIC: RegExp[] = [
   /^\/login(\/.*)?$/,
   /^\/sign\/.+/, // public signature page (GET)
-  /^\/api\/sign\/.+/, // POST sign — protected by its own token check
+  /^\/api\/sign(\/.+)?$/, // POST /api/sign (consume) + GET /api/sign/[token]/pdf (token-scoped preview) — guarded by sign token
   /^\/api\/auth\/.+/, // NextAuth route handlers
   /^\/api\/cron\/.+/, // protected by CRON_SECRET bearer
   /^\/offline$/, // PWA offline shell

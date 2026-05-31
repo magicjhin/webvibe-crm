@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileText, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -10,12 +10,21 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { EmptyState } from "@/components/data/EmptyState";
 import {
   InvoicesTable,
   type InvoiceRow,
 } from "@/components/invoices/InvoicesTable";
+import {
+  ContractsTable,
+  type ContractRow,
+} from "@/components/contracts/ContractsTable";
+import {
+  ProposalsTable,
+  type ProposalRow,
+} from "@/components/proposals/ProposalsTable";
 import { prisma } from "@/lib/db";
+import { getContracts } from "@/lib/actions/contracts";
+import { getProposals } from "@/lib/actions/proposals";
 
 export const metadata = { title: "Документы" };
 export const dynamic = "force-dynamic";
@@ -31,13 +40,17 @@ export default async function DocumentsPage({
   const activeTab =
     tab === "contracts" || tab === "proposals" ? tab : "invoices";
 
-  const invoices = await prisma.invoice.findMany({
-    orderBy: [{ issuedAt: "desc" }, { number: "desc" }],
-    include: {
-      client: { select: { id: true, name: true } },
-      project: { select: { title: true } },
-    },
-  });
+  const [invoices, contracts, proposals] = await Promise.all([
+    prisma.invoice.findMany({
+      orderBy: [{ issuedAt: "desc" }, { number: "desc" }],
+      include: {
+        client: { select: { id: true, name: true } },
+        project: { select: { title: true } },
+      },
+    }),
+    getContracts(),
+    getProposals(),
+  ]);
 
   const rows: InvoiceRow[] = invoices.map((i) => ({
     id: i.id,
@@ -50,6 +63,30 @@ export default async function DocumentsPage({
     issuedAt: i.issuedAt,
     dueAt: i.dueAt,
     total: i.total.toString(),
+  }));
+
+  const contractRows: ContractRow[] = contracts.map((c) => ({
+    id: c.id,
+    number: c.number,
+    kind: c.kind,
+    status: c.status,
+    clientId: c.clientId,
+    clientName: c.client.name,
+    projectTitle: c.project?.title ?? null,
+    issuedAt: c.issuedAt,
+    amount: c.amount.toString(),
+  }));
+
+  const proposalRows: ProposalRow[] = proposals.map((p) => ({
+    id: p.id,
+    number: p.number,
+    title: p.title,
+    status: p.status,
+    clientId: p.clientId,
+    clientName: p.client.name,
+    validUntil: p.validUntil,
+    total: p.total.toString(),
+    createdAt: p.createdAt,
   }));
 
   return (
@@ -76,8 +113,18 @@ export default async function DocumentsPage({
                 {rows.length}
               </span>
             </TabsTrigger>
-            <TabsTrigger value="contracts">Договора</TabsTrigger>
-            <TabsTrigger value="proposals">КП</TabsTrigger>
+            <TabsTrigger value="contracts">
+              Договора
+              <span className="ml-2 text-xs text-foreground-muted">
+                {contractRows.length}
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="proposals">
+              КП
+              <span className="ml-2 text-xs text-foreground-muted">
+                {proposalRows.length}
+              </span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="invoices" className="mt-4">
@@ -85,19 +132,11 @@ export default async function DocumentsPage({
           </TabsContent>
 
           <TabsContent value="contracts" className="mt-4">
-            <EmptyState
-              icon={FileText}
-              title="Договора появятся в Iter 4"
-              description="Project contracts + maintenance contracts с manual signature через /sign/[token]. Нумерация WVS000001."
-            />
+            <ContractsTable rows={contractRows} />
           </TabsContent>
 
           <TabsContent value="proposals" className="mt-4">
-            <EmptyState
-              icon={FileText}
-              title="КП появятся в Iter 4"
-              description="Коммерческие предложения с PDF и конверсией в Project. Нумерация WVP-001."
-            />
+            <ProposalsTable rows={proposalRows} />
           </TabsContent>
         </Tabs>
       </div>
