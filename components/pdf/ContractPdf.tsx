@@ -1,7 +1,6 @@
 import { Document, Page, Text, View, Image } from "@react-pdf/renderer";
 import { PdfHeader } from "./parts/PdfHeader";
 import { PdfFooter } from "./parts/PdfFooter";
-import { PdfWatermark } from "./parts/PdfWatermark";
 import { ensureFontsRegistered, pdfStyles } from "./parts/pdfStyles";
 
 ensureFontsRegistered();
@@ -170,7 +169,9 @@ function PartyCol({ party }: { party: ContractParty }) {
   return (
     <View style={pdfStyles.partiesCol}>
       <Text style={pdfStyles.partyLabel}>{party.role}</Text>
-      <Text style={pdfStyles.partyName}>{party.name}</Text>
+      <Text style={[pdfStyles.partyName, pdfStyles.partyNameClause]}>
+        {party.name}
+      </Text>
       {lines.map((l, i) => (
         <Text key={i} style={pdfStyles.partyLine}>
           {l}
@@ -228,7 +229,6 @@ function ProjectContract({ data }: { data: ContractPdfData }) {
   return (
     <Document title={`Paslaugu teikimo sutartis ${data.number}`}>
       <Page size="A4" style={pdfStyles.page} wrap>
-        <PdfWatermark />
         <PdfHeader />
 
         <Text style={pdfStyles.contractTitle}>PASLAUGŲ TEIKIMO SUTARTIS</Text>
@@ -552,7 +552,6 @@ function MaintenanceContract({ data }: { data: ContractPdfData }) {
   return (
     <Document title={`Technines prieziuros sutartis ${data.number}`}>
       <Page size="A4" style={pdfStyles.page} wrap>
-        <PdfWatermark />
         <PdfHeader />
 
         <Text style={pdfStyles.contractTitle}>

@@ -248,7 +248,9 @@ function PartyCol({ party }: { party: ProposalParty }) {
   return (
     <View style={pdfStyles.partiesCol}>
       <Text style={pdfStyles.partyLabel}>{party.role}</Text>
-      <Text style={pdfStyles.partyName}>{party.name}</Text>
+      <Text style={[pdfStyles.partyName, pdfStyles.partyNameClause]}>
+        {party.name}
+      </Text>
       {lines.map((l, i) => (
         <Text key={i} style={pdfStyles.partyLine}>
           {l}

@@ -117,7 +117,7 @@ export const pdfStyles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 4,
     padding: 10,
-    backgroundColor: colors.bg, // перекрывает watermark
+    backgroundColor: colors.bg,
   },
   partyLabel: {
     fontSize: 8,
@@ -151,7 +151,7 @@ export const pdfStyles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 4,
     marginBottom: 12,
-    backgroundColor: colors.bg, // строки таблицы перекрывают watermark
+    backgroundColor: colors.bg,
   },
   itemsHeader: {
     flexDirection: "row",
@@ -190,7 +190,7 @@ export const pdfStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 4,
-    backgroundColor: colors.bg, // перекрывает watermark
+    backgroundColor: colors.bg,
   },
   totalsRow: {
     flexDirection: "row",
@@ -332,6 +332,12 @@ export const pdfStyles = StyleSheet.create({
   partiesCol: {
     flex: 1,
   },
+  /* Имя стороны в колонках §1/§14: фикс. минимальная высота (≈2 строки),
+     чтобы реквизиты обеих сторон начинались на одной линии, даже если
+     длинное название клиента переносится на 2 строки, а моё имя — на 1. */
+  partyNameClause: {
+    minHeight: 26,
+  },
 
   /* Сумма крупно (договор/КП) */
   bigAmountWrap: {
@@ -411,9 +417,9 @@ export const pdfStyles = StyleSheet.create({
     marginTop: 1,
   },
 
-  /* Watermark — большой диагональный фон по центру страницы, очень faint.
-     Рендерится первым в дереве + БЕЗ `fixed`, чтобы основной контент
-     (таблица paslaugos, totals) рисовался поверх него. */
+  /* Watermark — большой диагональный фон, очень faint. Используется только
+     в счёте и КП (в договоре убран). Рендерится `fixed`, чтобы не ломать
+     пагинацию (full-bleed без fixed создавал пустую первую страницу). */
   watermark: {
     position: "absolute",
     top: 0,
