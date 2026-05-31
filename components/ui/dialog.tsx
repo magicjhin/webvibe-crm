@@ -61,7 +61,15 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "fixed z-50 grid max-h-[85dvh] gap-4 overflow-y-auto bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 outline-none duration-150",
+          // Mobile (<sm): bottom sheet — docks to bottom, full width, slides up.
+          "inset-x-0 bottom-0 w-full rounded-t-2xl max-sm:pb-[calc(1rem+env(safe-area-inset-bottom))]",
+          "max-sm:data-open:slide-in-from-bottom max-sm:data-closed:slide-out-to-bottom",
+          // sm+: centered modal — zoom in/out as before.
+          "sm:inset-x-auto sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:max-w-sm sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl",
+          "sm:data-open:zoom-in-95 sm:data-closed:zoom-out-95",
+          // Shared fade.
+          "data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
           className
         )}
         {...props}
@@ -76,7 +84,7 @@ function DialogContent({
             >
               <XIcon
               />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">Закрыть</span>
             </Button>
           </DialogPrimitive.Close>
         )}
@@ -115,7 +123,7 @@ function DialogFooter({
       {children}
       {showCloseButton && (
         <DialogPrimitive.Close asChild>
-          <Button variant="outline">Close</Button>
+          <Button variant="outline">Закрыть</Button>
         </DialogPrimitive.Close>
       )}
     </div>

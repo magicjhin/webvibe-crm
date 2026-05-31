@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ContractStatusBadge } from "./ContractStatusBadge";
+import { SharePdfButton } from "@/components/common/SharePdfButton";
 import { DeleteConfirm } from "@/components/data/DeleteConfirm";
 import { deleteContract, setContractStatus } from "@/lib/actions/contracts";
 import type { ContractStatus } from "@/lib/validators/contract";
@@ -60,13 +61,14 @@ export function ContractHeader({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
         <Button asChild variant="outline">
           <a href={`/api/contracts/${id}/pdf?download=1`} download={`${number}.pdf`}>
             <Download className="size-4" />
             PDF
           </a>
         </Button>
+        <SharePdfButton url={`/api/contracts/${id}/pdf?download=1`} filename={`${number}.pdf`} />
         {canEdit ? (
           <Button asChild variant="outline">
             <Link href={`/contracts/${id}/edit`}>

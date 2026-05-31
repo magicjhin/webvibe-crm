@@ -34,7 +34,7 @@ export function QuickAddFab() {
         <button
           type="button"
           aria-label="Быстрое создание"
-          className="fixed bottom-20 right-4 z-40 inline-flex size-14 items-center justify-center rounded-full text-white shadow-lg bg-accent-gradient active:scale-95 md:hidden"
+          className="fixed bottom-20 right-4 z-40 inline-flex size-14 items-center justify-center rounded-full text-white shadow-lg bg-accent-gradient active:scale-95 sm:hidden"
         >
           <Plus className="size-6" strokeWidth={2.25} />
         </button>

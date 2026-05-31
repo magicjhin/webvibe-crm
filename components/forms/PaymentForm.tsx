@@ -324,7 +324,7 @@ export function PaymentForm({ clients, projects, invoices, initial }: Props) {
         </div>
       ) : null}
 
-      <div className="flex justify-end gap-2">
+      <div className="sticky bottom-16 z-10 -mx-4 flex justify-end gap-2 border-t border-border bg-background/95 px-4 py-3 backdrop-blur sm:bottom-4 sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
         <Button type="button" variant="outline" onClick={() => router.back()} disabled={isPending}>
           Отмена
         </Button>

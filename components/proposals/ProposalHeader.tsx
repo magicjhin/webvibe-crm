@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ProposalStatusBadge } from "./ProposalStatusBadge";
+import { SharePdfButton } from "@/components/common/SharePdfButton";
 import { DeleteConfirm } from "@/components/data/DeleteConfirm";
 import { deleteProposal, setProposalStatus } from "@/lib/actions/proposals";
 import type { ProposalStatus } from "@/lib/validators/proposal";
@@ -64,7 +65,7 @@ export function ProposalHeader({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
         {status === "accepted" ? (
           <Button asChild variant="default">
             {/* Convert-to-project wizard lands later; link prefilled with proposal context. */}
@@ -80,6 +81,7 @@ export function ProposalHeader({
             PDF
           </a>
         </Button>
+        <SharePdfButton url={`/api/proposals/${id}/pdf?download=1`} filename={`${number}.pdf`} />
         {canEdit ? (
           <Button asChild variant="outline">
             <Link href={`/proposals/${id}/edit`}>
