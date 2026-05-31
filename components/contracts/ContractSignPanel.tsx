@@ -100,7 +100,7 @@ export function ContractSignPanel({
         toast.error(json.error ?? "Не удалось подписать");
         return;
       }
-      toast.success("Договор подписан");
+      toast.success("Твоя подпись добавлена");
       router.refresh();
     } catch {
       toast.error("Ошибка сети");
@@ -164,10 +164,11 @@ export function ContractSignPanel({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <PenLine className="size-4" />
-            Подписать самому
+            Моя подпись (исполнитель)
           </CardTitle>
           <CardDescription>
-            Подпиши договор прямо здесь, без отправки ссылки клиенту.
+            Твоя подпись как исполнителя — встанет в твою колонку (Paslaugų
+            teikėjas). Клиент подписывает свою через ссылку выше.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">

@@ -2,19 +2,17 @@ import { NextResponse } from "next/server";
 import { put, del } from "@vercel/blob";
 
 import { auth } from "@/lib/auth";
-import {
-  generateContractSignToken,
-  signContract,
-} from "@/lib/actions/contracts";
+import { signContractAsProvider } from "@/lib/actions/contracts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 /**
- * In-app signing by the owner (WORKFLOW §6 "Со стороны меня — подписать свой
- * документ"). Auth-protected. Reuses the token machinery: generate a one-time
- * token (draft|sent → sent) then immediately consume it with the signature.
+ * In-app signing by the owner ("Подписать самому"). Auth-protected.
+ * Это подпись ИСПОЛНИТЕЛЯ — пишется в provider*-поля договора и рендерится
+ * в МОЕЙ колонке (Paslaugų teikėjas). Подпись заказчика ставится отдельно —
+ * через публичную ссылку /sign/[token]. Status договора не меняется.
  */
 type Body = {
   signerName?: unknown;
@@ -31,12 +29,6 @@ function dataUrlToBuffer(dataUrl: string): Buffer | null {
   } catch {
     return null;
   }
-}
-
-function clientIp(req: Request): string | null {
-  const fwd = req.headers.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0]?.trim() ?? null;
-  return req.headers.get("x-real-ip");
 }
 
 export async function POST(
@@ -81,8 +73,7 @@ export async function POST(
     );
   }
 
-  // 1) Upload PNG FIRST. Если upload упадёт, мы ещё НЕ ротировали sign-токен,
-  //    поэтому ранее выданная клиенту ссылка остаётся валидной.
+  // 1) Upload PNG to Vercel Blob first.
   let blobUrl: string;
   try {
     const uploaded = await put(`signatures/${crypto.randomUUID()}.png`, buffer, {
@@ -103,34 +94,21 @@ export async function POST(
     );
   }
 
-  // 2) Issue a one-time token for this contract (draft|sent → sent).
-  const tokenRes = await generateContractSignToken(id);
-  if (!tokenRes.ok) {
-    // PNG уже залит — чистим orphan, токен не ротирован.
-    try {
-      await del(blobUrl);
-    } catch (err) {
-      console.error("orphan blob cleanup failed", err);
-    }
-    return NextResponse.json({ ok: false, error: tokenRes.error }, { status: 409 });
-  }
-
-  // 3) Consume the token.
-  const result = await signContract({
-    token: tokenRes.data.token,
+  // 2) Записываем подпись исполнителя в provider*-поля договора.
+  const result = await signContractAsProvider({
+    contractId: id,
     signerName: signerName.trim(),
     signaturePng: blobUrl,
-    ip: clientIp(req),
-    userAgent: req.headers.get("user-agent"),
   });
 
   if (!result.ok) {
+    // Запись не удалась — чистим orphan PNG из Blob.
     try {
       await del(blobUrl);
     } catch (err) {
       console.error("orphan blob cleanup failed", err);
     }
-    return NextResponse.json({ ok: false, error: result.error }, { status: 410 });
+    return NextResponse.json({ ok: false, error: result.error }, { status: 409 });
   }
 
   return NextResponse.json({ ok: true, data: result.data }, { status: 200 });

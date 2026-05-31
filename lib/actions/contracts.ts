@@ -554,3 +554,50 @@ export async function signContract(
     return { ok: false, error: "Не удалось подписать договор" };
   }
 }
+
+type SignAsProviderArgs = {
+  contractId: string;
+  signerName: string;
+  signaturePng: string; // Vercel Blob URL — загрузку делает caller
+};
+
+/**
+ * Подпись ИСПОЛНИТЕЛЯ (моя, "Подписать самому"). Auth-only.
+ * В отличие от signContract (заказчик по токену) — НЕ трогает status,
+ * не использует sign-токен и пишет в отдельные provider*-поля, которые
+ * рендерятся в моей колонке (Paslaugų teikėjas). Можно переподписать.
+ */
+export async function signContractAsProvider(
+  args: SignAsProviderArgs,
+): Promise<Result<{ id: string }>> {
+  const authed = await requireAuth();
+  if (!authed.ok) return authed;
+
+  const signerName = args.signerName.trim();
+  if (signerName.length < 2) {
+    return { ok: false, error: "Укажи имя подписанта" };
+  }
+  if (!/^https?:\/\//.test(args.signaturePng)) {
+    return { ok: false, error: "Невалидная подпись" };
+  }
+
+  try {
+    const updated = await prisma.contract.updateMany({
+      where: { id: args.contractId, status: { not: "cancelled" } },
+      data: {
+        providerSignedAt: new Date(),
+        providerSignerName: signerName,
+        providerSignatureUrl: args.signaturePng,
+      },
+    });
+    if (updated.count !== 1) {
+      return { ok: false, error: "Договор не найден или отменён" };
+    }
+    revalidatePath(`/contracts/${args.contractId}`);
+    revalidatePath("/documents");
+    return { ok: true, data: { id: args.contractId } };
+  } catch (err) {
+    console.error("signContractAsProvider failed", err);
+    return { ok: false, error: "Не удалось сохранить подпись" };
+  }
+}

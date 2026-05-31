@@ -99,27 +99,45 @@ export default async function ContractPage({
               <CardTitle className="text-sm font-medium text-foreground-muted">Подпись</CardTitle>
             </CardHeader>
             <CardContent className="space-y-1 text-sm">
-              {contract.status === "signed" ? (
-                <>
-                  <p>
-                    <span className="text-foreground-muted">Pasirašė:</span>{" "}
-                    {contract.signerName ?? "—"}
-                  </p>
-                  <p>
-                    <span className="text-foreground-muted">Дата:</span>{" "}
-                    <DateDisplay date={contract.signedAt} mode="long" />
-                  </p>
-                  {contract.maintenance ? (
-                    <p>
-                      <Link href="/maintenance" className="text-xs hover:underline">
-                        Создана запись поддержки →
-                      </Link>
-                    </p>
-                  ) : null}
-                </>
-              ) : (
-                <p className="text-foreground-muted">Ещё не подписан</p>
-              )}
+              <p>
+                <span className="text-foreground-muted">Я (исполнитель):</span>{" "}
+                {contract.providerSignatureUrl ? (
+                  <>
+                    {contract.providerSignerName ?? "✓"}
+                    {contract.providerSignedAt ? (
+                      <>
+                        {" · "}
+                        <DateDisplay date={contract.providerSignedAt} />
+                      </>
+                    ) : null}
+                  </>
+                ) : (
+                  <span className="text-foreground-muted">— не подписано</span>
+                )}
+              </p>
+              <p>
+                <span className="text-foreground-muted">Клиент:</span>{" "}
+                {contract.status === "signed" ? (
+                  <>
+                    {contract.signerName ?? "✓"}
+                    {contract.signedAt ? (
+                      <>
+                        {" · "}
+                        <DateDisplay date={contract.signedAt} />
+                      </>
+                    ) : null}
+                  </>
+                ) : (
+                  <span className="text-foreground-muted">— не подписано</span>
+                )}
+              </p>
+              {contract.maintenance ? (
+                <p>
+                  <Link href="/maintenance" className="text-xs hover:underline">
+                    Создана запись поддержки →
+                  </Link>
+                </p>
+              ) : null}
             </CardContent>
           </Card>
         </div>

@@ -154,7 +154,13 @@ export async function renderContractPdf(contractId: string): Promise<Buffer> {
     customer,
 
     status: contract.status,
-    providerSignatureUrl: settings.signatureUrl ?? null,
+    // Моя подпись: per-contract (self-sign) приоритетнее дефолтной из Settings.
+    providerSignatureUrl:
+      contract.providerSignatureUrl ?? settings.signatureUrl ?? null,
+    providerSignerName: contract.providerSignerName ?? null,
+    providerSignedAt: contract.providerSignedAt
+      ? fmtDate(contract.providerSignedAt)
+      : null,
     signature: {
       signatureUrl: contract.signatureUrl,
       signerName: contract.signerName,

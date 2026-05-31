@@ -478,7 +478,13 @@ model Contract {
   signerName         String?
   signerIp           String?
   signerUserAgent    String?
-  signatureUrl       String? // PNG в Vercel Blob
+  signatureUrl       String? // PNG в Vercel Blob — подпись ЗАКАЗЧИКА (по ссылке /sign)
+
+  // Подпись ИСПОЛНИТЕЛЯ (моя) — ставится в приложении ("Подписать самому").
+  // Не зависит от status и sign-токена: я подписываю свою колонку отдельно.
+  providerSignedAt     DateTime?
+  providerSignerName   String?
+  providerSignatureUrl String? // PNG в Vercel Blob — подпись исполнителя
 
   pdfUrl String?
 

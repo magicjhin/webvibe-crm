@@ -83,8 +83,12 @@ export type ContractPdfData = {
   customer: ContractParty;
 
   status: "draft" | "sent" | "signed" | "cancelled";
-  /** Подпись исполнителя (Settings.signatureUrl). */
+  /** Подпись исполнителя (per-contract self-sign или дефолт из Settings). */
   providerSignatureUrl: string | null;
+  /** Имя подписавшего исполнителя (если подписано в приложении). */
+  providerSignerName: string | null;
+  /** Дата подписи исполнителя "yyyy-MM-dd". */
+  providerSignedAt: string | null;
   /** Подпись заказчика. */
   signature: ContractSignature;
 };
@@ -357,8 +361,8 @@ function ProjectContract({ data }: { data: ContractPdfData }) {
             <SignBlock
               role="Paslaugų teikėjas"
               signatureUrl={data.providerSignatureUrl}
-              signerName={data.provider.name}
-              signedAt={null}
+              signerName={data.providerSignerName ?? data.provider.name}
+              signedAt={data.providerSignedAt}
               signerIp={null}
             />
             <SignBlock
@@ -643,8 +647,8 @@ function MaintenanceContract({ data }: { data: ContractPdfData }) {
             <SignBlock
               role="Paslaugų teikėjas"
               signatureUrl={data.providerSignatureUrl}
-              signerName={data.provider.name}
-              signedAt={null}
+              signerName={data.providerSignerName ?? data.provider.name}
+              signedAt={data.providerSignedAt}
               signerIp={null}
             />
             <SignBlock
