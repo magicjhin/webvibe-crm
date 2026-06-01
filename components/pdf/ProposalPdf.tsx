@@ -91,12 +91,9 @@ export function ProposalPdf({ data }: { data: ProposalPdfData }) {
           {data.title}
         </Text>
 
-        {/* §1 ŠALYS — только названия сторон, без полных реквизитов. */}
+        {/* §1 ŠALYS — реквизиты сторон, колонки выровнены по верху (как в договоре). */}
         <Section heading="1. ŠALYS">
-          <View style={pdfStyles.partiesColRow}>
-            <PartyCol party={{ ...data.provider, lines: [] }} />
-            <PartyCol party={{ ...data.customer, lines: [] }} />
-          </View>
+          <PartiesRow provider={data.provider} customer={data.customer} />
         </Section>
 
         {/* §2 DARBŲ APIMTIS */}
@@ -241,17 +238,40 @@ function Bullet({ children }: { children: React.ReactNode }) {
   );
 }
 
-function PartyCol({ party }: { party: ProposalParty }) {
-  const lines = party.lines.filter(
-    (l): l is string => !!l && l.trim() !== "",
+/** Две колонки сторон: имена отдельной строкой + реквизиты ниже, выровнены по
+ *  верху (та же раскладка, что в договоре — см. ContractPdf.PartiesRow). */
+function PartiesRow({
+  provider,
+  customer,
+}: {
+  provider: ProposalParty;
+  customer: ProposalParty;
+}) {
+  return (
+    <View wrap={false}>
+      <View style={pdfStyles.partiesNameRow}>
+        <View style={pdfStyles.partiesCol}>
+          <Text style={pdfStyles.partyLabel}>{provider.role}</Text>
+          <Text style={pdfStyles.partyName}>{provider.name}</Text>
+        </View>
+        <View style={pdfStyles.partiesCol}>
+          <Text style={pdfStyles.partyLabel}>{customer.role}</Text>
+          <Text style={pdfStyles.partyName}>{customer.name}</Text>
+        </View>
+      </View>
+      <View style={pdfStyles.partiesColRow}>
+        <PartyLines lines={provider.lines} />
+        <PartyLines lines={customer.lines} />
+      </View>
+    </View>
   );
+}
+
+function PartyLines({ lines }: { lines: Array<string | null | undefined> }) {
+  const clean = lines.filter((l): l is string => !!l && l.trim() !== "");
   return (
     <View style={pdfStyles.partiesCol}>
-      <Text style={pdfStyles.partyLabel}>{party.role}</Text>
-      <Text style={[pdfStyles.partyName, pdfStyles.partyNameClause]}>
-        {party.name}
-      </Text>
-      {lines.map((l, i) => (
+      {clean.map((l, i) => (
         <Text key={i} style={pdfStyles.partyLine}>
           {l}
         </Text>
