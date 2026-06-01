@@ -39,8 +39,29 @@ function createClient() {
   return new PrismaClient({ adapter });
 }
 
-export const prisma: PrismaClient = globalThis.__prisma ?? createClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalThis.__prisma = prisma;
+// Ленивая инициализация. Клиент создаётся при ПЕРВОМ обращении (реальный
+// запрос в рантайме), а не при импорте модуля. Это критично для `next build`:
+// на этапе "Collecting page data" Next импортирует все роуты, и если бы
+// createClient() выполнялся при импорте, билд падал бы с "DATABASE_URL is
+// required" в окружениях, где переменная не задана на этапе сборки
+// (напр. Vercel Preview deployments). Теперь DATABASE_URL нужна только когда
+// действительно выполняется запрос, а не во время компиляции.
+function getClient(): PrismaClient {
+  if (globalThis.__prisma) return globalThis.__prisma;
+  const client = createClient();
+  // На serverless (prod) тоже кешируем в global — переиспользование между
+  // инвокациями уменьшает количество cold-start подключений к Neon.
+  globalThis.__prisma = client;
+  return client;
 }
+
+// Прокси: createClient() откладывается до первого обращения к свойству
+// (prisma.contract, prisma.$transaction и т.д.). Сам импорт `prisma` ничего
+// не создаёт и не требует env — поэтому безопасен на этапе сборки.
+export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, prop, receiver) {
+    const client = getClient();
+    const value = Reflect.get(client, prop, receiver);
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});
