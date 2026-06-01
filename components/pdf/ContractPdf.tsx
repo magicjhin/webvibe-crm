@@ -469,6 +469,11 @@ function BoilerplateClauses({ warranty }: { warranty: string }) {
           nukeliamas tam laikotarpiui, kurį Užsakovas nebuvo pasiekiamas arba
           nepateikė reikalingo atsakymo.
         </Para>
+        <Para>
+          4.5. Atskirų etapų pradžia, tarpinės peržiūros ir darbų pabaiga
+          derinami Šalių susirašinėjimu el. paštu. Toks suderinimas laikomas
+          tinkama ir Šalims privaloma rašytine forma.
+        </Para>
       </Section>
 
       <Section heading="5. UŽSAKOVO ĮSIPAREIGOJIMAI">
@@ -540,6 +545,12 @@ function BoilerplateClauses({ warranty }: { warranty: string }) {
           atliekami pagal Šalių suderintą tvarką. Esminiai pakeitimai, papildomos
           funkcijos ar nauji reikalavimai laikomi papildomais darbais.
         </Para>
+        <Para>
+          7.5. Į darbų apimtį įeina pagrįstas pataisymų ir korekcijų skaičius
+          suderintos apimties ribose. Pakartotiniai esminiai krypties ar
+          koncepcijos keitimai, kuriuos Užsakovas inicijuoja patvirtinęs
+          ankstesnį etapą, laikomi papildomais darbais.
+        </Para>
       </Section>
 
       <Section heading="8. GARANTIJA">
@@ -557,6 +568,12 @@ function BoilerplateClauses({ warranty }: { warranty: string }) {
           ar platformų veikimo pokyčiams, mokėjimų paslaugų teikėjo ar kitų
           išorinių sistemų sutrikimams, Užsakovo ar trečiųjų asmenų atliktiems
           pakeitimams, naujų funkcijų kūrimui ar turinio administravimui.
+        </Para>
+        <Para>
+          8.4. Garantinės klaidos pranešamos Paslaugų teikėjui raštu (el. paštu),
+          nurodant klaidos aplinkybes ir, jei įmanoma, jos atkartojimo veiksmus.
+          Paslaugų teikėjas klaidas šalina per protingą terminą, atsižvelgdamas į
+          jų sudėtingumą ir poveikį sistemos veikimui.
         </Para>
       </Section>
 
@@ -578,6 +595,12 @@ function BoilerplateClauses({ warranty }: { warranty: string }) {
           tinkluose ar komerciniuose pristatymuose, jeigu Užsakovas raštu
           nenurodo kitaip.
         </Para>
+        <Para>
+          9.4. Trečiųjų šalių komponentams, bibliotekoms, šriftams ir
+          licencijuojamai programinei įrangai taikomos atitinkamų jų teikėjų
+          licencijų sąlygos; tokios teisės Užsakovui neperleidžiamos plačiau, nei
+          numato pati licencija.
+        </Para>
       </Section>
 
       <Section heading="10. KONFIDENCIALUMAS">
@@ -586,6 +609,15 @@ function BoilerplateClauses({ warranty }: { warranty: string }) {
           konfidencialios informacijos, gautos vykdant šią Sutartį, išskyrus
           atvejus, kai tai būtina Sutarties vykdymui arba to reikalauja teisės
           aktai.
+        </Para>
+        <Para>
+          10.2. Konfidencialumo įsipareigojimai galioja Sutarties vykdymo
+          laikotarpiu ir lieka galioti pasibaigus ar nutraukus Sutartį.
+        </Para>
+        <Para>
+          10.3. Asmens duomenys, gauti vykdant Sutartį, tvarkomi tik tiek, kiek
+          būtina Sutarčiai įgyvendinti, laikantis taikomų asmens duomenų apsaugos
+          teisės aktų reikalavimų.
         </Para>
       </Section>
 
@@ -624,6 +656,12 @@ function BoilerplateClauses({ warranty }: { warranty: string }) {
           grąžinti už neatliktą darbų dalį sumokėtas sumas, atsižvelgiant į
           faktiškai atliktų darbų apimtį.
         </Para>
+        <Para>
+          11.8. Šalys neatsako už įsipareigojimų neįvykdymą ar pavėluotą
+          įvykdymą, jeigu tai sukėlė nenugalimos jėgos (force majeure)
+          aplinkybės. Apie tokias aplinkybes paveiktoji Šalis nedelsdama
+          informuoja kitą Šalį, o darbų terminai atitinkamai pratęsiami.
+        </Para>
       </SectionWrap>
 
       <Section heading="12. BAIGIAMOSIOS NUOSTATOS">
@@ -646,6 +684,12 @@ function BoilerplateClauses({ warranty }: { warranty: string }) {
         <Para>
           12.5. Sutartis sudaryta dviem vienodą teisinę galią turinčiais
           egzemplioriais arba pasirašoma elektroniniu būdu.
+        </Para>
+        <Para>
+          12.6. Jeigu kuri nors Sutarties nuostata taptų negaliojančia ar
+          neįgyvendinama, tai neturi įtakos kitų nuostatų galiojimui, o Šalys
+          tokią nuostatą pakeičia galiojančia, kuo labiau atitinkančia pradinį
+          Šalių ketinimą.
         </Para>
       </Section>
     </>
