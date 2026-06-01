@@ -328,6 +328,11 @@ model Invoice {
   notes  String?
   pdfUrl String? // reserved for Phase 2 PDF cache; в Iter 3 рендерим каждый запрос на лету (см. ROADMAP «Out of MVP»)
 
+  // Импорт существующего (старого) счёта: если задано — это загруженный PDF,
+  // PDF-роут отдаёт ИМЕННО этот файл, а не генерит из шаблона. Номер вводится
+  // вручную, авто-счётчик не трогается.
+  importedPdfUrl String?
+
   items    InvoiceItem[]
   payments Payment[]
 
@@ -487,6 +492,11 @@ model Contract {
   providerSignatureUrl String? // PNG в Vercel Blob — подпись исполнителя
 
   pdfUrl String?
+
+  // Импорт существующего (старого) подписанного договора: если задано — это
+  // загруженный PDF, PDF-роут отдаёт ИМЕННО этот файл, а не рендерит из terms.
+  // Номер вводится вручную; terms содержит плейсхолдер (рендер не вызывается).
+  importedPdfUrl String?
 
   // MAINTENANCE-договор порождает запись Maintenance при подписании.
   maintenance Maintenance?

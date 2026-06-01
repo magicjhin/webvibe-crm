@@ -26,15 +26,36 @@ export async function GET(
     // renderInvoicePdf успешно вернётся. Дешевле, чем парсить buffer.
     const inv = await prisma.invoice.findUnique({
       where: { id },
-      select: { number: true },
+      select: { number: true, importedPdfUrl: true },
     });
     if (!inv) {
       return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
     }
 
-    const buffer = await renderInvoicePdf(id);
     const filename = `${inv.number}.pdf`;
     const disposition = download ? "attachment" : "inline";
+
+    // Импортированный счёт: отдаём загруженный PDF как есть (не рендерим).
+    if (inv.importedPdfUrl) {
+      const upstream = await fetch(inv.importedPdfUrl);
+      if (!upstream.ok) {
+        return NextResponse.json(
+          { error: "Загруженный PDF недоступен" },
+          { status: 502 },
+        );
+      }
+      const ab = await upstream.arrayBuffer();
+      return new NextResponse(new Uint8Array(ab), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `${disposition}; filename="${filename}"`,
+          "Cache-Control": "private, no-store",
+        },
+      });
+    }
+
+    const buffer = await renderInvoicePdf(id);
 
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,

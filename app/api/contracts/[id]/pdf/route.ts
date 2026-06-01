@@ -22,7 +22,7 @@ export async function GET(
   try {
     const contract = await prisma.contract.findUnique({
       where: { id },
-      select: { number: true },
+      select: { number: true, importedPdfUrl: true },
     });
     if (!contract) {
       return NextResponse.json(
@@ -31,9 +31,30 @@ export async function GET(
       );
     }
 
-    const buffer = await renderContractPdf(id);
     const filename = `${contract.number}.pdf`;
     const disposition = download ? "attachment" : "inline";
+
+    // Импортированный договор: отдаём загруженный PDF как есть (не рендерим).
+    if (contract.importedPdfUrl) {
+      const upstream = await fetch(contract.importedPdfUrl);
+      if (!upstream.ok) {
+        return NextResponse.json(
+          { error: "Загруженный PDF недоступен" },
+          { status: 502 },
+        );
+      }
+      const ab = await upstream.arrayBuffer();
+      return new NextResponse(new Uint8Array(ab), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `${disposition}; filename="${filename}"`,
+          "Cache-Control": "private, no-store",
+        },
+      });
+    }
+
+    const buffer = await renderContractPdf(id);
 
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,

@@ -8,6 +8,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -118,6 +120,16 @@ export default async function DocumentsPage({
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/proposals/new">КП</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs font-normal text-foreground-subtle">
+                  Импорт старого PDF
+                </DropdownMenuLabel>
+                <DropdownMenuItem asChild>
+                  <Link href="/invoices/import">Импорт счёта</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/contracts/import">Импорт договора</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
