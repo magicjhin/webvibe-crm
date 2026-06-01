@@ -9,9 +9,9 @@ ensureFontsRegistered();
  * ContractPdf — единая точка входа для всех трёх типов договора.
  *
  *  - STAGED / ADVANCE → один проектный шаблон `PASLAUGŲ TEIKIMO SUTARTIS`,
- *    §1–§3 + §5–§14 общие, §4 (KAINA) условный по `kind`.
+ *    §1–§2 + §4–§13 общие, §3 (KAINA) условный по `kind`.
  *  - MAINTENANCE      → отдельный короткий шаблон `INTERNETO SVETAINĖS
- *    TECHNINĖS PRIEŽIŪROS SUTARTIS` (§2–§5).
+ *    TECHNINĖS PRIEŽIŪROS SUTARTIS` (§1–§4 + реквизиты).
  *
  * Boilerplate перенесён дословно из CONTRACTS-LT-SOURCE.md (ADR-026).
  * Все суммы/даты приходят УЖЕ отформатированными строками (см. renderContract).
@@ -248,21 +248,21 @@ function ProjectContract({ data }: { data: ContractPdfData }) {
         <Text style={pdfStyles.contractMeta}>{data.issuedAt}, Vilnius</Text>
 
         {/* §2 SUTARTIES DALYKAS — §1 ŠALYS убран: реквизиты сторон только в §14. */}
-        <Section heading="2. SUTARTIES DALYKAS">
+        <Section heading="1. SUTARTIES DALYKAS">
           <Para>
-            2.1. Paslaugų teikėjas įsipareigoja suteikti Užsakovui{" "}
+            1.1. Paslaugų teikėjas įsipareigoja suteikti Užsakovui{" "}
             <Text style={pdfStyles.clauseStrong}>{data.subject}</Text> paslaugas,
             o Užsakovas įsipareigoja priimti suteiktas paslaugas ir už jas
             atsiskaityti šioje Sutartyje nustatyta tvarka.
           </Para>
           <Para>
-            2.2. Projektas vykdomas etapais. Bendra projekto kaina apima šioje
+            1.2. Projektas vykdomas etapais. Bendra projekto kaina apima šioje
             Sutartyje nurodytą Užsakovo pateiktą funkcijų sąrašą. Funkcijos,
             kurios nėra nurodytos šioje Sutartyje, arba keičia suderintą projekto
             logiką ir apimtį, laikomos papildomais darbais.
           </Para>
           <Para>
-            2.3. Pilna techninė specifikacija rengiama po Sutarties pasirašymo,
+            1.3. Pilna techninė specifikacija rengiama po Sutarties pasirašymo,
             remiantis Užsakovo pateiktu funkcijų sąrašu. Jeigu techninės
             specifikacijos rengimo metu paaiškėja poreikis funkcijoms, kurios
             nėra nurodytos šios Sutarties darbų apimtyje, tokios funkcijos
@@ -271,28 +271,28 @@ function ProjectContract({ data }: { data: ContractPdfData }) {
         </Section>
 
         {/* §3 DARBŲ APIMTIS — длинный, переносится */}
-        <SectionWrap heading="3. DARBŲ APIMTIS">
+        <SectionWrap heading="2. DARBŲ APIMTIS">
           <Para>
-            3.1. Į projekto darbų apimtį įeina toliau nurodytos funkcijos ir
+            2.1. Į projekto darbų apimtį įeina toliau nurodytos funkcijos ir
             moduliai:
           </Para>
           {data.scope.map((item, idx) => (
             <View key={idx} style={pdfStyles.scopeItem} wrap={false}>
               <Text style={pdfStyles.scopeTitle}>
-                3.1.{idx + 1}. {item.title}
+                2.1.{idx + 1}. {item.title}
               </Text>
               {item.description ? <Bullet>{item.description}</Bullet> : null}
             </View>
           ))}
           <Para>
-            3.2. Jeigu projekto vykdymo metu Užsakovas pageidauja papildomų
+            2.2. Jeigu projekto vykdymo metu Užsakovas pageidauja papildomų
             funkcijų, integracijų, dizaino pakeitimų, papildomų ekranų ar kitų
-            darbų, kurie nėra aiškiai nurodyti 3.1 punkte, tokie darbai laikomi
+            darbų, kurie nėra aiškiai nurodyti 2.1 punkte, tokie darbai laikomi
             papildomais darbais. Papildomi darbai atliekami tik Šalims raštu
             suderinus jų apimtį, terminus ir kainą.
           </Para>
           <Para>
-            3.3. Trečiųjų šalių paslaugų mokesčiai (serverio nuoma, domenas, SMS
+            2.3. Trečiųjų šalių paslaugų mokesčiai (serverio nuoma, domenas, SMS
             tiekėjai, el. pašto siuntimas, failų saugykla, mokami API, licencijos
             ir kt.) nėra įtraukti į Sutarties kainą ir apmokami Užsakovo atskirai,
             jeigu Šalys raštu nesusitaria kitaip.
@@ -300,7 +300,7 @@ function ProjectContract({ data }: { data: ContractPdfData }) {
           {data.excluded.length > 0 ? (
             <View wrap={false}>
               <Para>
-                3.4. Į Sutarties darbų apimtį neįeina (vykdoma atskirai pagal
+                2.4. Į Sutarties darbų apimtį neįeina (vykdoma atskirai pagal
                 susitarimą):
               </Para>
               {data.excluded.map((item, idx) => (
@@ -314,9 +314,9 @@ function ProjectContract({ data }: { data: ContractPdfData }) {
         </SectionWrap>
 
         {/* §4 KAINA IR ATSISKAITYMO TVARKA — условный по kind */}
-        <SectionWrap heading="4. KAINA IR ATSISKAITYMO TVARKA">
+        <SectionWrap heading="3. KAINA IR ATSISKAITYMO TVARKA">
           <Para>
-            4.1. Bendra Sutarties kaina už šioje Sutartyje nurodytus darbus yra{" "}
+            3.1. Bendra Sutarties kaina už šioje Sutartyje nurodytus darbus yra{" "}
             <Text style={pdfStyles.clauseStrong}>{data.amount}</Text>.
           </Para>
 
@@ -327,18 +327,18 @@ function ProjectContract({ data }: { data: ContractPdfData }) {
           )}
 
           <Para>
-            4.3. Paslaugų teikėjas pradeda darbus tik gavęs avansinį mokėjimą.
+            3.3. Paslaugų teikėjas pradeda darbus tik gavęs avansinį mokėjimą.
           </Para>
           <Para>
-            4.4. Sąskaitos apmokamos per {data.paymentDays} kalendorinę dieną nuo
+            3.4. Sąskaitos apmokamos per {data.paymentDays} kalendorinę dieną nuo
             jų pateikimo, jeigu Šalys raštu nesusitaria kitaip.
           </Para>
           <Para>
-            4.5. Mokėjimai atliekami į Paslaugų teikėjo Wise sąskaitą:{" "}
+            3.5. Mokėjimai atliekami į Paslaugų teikėjo Wise sąskaitą:{" "}
             <Text style={pdfStyles.clauseStrong}>{data.iban}</Text>. {data.bankNote}
           </Para>
           <Para>
-            4.6. Jeigu Užsakovas vėluoja atlikti mokėjimą, Paslaugų teikėjas turi
+            3.6. Jeigu Užsakovas vėluoja atlikti mokėjimą, Paslaugų teikėjas turi
             teisę sustabdyti darbus iki mokėjimo gavimo. Tokiu atveju projekto
             terminai atitinkamai pratęsiami.
           </Para>
@@ -355,7 +355,7 @@ function ProjectContract({ data }: { data: ContractPdfData }) {
 
         {/* §14 ŠALIŲ REKVIZITAI IR PARAŠAI — неразрывный блок: заголовок,
             реквизиты и подписи всегда вместе на одной странице. */}
-        <Section heading="14. ŠALIŲ REKVIZITAI IR PARAŠAI">
+        <Section heading="13. ŠALIŲ REKVIZITAI IR PARAŠAI">
           <PartiesRow provider={data.provider} customer={data.customer} />
           <View style={pdfStyles.signRow}>
             <SignBlock
@@ -388,7 +388,7 @@ function StagedTerms({
 }) {
   return (
     <View wrap={false}>
-      <Para>4.2. Atsiskaitymas vykdomas etapais:</Para>
+      <Para>3.2. Atsiskaitymas vykdomas etapais:</Para>
       {paymentTerms.map((p, idx) => (
         <Bullet key={idx}>
           <Text style={pdfStyles.clauseStrong}>{p.amount}</Text> {p.label}
@@ -415,7 +415,7 @@ function AdvanceTerms({
     "mokama po darbų užbaigimo ir galutinio darbų perdavimo Užsakovui.";
   return (
     <View wrap={false}>
-      <Para>4.2. Atsiskaitymas vykdomas dviem dalimis:</Para>
+      <Para>3.2. Atsiskaitymas vykdomas dviem dalimis:</Para>
       {advance ? (
         <Bullet>
           <Text style={pdfStyles.clauseStrong}>{advance.amount}</Text> {advance.label}
@@ -439,104 +439,104 @@ function AdvanceTerms({
 function BoilerplateClauses({ warranty }: { warranty: string }) {
   return (
     <>
-      <Section heading="5. DARBŲ TERMINAI">
+      <Section heading="4. DARBŲ TERMINAI">
         <Para>
-          5.1. Darbai pradedami gavus avansinį mokėjimą ir Užsakovui pateikus
+          4.1. Darbai pradedami gavus avansinį mokėjimą ir Užsakovui pateikus
           visą darbams pradėti reikalingą medžiagą bei prieigas.
         </Para>
         <Para>
-          5.2. Konkretūs etapų terminai derinami Šalių raštu (el. paštu) ir gali
+          4.2. Konkretūs etapų terminai derinami Šalių raštu (el. paštu) ir gali
           būti pratęsiami, jeigu Užsakovas vėluoja pateikti medžiagą, atsakymus
           ar mokėjimus.
         </Para>
       </Section>
 
-      <Section heading="6. UŽSAKOVO ĮSIPAREIGOJIMAI">
+      <Section heading="5. UŽSAKOVO ĮSIPAREIGOJIMAI">
         <Para>
-          6.1. Užsakovas įsipareigoja laiku pateikti Paslaugų teikėjui visą
+          5.1. Užsakovas įsipareigoja laiku pateikti Paslaugų teikėjui visą
           darbams reikalingą informaciją, medžiagą (tekstus, logotipus,
           nuotraukas) ir prieigas.
         </Para>
         <Para>
-          6.2. Užsakovas įsipareigoja per protingą terminą peržiūrėti pateiktus
+          5.2. Užsakovas įsipareigoja per protingą terminą peržiūrėti pateiktus
           darbus ir pateikti pastabas arba juos patvirtinti.
         </Para>
         <Para>
-          6.3. Užsakovas atsako už jam pateiktos medžiagos teisėtumą ir teises ją
+          5.3. Užsakovas atsako už jam pateiktos medžiagos teisėtumą ir teises ją
           naudoti.
         </Para>
       </Section>
 
-      <Section heading="7. PASLAUGŲ TEIKĖJO ĮSIPAREIGOJIMAI">
+      <Section heading="6. PASLAUGŲ TEIKĖJO ĮSIPAREIGOJIMAI">
         <Para>
-          7.1. Paslaugų teikėjas įsipareigoja atlikti darbus kokybiškai, laikantis
+          6.1. Paslaugų teikėjas įsipareigoja atlikti darbus kokybiškai, laikantis
           gerosios praktikos ir suderintos apimties.
         </Para>
         <Para>
-          7.2. Paslaugų teikėjas informuoja Užsakovą apie darbų eigą ir esmines
+          6.2. Paslaugų teikėjas informuoja Užsakovą apie darbų eigą ir esmines
           aplinkybes, galinčias turėti įtakos terminams ar apimčiai.
         </Para>
       </Section>
 
-      <Section heading="8. DARBŲ PERDAVIMAS IR PRIĖMIMAS">
+      <Section heading="7. DARBŲ PERDAVIMAS IR PRIĖMIMAS">
         <Para>
-          8.1. Užbaigti darbai (etapas) perduodami Užsakovui pateikiant prieigą
+          7.1. Užbaigti darbai (etapas) perduodami Užsakovui pateikiant prieigą
           arba rezultatą peržiūrai.
         </Para>
         <Para>
-          8.2. Jeigu Užsakovas per 5 (penkias) darbo dienas nepateikia pastabų,
+          7.2. Jeigu Užsakovas per 5 (penkias) darbo dienas nepateikia pastabų,
           darbai laikomi priimtais.
         </Para>
       </Section>
 
-      <Section heading="9. GARANTIJA">
+      <Section heading="8. GARANTIJA">
         <Para>
-          9.1. Paslaugų teikėjas suteikia atliktų darbų garantiją – {warranty}
+          8.1. Paslaugų teikėjas suteikia atliktų darbų garantiją – {warranty}
         </Para>
         <Para>
-          9.2. Garantija netaikoma trūkumams, atsiradusiems dėl Užsakovo ar
+          8.2. Garantija netaikoma trūkumams, atsiradusiems dėl Užsakovo ar
           trečiųjų šalių veiksmų, neteisėto naudojimo, savavališkų pakeitimų ar
           trečiųjų šalių paslaugų sutrikimų.
         </Para>
       </Section>
 
-      <Section heading="10. INTELEKTINĖ NUOSAVYBĖ">
+      <Section heading="9. INTELEKTINĖ NUOSAVYBĖ">
         <Para>
-          10.1. Visiškai apmokėjus Sutarties kainą, sukurto rezultato turtinės
+          9.1. Visiškai apmokėjus Sutarties kainą, sukurto rezultato turtinės
           teisės pereina Užsakovui, išskyrus trečiųjų šalių komponentus ir
           licencijuojamą programinę įrangą.
         </Para>
         <Para>
-          10.2. Paslaugų teikėjas turi teisę naudoti atliktą darbą savo portfelyje,
+          9.2. Paslaugų teikėjas turi teisę naudoti atliktą darbą savo portfelyje,
           jeigu Šalys raštu nesusitaria kitaip.
         </Para>
       </Section>
 
-      <Section heading="11. KONFIDENCIALUMAS">
+      <Section heading="10. KONFIDENCIALUMAS">
         <Para>
-          11.1. Šalys įsipareigoja neatskleisti tretiesiems asmenims
+          10.1. Šalys įsipareigoja neatskleisti tretiesiems asmenims
           konfidencialios informacijos, gautos vykdant šią Sutartį.
         </Para>
       </Section>
 
-      <Section heading="12. SUTARTIES NUTRAUKIMAS">
+      <Section heading="11. SUTARTIES NUTRAUKIMAS">
         <Para>
-          12.1. Sutartis gali būti nutraukta Šalių susitarimu arba vienos Šalies
+          11.1. Sutartis gali būti nutraukta Šalių susitarimu arba vienos Šalies
           iniciatyva, jei kita Šalis iš esmės pažeidžia Sutartį.
         </Para>
         <Para>
-          12.2. Nutraukus Sutartį, Užsakovas apmoka už faktiškai atliktus darbus
+          11.2. Nutraukus Sutartį, Užsakovas apmoka už faktiškai atliktus darbus
           iki nutraukimo dienos.
         </Para>
       </Section>
 
-      <Section heading="13. BAIGIAMOSIOS NUOSTATOS">
+      <Section heading="12. BAIGIAMOSIOS NUOSTATOS">
         <Para>
-          13.1. Sutarčiai taikoma Lietuvos Respublikos teisė. Ginčai sprendžiami
+          12.1. Sutarčiai taikoma Lietuvos Respublikos teisė. Ginčai sprendžiami
           derybomis, o nepavykus susitarti – Lietuvos Respublikos teismuose.
         </Para>
         <Para>
-          13.2. Sutartis sudaryta dviem vienodą teisinę galią turinčiais
+          12.2. Sutartis sudaryta dviem vienodą teisinę galią turinčiais
           egzemplioriais, po vieną kiekvienai Šaliai (arba elektroniniu būdu).
         </Para>
       </Section>
@@ -565,9 +565,9 @@ function MaintenanceContract({ data }: { data: ContractPdfData }) {
         <Text style={pdfStyles.contractMeta}>{data.issuedAt}, Vilnius</Text>
 
         {/* §2 SUTARTIES DALYKAS — §1 ŠALYS убран: реквизиты сторон только в конце. */}
-        <Section heading="2. SUTARTIES DALYKAS">
+        <Section heading="1. SUTARTIES DALYKAS">
           <Para>
-            2.1. <Text style={pdfStyles.clauseStrong}>Paslaugų apimtis:</Text>{" "}
+            1.1. <Text style={pdfStyles.clauseStrong}>Paslaugų apimtis:</Text>{" "}
             Paslaugų teikėjas įsipareigoja vykdyti nuolatinę techninę Užsakovo
             svetainės priežiūrą, kuri apima:
           </Para>
@@ -575,7 +575,7 @@ function MaintenanceContract({ data }: { data: ContractPdfData }) {
             <Bullet key={idx}>{line}</Bullet>
           ))}
           <Para>
-            2.2.{" "}
+            1.2.{" "}
             <Text style={pdfStyles.clauseStrong}>Atsakomybės ribos:</Text>{" "}
             Palaikymas neapima naujų didelės apimties modulių kūrimo ar esminio
             svetainės perdarymo, dėl kurių šalys tariasi atskirai.
@@ -583,23 +583,23 @@ function MaintenanceContract({ data }: { data: ContractPdfData }) {
         </Section>
 
         {/* §3 ATLYGIS IR ATSISKAITYMO TVARKA */}
-        <Section heading="3. ATLYGIS IR ATSISKAITYMO TVARKA">
+        <Section heading="2. ATLYGIS IR ATSISKAITYMO TVARKA">
           <Para>
-            3.1. Paslaugų kaina yra{" "}
+            2.1. Paslaugų kaina yra{" "}
             <Text style={pdfStyles.clauseStrong}>{monthly}</Text> už vieną
             kalendorinį mėnesį.
           </Para>
           <Para>
-            3.2. <Text style={pdfStyles.clauseStrong}>Mokėjimo tvarka:</Text>{" "}
+            2.2. <Text style={pdfStyles.clauseStrong}>Mokėjimo tvarka:</Text>{" "}
             Užsakovas moka fiksuotą mėnesinį mokestį prieš prasidedant paslaugų
             teikimo laikotarpiui (išankstinis apmokėjimas).
           </Para>
           <Para>
-            3.3. Sąskaita išrašoma kiekvieno mėnesio pradžioje, o apmokėjimas turi
+            2.3. Sąskaita išrašoma kiekvieno mėnesio pradžioje, o apmokėjimas turi
             būti atliktas per 3 (tris) darbo dienas.
           </Para>
           <Para>
-            3.4. <Text style={pdfStyles.clauseStrong}>Svarbu:</Text> Atliekant
+            2.4. <Text style={pdfStyles.clauseStrong}>Svarbu:</Text> Atliekant
             pavedimą į Wise sąskaitą (
             <Text style={pdfStyles.clauseStrong}>{data.iban}</Text>), mokėjimo
             nurodyme būtina pasirinkti šalį –{" "}
@@ -608,22 +608,22 @@ function MaintenanceContract({ data }: { data: ContractPdfData }) {
         </Section>
 
         {/* §4 TERMINAI IR NUTRAUKIMAS */}
-        <Section heading="4. TERMINAI IR NUTRAUKIMAS">
-          <Para>4.1. Sutartis sudaroma neterminuotam laikotarpiui.</Para>
+        <Section heading="3. TERMINAI IR NUTRAUKIMAS">
+          <Para>3.1. Sutartis sudaroma neterminuotam laikotarpiui.</Para>
           <Para>
-            4.2. Kiekviena šalis gali nutraukti sutartį informavusi kitą šalį
+            3.2. Kiekviena šalis gali nutraukti sutartį informavusi kitą šalį
             prieš 30 kalendorinių dienų.
           </Para>
         </Section>
 
         {/* §5 GARANTIJA IR ATSAKOMYBĖ */}
-        <Section heading="5. GARANTIJA IR ATSAKOMYBĖ">
+        <Section heading="4. GARANTIJA IR ATSAKOMYBĖ">
           <Para>
-            5.1. Paslaugų teikėjas užtikrina stabilų svetainės veikimą ir techninę
+            4.1. Paslaugų teikėjas užtikrina stabilų svetainės veikimą ir techninę
             priežiūrą pagal suteiktas prieigas.
           </Para>
           <Para>
-            5.2. Teikėjas neatsako už sutrikimus, kilusius dėl trečiųjų šalių
+            4.2. Teikėjas neatsako už sutrikimus, kilusius dėl trečiųjų šalių
             (hostingo, domenų) kaltės, jei jie nepatenka į Teikėjo kontrolės
             sritį.
           </Para>
