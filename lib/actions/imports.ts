@@ -78,7 +78,7 @@ export async function deleteDocumentBlob(url: string): Promise<Result<{ url: str
 /**
  * Плейсхолдер terms для импортированного договора. Contract.terms — NOT NULL и
  * валидируется схемой при возможном парсинге; рендер из него НЕ вызывается
- * (PDF-роут отдаёт importedPdfUrl). Кладём минимально валидный STAGED-объект.
+ * (PDF-роут отдаёт pdfUrl). Кладём минимально валидный STAGED-объект.
  */
 function placeholderTerms(amount: Decimal): Prisma.InputJsonValue {
   return {
@@ -131,7 +131,7 @@ export async function importContract(formData: unknown): Promise<Result<{ id: st
         terms: placeholderTerms(amount),
         signedAt,
         signerName: input.signerName ?? null,
-        importedPdfUrl: input.importedPdfUrl,
+        pdfUrl: input.importedPdfUrl,
       },
       select: { id: true },
     });
@@ -188,7 +188,7 @@ export async function importInvoice(formData: unknown): Promise<Result<{ id: str
         currency: input.currency,
         subtotal: amount,
         total: amount,
-        importedPdfUrl: input.importedPdfUrl,
+        pdfUrl: input.importedPdfUrl,
       },
       select: { id: true },
     });
