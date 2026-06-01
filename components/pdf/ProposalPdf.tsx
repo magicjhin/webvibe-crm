@@ -91,11 +91,11 @@ export function ProposalPdf({ data }: { data: ProposalPdfData }) {
           {data.title}
         </Text>
 
-        {/* §1 ŠALYS */}
+        {/* §1 ŠALYS — только названия сторон, без полных реквизитов. */}
         <Section heading="1. ŠALYS">
           <View style={pdfStyles.partiesColRow}>
-            <PartyCol party={data.provider} />
-            <PartyCol party={data.customer} />
+            <PartyCol party={{ ...data.provider, lines: [] }} />
+            <PartyCol party={{ ...data.customer, lines: [] }} />
           </View>
         </Section>
 

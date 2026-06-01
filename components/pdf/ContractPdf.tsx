@@ -159,24 +159,32 @@ function PartiesRow({
   customer: ContractParty;
 }) {
   return (
-    <View style={pdfStyles.partiesColRow}>
-      <PartyCol party={provider} />
-      <PartyCol party={customer} />
+    <View wrap={false}>
+      {/* Названия сторон отдельной строкой — колонки выравниваются по высоте. */}
+      <View style={pdfStyles.partiesNameRow}>
+        <View style={pdfStyles.partiesCol}>
+          <Text style={pdfStyles.partyLabel}>{provider.role}</Text>
+          <Text style={pdfStyles.partyName}>{provider.name}</Text>
+        </View>
+        <View style={pdfStyles.partiesCol}>
+          <Text style={pdfStyles.partyLabel}>{customer.role}</Text>
+          <Text style={pdfStyles.partyName}>{customer.name}</Text>
+        </View>
+      </View>
+      {/* Реквизиты — начинаются на одной линии для обеих сторон. */}
+      <View style={pdfStyles.partiesColRow}>
+        <PartyLines lines={provider.lines} />
+        <PartyLines lines={customer.lines} />
+      </View>
     </View>
   );
 }
 
-function PartyCol({ party }: { party: ContractParty }) {
-  const lines = party.lines.filter(
-    (l): l is string => !!l && l.trim() !== "",
-  );
+function PartyLines({ lines }: { lines: Array<string | null | undefined> }) {
+  const clean = lines.filter((l): l is string => !!l && l.trim() !== "");
   return (
     <View style={pdfStyles.partiesCol}>
-      <Text style={pdfStyles.partyLabel}>{party.role}</Text>
-      <Text style={[pdfStyles.partyName, pdfStyles.partyNameClause]}>
-        {party.name}
-      </Text>
-      {lines.map((l, i) => (
+      {clean.map((l, i) => (
         <Text key={i} style={pdfStyles.partyLine}>
           {l}
         </Text>
@@ -239,16 +247,7 @@ function ProjectContract({ data }: { data: ContractPdfData }) {
         <Text style={pdfStyles.contractSub}>Nr. {data.number}</Text>
         <Text style={pdfStyles.contractMeta}>{data.issuedAt}, Vilnius</Text>
 
-        {/* §1 ŠALYS */}
-        <Section heading="1. ŠALYS">
-          <PartiesRow provider={data.provider} customer={data.customer} />
-          <Para>
-            Šios Šalys, toliau kartu vadinamos Šalimis, o kiekviena atskirai –
-            Šalimi, sudaro šią paslaugų teikimo sutartį (toliau – Sutartis).
-          </Para>
-        </Section>
-
-        {/* §2 SUTARTIES DALYKAS */}
+        {/* §2 SUTARTIES DALYKAS — §1 ŠALYS убран: реквизиты сторон только в §14. */}
         <Section heading="2. SUTARTIES DALYKAS">
           <Para>
             2.1. Paslaugų teikėjas įsipareigoja suteikti Užsakovui{" "}
@@ -354,8 +353,9 @@ function ProjectContract({ data }: { data: ContractPdfData }) {
           </Section>
         ) : null}
 
-        {/* §14 ŠALIŲ REKVIZITAI IR PARAŠAI */}
-        <SectionWrap heading="14. ŠALIŲ REKVIZITAI IR PARAŠAI">
+        {/* §14 ŠALIŲ REKVIZITAI IR PARAŠAI — неразрывный блок: заголовок,
+            реквизиты и подписи всегда вместе на одной странице. */}
+        <Section heading="14. ŠALIŲ REKVIZITAI IR PARAŠAI">
           <PartiesRow provider={data.provider} customer={data.customer} />
           <View style={pdfStyles.signRow}>
             <SignBlock
@@ -373,7 +373,7 @@ function ProjectContract({ data }: { data: ContractPdfData }) {
               signerIp={isSigned ? data.signature.signerIp : null}
             />
           </View>
-        </SectionWrap>
+        </Section>
 
         <PdfFooter leftText={footerLeft} />
       </Page>
@@ -564,17 +564,7 @@ function MaintenanceContract({ data }: { data: ContractPdfData }) {
         <Text style={pdfStyles.contractSub}>Nr. {data.number}</Text>
         <Text style={pdfStyles.contractMeta}>{data.issuedAt}, Vilnius</Text>
 
-        {/* §1 ŠALYS */}
-        <Section heading="1. ŠALYS">
-          <PartiesRow provider={data.provider} customer={data.customer} />
-          <Para>
-            Šios Šalys, toliau kartu vadinamos Šalimis, o kiekviena atskirai –
-            Šalimi, sudarė šią interneto svetainės techninės priežiūros sutartį
-            (toliau – Sutartis).
-          </Para>
-        </Section>
-
-        {/* §2 SUTARTIES DALYKAS */}
+        {/* §2 SUTARTIES DALYKAS — §1 ŠALYS убран: реквизиты сторон только в конце. */}
         <Section heading="2. SUTARTIES DALYKAS">
           <Para>
             2.1. <Text style={pdfStyles.clauseStrong}>Paslaugų apimtis:</Text>{" "}
@@ -640,8 +630,8 @@ function MaintenanceContract({ data }: { data: ContractPdfData }) {
           {data.termsNote ? <Para>{data.termsNote}</Para> : null}
         </Section>
 
-        {/* Реквизиты + подписи */}
-        <SectionWrap heading="ŠALIŲ REKVIZITAI IR PARAŠAI">
+        {/* Реквизиты + подписи — неразрывный блок (заголовок + реквизиты + подписи). */}
+        <Section heading="ŠALIŲ REKVIZITAI IR PARAŠAI">
           <PartiesRow provider={data.provider} customer={data.customer} />
           <View style={pdfStyles.signRow}>
             <SignBlock
@@ -659,7 +649,7 @@ function MaintenanceContract({ data }: { data: ContractPdfData }) {
               signerIp={isSigned ? data.signature.signerIp : null}
             />
           </View>
-        </SectionWrap>
+        </Section>
 
         <PdfFooter leftText={footerLeft} />
       </Page>
