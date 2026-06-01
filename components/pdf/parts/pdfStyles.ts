@@ -396,13 +396,13 @@ export const pdfStyles = StyleSheet.create({
     marginBottom: 6,
   },
   signImage: {
-    height: 46,
-    width: 150,
+    height: 58,
+    width: 188,
     objectFit: "contain",
     marginBottom: 2,
   },
   signImagePlaceholder: {
-    height: 46,
+    height: 58,
   },
   signLine: {
     borderTopWidth: 1,
