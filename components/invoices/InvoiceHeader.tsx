@@ -46,7 +46,9 @@ export function InvoiceHeader({
     });
   };
 
-  const canEdit = status === "draft";
+  // Редактировать/удалять можно, пока счёт не финализирован (draft/sent).
+  // paid — деньги получены, cancelled — terminal: заморожены.
+  const canEdit = status === "draft" || status === "sent";
 
   return (
     <header className="flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -115,7 +117,7 @@ export function InvoiceHeader({
                 {status === "paid" ? "Отменить (refund)" : "Отменить"}
               </DropdownMenuItem>
             ) : null}
-            {status === "draft" ? (
+            {canEdit ? (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -137,7 +139,7 @@ export function InvoiceHeader({
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title="Удалить счёт?"
-        description={`${number}. Удалять можно только черновики.`}
+        description={`${number}. Удалить можно черновик или отправленный (не оплаченный) счёт.`}
         action={() => deleteInvoice(id)}
         onSuccess={() => router.push("/invoices")}
       />

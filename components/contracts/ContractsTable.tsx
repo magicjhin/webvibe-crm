@@ -163,7 +163,7 @@ export function ContractsTable({ rows }: { rows: ContractRow[] }) {
                     Скачать PDF
                   </a>
                 </DropdownMenuItem>
-                {row.original.status === "draft" ? (
+                {row.original.status === "draft" || row.original.status === "sent" ? (
                   <>
                     <DropdownMenuItem asChild>
                       <Link href={`/contracts/${row.original.id}/edit`}>
@@ -275,7 +275,7 @@ export function ContractsTable({ rows }: { rows: ContractRow[] }) {
         title="Удалить договор?"
         description={
           deleteTarget
-            ? `${deleteTarget.number}. Удалять можно только черновики.`
+            ? `${deleteTarget.number}. Удалить можно черновик или отправленный (не подписанный) договор.`
             : undefined
         }
         action={async () => {

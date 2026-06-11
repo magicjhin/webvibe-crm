@@ -57,7 +57,9 @@ export default async function EditContractPage({
   ]);
 
   if (!contract) notFound();
-  if (contract.status !== "draft") {
+  // Редактировать можно, пока договор не подписан: draft/sent — да,
+  // signed/cancelled — заморожены.
+  if (contract.status !== "draft" && contract.status !== "sent") {
     redirect(`/contracts/${contract.id}`);
   }
 
@@ -123,7 +125,7 @@ export default async function EditContractPage({
       <div className="flex flex-col gap-6">
         <PageHeader
           title={`Редактировать — ${contract.number}`}
-          description="Редактировать можно только черновики. После «Отправлен» — заморожено."
+          description="Черновик и отправленный договор можно править. После подписи — заморожено."
         />
         <ContractForm
           mode="edit"

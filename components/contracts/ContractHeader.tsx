@@ -43,7 +43,9 @@ export function ContractHeader({
     });
   };
 
-  const canEdit = status === "draft";
+  // Редактировать/удалять можно, пока договор не подписан (draft/sent).
+  // signed — подпись клиента неприкосновенна, cancelled — terminal: заморожены.
+  const canEdit = status === "draft" || status === "sent";
 
   return (
     <header className="flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -100,7 +102,7 @@ export function ContractHeader({
               >
                 Отменить
               </DropdownMenuItem>
-              {status === "draft" ? (
+              {canEdit ? (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -123,7 +125,7 @@ export function ContractHeader({
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title="Удалить договор?"
-        description={`${number}. Удалять можно только черновики.`}
+        description={`${number}. Удалить можно черновик или отправленный (не подписанный) договор.`}
         action={() => deleteContract(id)}
         onSuccess={() => router.push("/contracts")}
       />

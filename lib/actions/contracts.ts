@@ -225,14 +225,17 @@ export async function updateContract(
   if (!prepared.ok) return { ok: false, error: prepared.error };
 
   try {
-    // Редактировать можно только draft: row-lock через updateMany WHERE status='draft',
-    // защита от concurrent generateContractSignToken (draft → sent).
+    // Редактировать можно draft и sent (ещё не подписанный): row-lock через
+    // updateMany WHERE status IN (draft, sent). signed/cancelled — заморожены
+    // (подпись клиента неприкосновенна; см. ADR в DECISIONS.md).
     let acquired = false;
     let dropped = false;
     await prisma.$transaction(async (tx) => {
       const lock = await tx.contract.updateMany({
-        where: { id, status: "draft" },
-        data: { status: "draft" },
+        where: { id, status: { in: ["draft", "sent"] } },
+        // Lock-write: сбрасываем pdfUrl (обнуляется и в основном апдейте).
+        // НЕ трогаем status — иначе sent ошибочно стал бы draft.
+        data: { pdfUrl: null },
       });
       if (lock.count !== 1) {
         const exists = await tx.contract.findUnique({ where: { id }, select: { id: true } });
@@ -247,8 +250,9 @@ export async function updateContract(
           clientId: input.clientId,
           projectId: input.projectId ?? null,
           issuedAt,
-          // Статус не трогаем: редактирование разрешено только для draft (lock выше),
-          // и он остаётся draft. Переходы — через setContractStatus / sign-flow.
+          // Статус не трогаем: остаётся тем же (draft или sent). Активный sign-токен
+          // у sent сохраняется — /sign рендерит договор из БД, клиент увидит правки.
+          // Переходы статуса — только через setContractStatus / sign-flow.
           currency: input.currency,
           amount: prepared.amount,
           terms: prepared.terms,
@@ -261,7 +265,7 @@ export async function updateContract(
       if (dropped) return { ok: false, error: "Договор не найден" };
       return {
         ok: false,
-        error: "Редактировать можно только черновики (draft). Sent/signed/cancelled — заморожены.",
+        error: "Редактировать можно черновики и отправленные договоры. Подписанные/отменённые — заморожены.",
       };
     }
 
@@ -342,10 +346,10 @@ export async function deleteContract(id: string): Promise<Result<{ id: string }>
       select: { status: true, clientId: true, projectId: true },
     });
     if (!current) return { ok: false, error: "Договор не найден" };
-    if (current.status !== "draft") {
+    if (current.status !== "draft" && current.status !== "sent") {
       return {
         ok: false,
-        error: "Удалять можно только черновики. Отправленные/подписанные сохраняются для аудита.",
+        error: "Удалять можно черновики и отправленные. Подписанные/отменённые сохраняются для аудита.",
       };
     }
 

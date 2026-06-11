@@ -169,7 +169,7 @@ export function InvoicesTable({ rows }: { rows: InvoiceRow[] }) {
                     Скачать PDF
                   </a>
                 </DropdownMenuItem>
-                {row.original.status === "draft" ? (
+                {row.original.status === "draft" || row.original.status === "sent" ? (
                   <>
                     <DropdownMenuItem asChild>
                       <Link href={`/invoices/${row.original.id}/edit`}>
@@ -281,7 +281,7 @@ export function InvoicesTable({ rows }: { rows: InvoiceRow[] }) {
         title="Удалить счёт?"
         description={
           deleteTarget
-            ? `${deleteTarget.number}. Удалять можно только черновики.`
+            ? `${deleteTarget.number}. Удалить можно черновик или отправленный (не оплаченный) счёт.`
             : undefined
         }
         action={async () => {

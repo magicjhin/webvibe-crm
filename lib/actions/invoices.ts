@@ -133,17 +133,18 @@ export async function updateInvoice(
   const dueAt = parseDateOnly(input.dueAt);
 
   try {
-    // Atomic guard: используем updateMany с WHERE status='draft', чтобы row lock
-    // защищал от concurrent setInvoiceStatus, который мог перевести счёт в sent
-    // между read и write. Если count === 0 — счёт либо удалён, либо уже не draft.
+    // Atomic guard: используем updateMany с WHERE status IN (draft, sent), чтобы
+    // row lock защищал от concurrent setInvoiceStatus между read и write.
+    // Редактировать разрешаем, пока счёт не финализирован: draft/sent — да,
+    // paid/cancelled — заморожены (см. ADR в DECISIONS.md).
     let acquired = false;
     let dropped = false;
     await prisma.$transaction(async (tx) => {
       const guardUpdate = await tx.invoice.updateMany({
-        where: { id, status: "draft" },
-        // Минимальный no-op write (status тот же), нужен только чтобы взять row lock
-        // на этой строке до конца транзакции.
-        data: { status: "draft" },
+        where: { id, status: { in: ["draft", "sent"] } },
+        // Lock-write: сбрасываем pdfUrl (его всё равно обнуляем в основном апдейте).
+        // НЕ трогаем status — иначе sent ошибочно стал бы draft.
+        data: { pdfUrl: null },
       });
       if (guardUpdate.count !== 1) {
         // Проверяем, какая именно ситуация
@@ -181,7 +182,7 @@ export async function updateInvoice(
       if (dropped) return { ok: false, error: "Счёт не найден" };
       return {
         ok: false,
-        error: "Редактировать можно только черновики (draft). Sent/paid/cancelled — заморожены.",
+        error: "Редактировать можно только черновики и отправленные счета. Оплаченные/отменённые — заморожены.",
       };
     }
 
@@ -281,10 +282,10 @@ export async function deleteInvoice(id: string): Promise<Result<{ id: string }>>
       select: { status: true, clientId: true, projectId: true },
     });
     if (!current) return { ok: false, error: "Счёт не найден" };
-    if (current.status !== "draft") {
+    if (current.status !== "draft" && current.status !== "sent") {
       return {
         ok: false,
-        error: "Удалять можно только черновики. Отменённые сохраняются для аудита.",
+        error: "Удалять можно только черновики и отправленные. Оплаченные/отменённые сохраняются для аудита.",
       };
     }
 

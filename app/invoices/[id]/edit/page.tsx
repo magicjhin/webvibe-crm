@@ -45,7 +45,9 @@ export default async function EditInvoicePage({
   ]);
 
   if (!invoice) notFound();
-  if (invoice.status !== "draft") {
+  // Редактировать можно, пока счёт не финализирован: draft/sent — да,
+  // paid/cancelled — заморожены.
+  if (invoice.status !== "draft" && invoice.status !== "sent") {
     redirect(`/invoices/${invoice.id}`);
   }
 
@@ -73,7 +75,7 @@ export default async function EditInvoicePage({
       <div className="flex flex-col gap-6">
         <PageHeader
           title={`Редактировать — ${invoice.number}`}
-          description="Редактировать можно только черновики. После «Отправлен» — заморожено."
+          description="Черновик и отправленный счёт можно править. После «Оплачен» — заморожено."
         />
         <InvoiceForm
           mode="edit"
