@@ -9,6 +9,8 @@ import {
   type ClauseSection,
 } from "@/lib/documents/contractClauses";
 import {
+  AlignmentType,
+  docMeta,
   docSubtitle,
   docTitle,
   FONT,
@@ -216,9 +218,9 @@ export async function renderContractDocx(contractId: string): Promise<Buffer> {
     : "Šios Šalys, toliau kartu vadinamos Šalimis, o kiekviena atskirai – Šalimi, sudaro šią paslaugų teikimo sutartį (toliau – Sutartis).";
 
   const children: Block[] = [
-    docTitle(title),
-    docSubtitle(`Nr. ${data.number}`),
-    para(`${data.issuedAt}, Vilnius`),
+    docTitle(title, AlignmentType.CENTER),
+    docSubtitle(`Nr. ${data.number}`, AlignmentType.CENTER),
+    docMeta(`${data.issuedAt}, Vilnius`, AlignmentType.CENTER),
 
     // §1 ŠALYS
     heading("1. ŠALYS"),

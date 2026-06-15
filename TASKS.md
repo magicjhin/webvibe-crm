@@ -153,6 +153,12 @@ pnpm dev
 - **SW + offline read-only dashboard** — намеренно НЕ кешируем авторизованный HTML (privacy). Если позже захотим offline-доступ к dashboard — кешировать только явно безопасные read-only данные с очисткой при logout.
 - **SharePdfButton revoke objectURL** — отложить через microtask/таймаут для кросс-браузерной совместимости (nice-to-have).
 
+**Из Codex review Word (.docx) export (Important/nice-to-have, перенесены — не блокеры):**
+- **`CONTRACTS-LT-SOURCE.md` рассинхрон со STAGED/ADVANCE шаблоном** — source-документ описывает старую нумерацию (`§2 SUTARTIES DALYKAS`, `§3 DARBŲ APIMTIS`, `§4 KAINA`), а фактические PDF/Word-шаблоны используют `§2 SUTARTIES DALYKAS IR DARBŲ APIMTIS`, `§3 APMOKĖJIMAS`, boilerplate с `4. TERMINAI`. Обновить source под текущую структуру (объявлен эталоном литовского текста).
+- **`buildContractData` read-path guard** — `lib/pdf/renderContract.tsx` берёт тело по `terms.kind`, а `kind` в результат кладёт из `contract.kind`. Create/update инвариант валидируют, но общий builder лучше явно падать при `contract.kind !== terms.kind` (защита от ручных/импортных неконсистентных записей).
+- **docx API: не отдавать сырой `err.message` на 500** (nice-to-have) — в `app/api/{contracts,invoices}/[id]/docx/route.ts` отдавать generic-текст, детали в `console.error`.
+- **`Content-Disposition` filename sanitization** (nice-to-have) — имя файла собирается из номера документа без экранирования; для импортных номеров со спецсимволами добавить sanitization.
+
 ---
 
 ## Done iterations (compact)

@@ -13,6 +13,7 @@ import {
 
 import { buildInvoiceData } from "@/lib/pdf/renderInvoice";
 import {
+  BG_EMPHASIS,
   docSubtitle,
   docTitle,
   FONT,
@@ -22,7 +23,8 @@ import {
   MUTED,
   pageSection,
   para,
-  partiesTable,
+  partyBoxes,
+  totalsBox,
 } from "./common";
 
 const cellBorder = { style: BorderStyle.SINGLE, size: 4, color: HAIRLINE };
@@ -45,7 +47,7 @@ function txt(text: string, opts?: { bold?: boolean; color?: string; size?: numbe
 function headCell(text: string, align: (typeof AlignmentType)[keyof typeof AlignmentType]) {
   return new TableCell({
     borders: cellBorders,
-    shading: { fill: "F4F4F6" },
+    shading: { fill: BG_EMPHASIS },
     margins: { top: 60, bottom: 60, left: 80, right: 80 },
     children: [
       new Paragraph({
@@ -145,17 +147,6 @@ export async function renderInvoiceDocx(invoiceId: string): Promise<Buffer> {
     rows: [headerRow, ...bodyRows],
   });
 
-  // Итоги — простой правый блок
-  const totalLine = (label: string, value: string, bold = false) =>
-    new Paragraph({
-      alignment: AlignmentType.RIGHT,
-      spacing: { after: 20 },
-      children: [
-        txt(`${label}  `, { color: MUTED, size: 20 }),
-        txt(value, { bold, size: 20 }),
-      ],
-    });
-
   const children: Array<Paragraph | Table> = [
     docTitle("SĄSKAITA FAKTŪRA"),
     docSubtitle(`Nr. ${data.number}`),
@@ -164,8 +155,8 @@ export async function renderInvoiceDocx(invoiceId: string): Promise<Buffer> {
     ...(data.dueAt ? [metaRow("Apmokėti iki", fmt(data.dueAt))] : []),
     ...(data.contractRef ? [metaRow("Sutartis", data.contractRef)] : []),
 
-    new Paragraph({ spacing: { after: 80 }, children: [] }),
-    partiesTable(
+    new Paragraph({ spacing: { after: 120 }, children: [] }),
+    partyBoxes(
       { label: "Pardavėjas / Paslaugų teikėjas", name: data.seller.ownerName, lines: sellerLines },
       { label: "Pirkėjas / Užsakovas", name: data.buyer.name, lines: buyerLines },
     ),
@@ -173,10 +164,12 @@ export async function renderInvoiceDocx(invoiceId: string): Promise<Buffer> {
     heading("Paslaugos"),
     itemsTable,
 
-    new Paragraph({ spacing: { after: 80 }, children: [] }),
-    totalLine("Tarpinė suma:", data.subtotal),
-    totalLine("Iš viso apmokėti:", data.totalDue, true),
-    totalLine("Suma be PVM", data.notVatRegisteredHint),
+    new Paragraph({ spacing: { after: 100 }, children: [] }),
+    totalsBox([
+      { label: "Tarpinė suma:", value: data.subtotal },
+      { label: "Iš viso apmokėti:", value: data.totalDue, emphasis: true },
+      { label: "Suma be PVM", value: data.notVatRegisteredHint },
+    ]),
   ];
 
   if (data.notes) {
