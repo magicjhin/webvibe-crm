@@ -58,6 +58,7 @@ export default async function InvoicePage({
           status={invoice.status}
           dueAt={invoice.dueAt}
           clientName={invoice.client.name}
+          isImported={!!invoice.pdfUrl}
         />
 
         {/* PDF preview */}

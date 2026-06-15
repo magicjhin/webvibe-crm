@@ -30,6 +30,7 @@ export default async function InvoicesPage() {
     issuedAt: i.issuedAt,
     dueAt: i.dueAt,
     total: i.total.toString(),
+    isImported: !!i.pdfUrl,
   }));
 
   return (

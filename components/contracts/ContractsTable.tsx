@@ -47,6 +47,8 @@ export type ContractRow = {
   projectTitle: string | null;
   issuedAt: Date;
   amount: string;
+  /** Импортированный договор (загруженный PDF) — Word недоступен. */
+  isImported?: boolean;
 };
 
 const STATUS_LABEL: Record<ContractStatus, string> = {
@@ -163,6 +165,16 @@ export function ContractsTable({ rows }: { rows: ContractRow[] }) {
                     Скачать PDF
                   </a>
                 </DropdownMenuItem>
+                {!row.original.isImported ? (
+                  <DropdownMenuItem asChild>
+                    <a
+                      href={`/api/contracts/${row.original.id}/docx`}
+                      download={`${row.original.number}.docx`}
+                    >
+                      Скачать Word
+                    </a>
+                  </DropdownMenuItem>
+                ) : null}
                 {row.original.status === "draft" || row.original.status === "sent" ? (
                   <>
                     <DropdownMenuItem asChild>

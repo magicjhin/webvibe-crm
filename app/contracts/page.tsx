@@ -23,6 +23,7 @@ export default async function ContractsPage() {
     projectTitle: c.project?.title ?? null,
     issuedAt: c.issuedAt,
     amount: c.amount.toString(),
+    isImported: !!c.pdfUrl,
   }));
 
   return (

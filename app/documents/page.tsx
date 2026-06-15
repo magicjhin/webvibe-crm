@@ -71,6 +71,7 @@ export default async function DocumentsPage({
     issuedAt: i.issuedAt,
     dueAt: i.dueAt,
     total: i.total.toString(),
+    isImported: !!i.pdfUrl,
   }));
 
   const contractRows: ContractRow[] = contracts.map((c) => ({
@@ -83,6 +84,7 @@ export default async function DocumentsPage({
     projectTitle: c.project?.title ?? null,
     issuedAt: c.issuedAt,
     amount: c.amount.toString(),
+    isImported: !!c.pdfUrl,
   }));
 
   const proposalRows: ProposalRow[] = proposals.map((p) => ({

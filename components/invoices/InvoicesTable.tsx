@@ -45,6 +45,8 @@ export type InvoiceRow = {
   issuedAt: Date;
   dueAt: Date | null;
   total: string;
+  /** Импортированный счёт (загруженный PDF) — Word недоступен. */
+  isImported?: boolean;
 };
 
 const KIND_LABEL: Record<InvoiceRow["kind"], string> = {
@@ -169,6 +171,16 @@ export function InvoicesTable({ rows }: { rows: InvoiceRow[] }) {
                     Скачать PDF
                   </a>
                 </DropdownMenuItem>
+                {!row.original.isImported ? (
+                  <DropdownMenuItem asChild>
+                    <a
+                      href={`/api/invoices/${row.original.id}/docx`}
+                      download={`${row.original.number}.docx`}
+                    >
+                      Скачать Word
+                    </a>
+                  </DropdownMenuItem>
+                ) : null}
                 {row.original.status === "draft" || row.original.status === "sent" ? (
                   <>
                     <DropdownMenuItem asChild>

@@ -53,6 +53,7 @@ export default async function ContractPage({
           number={contract.number}
           status={contract.status}
           clientName={contract.client.name}
+          isImported={!!contract.pdfUrl}
         />
 
         <div className="grid gap-4 md:grid-cols-3">

@@ -34,10 +34,12 @@ const fmtQty = (value: Decimal | string | number) => {
 };
 
 /**
- * Builds the data object for InvoicePdf and renders it to a Buffer.
- * Reads Settings (singleton) + the invoice with items + client + project.
+ * Loads Settings + invoice (items/client/project) and assembles InvoicePdfData.
+ * Shared by the PDF renderer and the Word (.docx) renderer so both stay in sync.
  */
-export async function renderInvoicePdf(invoiceId: string): Promise<Buffer> {
+export async function buildInvoiceData(
+  invoiceId: string,
+): Promise<InvoicePdfData> {
   const [settings, invoice] = await Promise.all([
     prisma.settings.findUnique({ where: { id: 1 } }),
     prisma.invoice.findUnique({
@@ -111,5 +113,14 @@ export async function renderInvoicePdf(invoiceId: string): Promise<Buffer> {
   // touch `format`/`lt` so tree-shaking keeps them
   void format(new Date(), "yyyy-MM-dd", { locale: lt });
 
+  return data;
+}
+
+/**
+ * Builds the data object for InvoicePdf and renders it to a Buffer.
+ * Reads Settings (singleton) + the invoice with items + client + project.
+ */
+export async function renderInvoicePdf(invoiceId: string): Promise<Buffer> {
+  const data = await buildInvoiceData(invoiceId);
   return renderToBuffer(<InvoicePdf data={data} />);
 }

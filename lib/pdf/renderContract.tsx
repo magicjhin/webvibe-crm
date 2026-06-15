@@ -45,9 +45,12 @@ const DEFAULT_MAINTENANCE_INCLUDES = [
 
 /**
  * Грузит договор + Settings + Client, парсит terms по дискриминатору kind,
- * собирает ContractPdfData и рендерит PDF в Buffer (Node runtime).
+ * собирает ContractPdfData. Переиспользуется рендерерами PDF и Word (.docx),
+ * чтобы оба формата оставались синхронными.
  */
-export async function renderContractPdf(contractId: string): Promise<Buffer> {
+export async function buildContractData(
+  contractId: string,
+): Promise<ContractPdfData> {
   const [settings, contract] = await Promise.all([
     prisma.settings.findUnique({ where: { id: 1 } }),
     prisma.contract.findUnique({
@@ -169,5 +172,11 @@ export async function renderContractPdf(contractId: string): Promise<Buffer> {
     },
   };
 
+  return data;
+}
+
+/** Собирает данные договора и рендерит PDF в Buffer (Node runtime). */
+export async function renderContractPdf(contractId: string): Promise<Buffer> {
+  const data = await buildContractData(contractId);
   return renderToBuffer(<ContractPdf data={data} />);
 }

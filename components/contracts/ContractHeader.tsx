@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Download, Edit, MoreHorizontal } from "lucide-react";
+import { Download, Edit, FileText, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -25,11 +25,14 @@ export function ContractHeader({
   number,
   status,
   clientName,
+  isImported = false,
 }: {
   id: string;
   number: string;
   status: ContractStatus;
   clientName: string;
+  /** Импортированный договор (загруженный PDF) — Word недоступен. */
+  isImported?: boolean;
 }) {
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -70,6 +73,14 @@ export function ContractHeader({
             PDF
           </a>
         </Button>
+        {!isImported ? (
+          <Button asChild variant="outline">
+            <a href={`/api/contracts/${id}/docx`} download={`${number}.docx`}>
+              <FileText className="size-4" />
+              Word
+            </a>
+          </Button>
+        ) : null}
         <SharePdfButton url={`/api/contracts/${id}/pdf?download=1`} filename={`${number}.pdf`} />
         {canEdit ? (
           <Button asChild variant="outline">
