@@ -21,6 +21,20 @@
     "title": "More",
     "description": "Additional CRM sections."
   },
+  "quickAdd": {
+    "title": "Quick create",
+    "newClient": "New client",
+    "newProject": "New project",
+    "newInvoice": "New invoice",
+    "newPayment": "New payment",
+    "newExpense": "New expense"
+  },
+  "table": {
+    "empty": "Empty",
+    "pageInfo": "Page {page} of {total} · {count, plural, one {# record} other {# records}}",
+    "prev": "Back",
+    "next": "Next"
+  },
   "common": {
     "language": "Language",
     "russian": "Русский",
@@ -30,6 +44,44 @@
     "delete": "Delete",
     "edit": "Edit",
     "create": "Create",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "deleted": "Deleted",
+    "deleting": "Deleting…"
+  },
+  "status": {
+    "client": {
+      "active": "Active",
+      "archived": "Archived"
+    },
+    "project": {
+      "idea": "Idea",
+      "estimating": "Estimating",
+      "awaiting_advance": "Awaiting advance",
+      "in_progress": "In progress",
+      "waiting_client": "Waiting for client",
+      "review": "Review",
+      "revisions": "Revisions",
+      "ready": "Ready",
+      "paid": "Paid",
+      "archived": "Archived"
+    },
+    "task": {
+      "todo": "To do",
+      "in_progress": "In progress",
+      "waiting_client": "Waiting for client",
+      "review": "Review",
+      "done": "Done"
+    },
+    "lead": {
+      "new": "New",
+      "to_contact": "To contact",
+      "discussion": "Discussion",
+      "awaiting_proposal": "Awaiting proposal",
+      "proposal_sent": "Proposal sent",
+      "thinking": "Thinking",
+      "accepted": "Accepted",
+      "declined": "Declined",
+      "postponed": "Postponed"
+    }
   }
 }

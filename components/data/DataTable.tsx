@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   flexRender,
   getCoreRowModel,
@@ -40,6 +41,7 @@ export function DataTable<T>({
   onRowClick,
   getRowId,
 }: Props<T>) {
+  const t = useTranslations("table");
   const [sorting, setSorting] = useState<SortingState>([]);
   const table = useReactTable({
     data,
@@ -104,7 +106,7 @@ export function DataTable<T>({
                 >
                   {empty ?? (
                     <div className="px-6 py-12 text-center text-sm text-foreground-muted">
-                      Пусто
+                      {t("empty")}
                     </div>
                   )}
                 </TableCell>
@@ -134,8 +136,11 @@ export function DataTable<T>({
       {showPagination ? (
         <div className="flex items-center justify-between text-xs text-foreground-muted">
           <span>
-            Стр. {table.getState().pagination.pageIndex + 1} из {table.getPageCount()} ·{" "}
-            {data.length} записей
+            {t("pageInfo", {
+              page: table.getState().pagination.pageIndex + 1,
+              total: table.getPageCount(),
+              count: data.length,
+            })}
           </span>
           <div className="flex items-center gap-2">
             <Button
@@ -144,7 +149,7 @@ export function DataTable<T>({
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              Назад
+              {t("prev")}
             </Button>
             <Button
               variant="outline"
@@ -152,7 +157,7 @@ export function DataTable<T>({
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
-              Вперёд
+              {t("next")}
             </Button>
           </div>
         </div>

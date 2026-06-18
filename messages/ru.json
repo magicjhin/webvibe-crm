@@ -21,6 +21,20 @@
     "title": "Ещё",
     "description": "Дополнительные разделы CRM."
   },
+  "quickAdd": {
+    "title": "Быстрое создание",
+    "newClient": "Новый клиент",
+    "newProject": "Новый проект",
+    "newInvoice": "Новый счёт",
+    "newPayment": "Новый платёж",
+    "newExpense": "Новый расход"
+  },
+  "table": {
+    "empty": "Пусто",
+    "pageInfo": "Стр. {page} из {total} · {count, plural, one {# запись} few {# записи} other {# записей}}",
+    "prev": "Назад",
+    "next": "Вперёд"
+  },
   "common": {
     "language": "Язык",
     "russian": "Русский",
@@ -30,6 +44,44 @@
     "delete": "Удалить",
     "edit": "Редактировать",
     "create": "Создать",
-    "signOut": "Выйти"
+    "signOut": "Выйти",
+    "deleted": "Удалено",
+    "deleting": "Удаляем…"
+  },
+  "status": {
+    "client": {
+      "active": "Активен",
+      "archived": "В архиве"
+    },
+    "project": {
+      "idea": "Идея",
+      "estimating": "Оценка",
+      "awaiting_advance": "Ждёт аванс",
+      "in_progress": "В работе",
+      "waiting_client": "Ждёт клиента",
+      "review": "Ревью",
+      "revisions": "Правки",
+      "ready": "Готов",
+      "paid": "Оплачен",
+      "archived": "В архиве"
+    },
+    "task": {
+      "todo": "К работе",
+      "in_progress": "В работе",
+      "waiting_client": "Ждёт клиента",
+      "review": "Ревью",
+      "done": "Готова"
+    },
+    "lead": {
+      "new": "Новый",
+      "to_contact": "Связаться",
+      "discussion": "Обсуждение",
+      "awaiting_proposal": "Ждёт КП",
+      "proposal_sent": "КП отправлено",
+      "thinking": "Думает",
+      "accepted": "Принял",
+      "declined": "Отказался",
+      "postponed": "Отложено"
+    }
   }
 }

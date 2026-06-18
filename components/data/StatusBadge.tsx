@@ -1,52 +1,44 @@
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 type StatusKind = "client" | "project" | "task" | "lead";
 
-type StatusDef = { label: string; color: string };
-
-const CLIENT: Record<string, StatusDef> = {
-  active: { label: "Активен", color: "bg-[var(--color-status-active)]" },
-  archived: { label: "В архиве", color: "bg-[var(--color-status-cancelled)]" },
-};
-
-const PROJECT: Record<string, StatusDef> = {
-  idea: { label: "Идея", color: "bg-[var(--color-status-draft)]" },
-  estimating: { label: "Оценка", color: "bg-[var(--color-status-draft)]" },
-  awaiting_advance: { label: "Ждёт аванс", color: "bg-[var(--color-status-pending)]" },
-  in_progress: { label: "В работе", color: "bg-[var(--color-info)]" },
-  waiting_client: { label: "Ждёт клиента", color: "bg-[var(--color-status-pending)]" },
-  review: { label: "Ревью", color: "bg-[var(--color-status-pending)]" },
-  revisions: { label: "Правки", color: "bg-[var(--color-status-pending)]" },
-  ready: { label: "Готов", color: "bg-[var(--color-status-active)]" },
-  paid: { label: "Оплачен", color: "bg-[var(--color-status-paid)]" },
-  archived: { label: "В архиве", color: "bg-[var(--color-status-cancelled)]" },
-};
-
-const TASK: Record<string, StatusDef> = {
-  todo: { label: "К работе", color: "bg-[var(--color-status-draft)]" },
-  in_progress: { label: "В работе", color: "bg-[var(--color-info)]" },
-  waiting_client: { label: "Ждёт клиента", color: "bg-[var(--color-status-pending)]" },
-  review: { label: "Ревью", color: "bg-[var(--color-status-pending)]" },
-  done: { label: "Готова", color: "bg-[var(--color-status-paid)]" },
-};
-
-const LEAD: Record<string, StatusDef> = {
-  new: { label: "Новый", color: "bg-[var(--color-info)]" },
-  to_contact: { label: "Связаться", color: "bg-[var(--color-status-pending)]" },
-  discussion: { label: "Обсуждение", color: "bg-[var(--color-status-pending)]" },
-  awaiting_proposal: { label: "Ждёт КП", color: "bg-[var(--color-status-pending)]" },
-  proposal_sent: { label: "КП отправлено", color: "bg-[var(--color-status-pending)]" },
-  thinking: { label: "Думает", color: "bg-[var(--color-status-draft)]" },
-  accepted: { label: "Принял", color: "bg-[var(--color-status-paid)]" },
-  declined: { label: "Отказался", color: "bg-[var(--color-status-overdue)]" },
-  postponed: { label: "Отложено", color: "bg-[var(--color-status-cancelled)]" },
-};
-
-const MAP: Record<StatusKind, Record<string, StatusDef>> = {
-  client: CLIENT,
-  project: PROJECT,
-  task: TASK,
-  lead: LEAD,
+// Только цвета; подписи берём из каталога messages (неймспейс `status.<kind>`).
+const COLORS: Record<StatusKind, Record<string, string>> = {
+  client: {
+    active: "bg-[var(--color-status-active)]",
+    archived: "bg-[var(--color-status-cancelled)]",
+  },
+  project: {
+    idea: "bg-[var(--color-status-draft)]",
+    estimating: "bg-[var(--color-status-draft)]",
+    awaiting_advance: "bg-[var(--color-status-pending)]",
+    in_progress: "bg-[var(--color-info)]",
+    waiting_client: "bg-[var(--color-status-pending)]",
+    review: "bg-[var(--color-status-pending)]",
+    revisions: "bg-[var(--color-status-pending)]",
+    ready: "bg-[var(--color-status-active)]",
+    paid: "bg-[var(--color-status-paid)]",
+    archived: "bg-[var(--color-status-cancelled)]",
+  },
+  task: {
+    todo: "bg-[var(--color-status-draft)]",
+    in_progress: "bg-[var(--color-info)]",
+    waiting_client: "bg-[var(--color-status-pending)]",
+    review: "bg-[var(--color-status-pending)]",
+    done: "bg-[var(--color-status-paid)]",
+  },
+  lead: {
+    new: "bg-[var(--color-info)]",
+    to_contact: "bg-[var(--color-status-pending)]",
+    discussion: "bg-[var(--color-status-pending)]",
+    awaiting_proposal: "bg-[var(--color-status-pending)]",
+    proposal_sent: "bg-[var(--color-status-pending)]",
+    thinking: "bg-[var(--color-status-draft)]",
+    accepted: "bg-[var(--color-status-paid)]",
+    declined: "bg-[var(--color-status-overdue)]",
+    postponed: "bg-[var(--color-status-cancelled)]",
+  },
 };
 
 export function StatusBadge({
@@ -58,7 +50,12 @@ export function StatusBadge({
   value: string;
   className?: string;
 }) {
-  const def = MAP[kind][value] ?? { label: value, color: "bg-[var(--color-status-draft)]" };
+  const t = useTranslations("status");
+  const color = COLORS[kind][value] ?? "bg-[var(--color-status-draft)]";
+  // Неизвестный статус — показываем сырое значение, не падаем.
+  const known = value in COLORS[kind];
+  const label = known ? t(`${kind}.${value}`) : value;
+
   return (
     <span
       className={cn(
@@ -66,8 +63,8 @@ export function StatusBadge({
         className,
       )}
     >
-      <span className={cn("size-1.5 rounded-full", def.color)} aria-hidden />
-      <span className="text-foreground">{def.label}</span>
+      <span className={cn("size-1.5 rounded-full", color)} aria-hidden />
+      <span className="text-foreground">{label}</span>
     </span>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -30,7 +31,7 @@ export function DeleteConfirm({
   description,
   action,
   onSuccess,
-  confirmLabel = "Удалить",
+  confirmLabel,
   refreshOnSuccess = true,
 }: {
   open: boolean;
@@ -43,13 +44,14 @@ export function DeleteConfirm({
   refreshOnSuccess?: boolean;
 }) {
   const router = useRouter();
+  const t = useTranslations("common");
   const [isPending, startTransition] = useTransition();
 
   const onConfirm = () => {
     startTransition(async () => {
       const result = await action();
       if (result.ok) {
-        toast.success("Удалено");
+        toast.success(t("deleted"));
         onOpenChange(false);
         if (onSuccess) onSuccess();
         else if (refreshOnSuccess) router.refresh();
@@ -72,7 +74,7 @@ export function DeleteConfirm({
             onClick={() => onOpenChange(false)}
             disabled={isPending}
           >
-            Отмена
+            {t("cancel")}
           </Button>
           <Button
             variant="destructive"
@@ -82,10 +84,10 @@ export function DeleteConfirm({
             {isPending ? (
               <span className="inline-flex items-center gap-2">
                 <Loader2 className="size-4 animate-spin" />
-                Удаляем…
+                {t("deleting")}
               </span>
             ) : (
-              confirmLabel
+              confirmLabel ?? t("delete")
             )}
           </Button>
         </DialogFooter>

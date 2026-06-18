@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   FileText,
   FolderKanban,
@@ -20,20 +21,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const ITEMS = [
-  { href: "/clients/new", label: "Новый клиент", icon: Users },
-  { href: "/projects/new", label: "Новый проект", icon: FolderKanban },
-  { href: "/invoices/new", label: "Новый счёт", icon: FileText },
-  { href: "/payments/new", label: "Новый платёж", icon: Wallet },
-  { href: "/expenses/new", label: "Новый расход", icon: Receipt },
-];
+  { href: "/clients/new", key: "newClient", icon: Users },
+  { href: "/projects/new", key: "newProject", icon: FolderKanban },
+  { href: "/invoices/new", key: "newInvoice", icon: FileText },
+  { href: "/payments/new", key: "newPayment", icon: Wallet },
+  { href: "/expenses/new", key: "newExpense", icon: Receipt },
+] as const;
 
 export function QuickAddFab() {
+  const t = useTranslations("quickAdd");
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label="Быстрое создание"
+          aria-label={t("title")}
           className="fixed bottom-20 right-4 z-40 inline-flex size-14 items-center justify-center rounded-full text-white shadow-lg bg-accent-gradient active:scale-95 sm:hidden"
         >
           <Plus className="size-6" strokeWidth={2.25} />
@@ -46,14 +48,14 @@ export function QuickAddFab() {
         className="min-w-[220px]"
       >
         <DropdownMenuLabel className="text-xs text-foreground-muted">
-          Быстрое создание
+          {t("title")}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {ITEMS.map((item) => (
           <DropdownMenuItem key={item.href} asChild>
             <Link href={item.href} className="cursor-pointer">
               <item.icon className="size-4" />
-              {item.label}
+              {t(item.key)}
             </Link>
           </DropdownMenuItem>
         ))}
