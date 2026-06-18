@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Menu, X } from "lucide-react";
 
 import {
@@ -20,13 +21,14 @@ import { cn } from "@/lib/utils";
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const t = useTranslations("nav");
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button
           type="button"
-          aria-label="Открыть меню"
+          aria-label={t("openMenu")}
           className="inline-flex size-11 items-center justify-center rounded-md text-foreground-muted hover:bg-secondary hover:text-foreground md:hidden"
         >
           <Menu className="size-5" />
@@ -43,12 +45,12 @@ export function MobileNav() {
             <span className="text-foreground-muted"> / CRM</span>
           </SheetTitle>
           <SheetDescription className="sr-only">
-            Главное меню навигации
+            {t("mainMenu")}
           </SheetDescription>
           <SheetClose asChild>
             <button
               type="button"
-              aria-label="Закрыть меню"
+              aria-label={t("closeMenu")}
               className="inline-flex size-9 items-center justify-center rounded-md text-foreground-muted hover:bg-secondary hover:text-foreground"
             >
               <X className="size-4" />
@@ -74,7 +76,7 @@ export function MobileNav() {
                     )}
                   >
                     <item.icon className="size-4 shrink-0 opacity-70 group-hover:opacity-100" />
-                    <span>{item.label}</span>
+                    <span>{t(item.key)}</span>
                   </Link>
                 </li>
               );

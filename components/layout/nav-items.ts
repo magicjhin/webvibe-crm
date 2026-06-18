@@ -16,29 +16,31 @@ import {
 
 export type NavItem = {
   href: string;
-  label: string;
+  // ключ в неймспейсе `nav` каталога сообщений (messages/*.json).
+  // Подпись подставляется при рендере через useTranslations/getTranslations("nav").
+  key: string;
   icon: typeof LayoutDashboard;
 };
 
 export const NAV: NavItem[] = [
-  { href: "/dashboard", label: "Дашборд", icon: LayoutDashboard },
-  { href: "/clients", label: "Клиенты", icon: Users },
-  { href: "/leads", label: "Лиды", icon: Sparkles },
-  { href: "/projects", label: "Проекты", icon: FolderKanban },
-  { href: "/documents", label: "Документы", icon: FileText },
-  { href: "/proposals", label: "КП", icon: FileCheck2 },
-  { href: "/contracts", label: "Договора", icon: FileSignature },
-  { href: "/payments", label: "Платежи", icon: Wallet },
-  { href: "/expenses", label: "Расходы", icon: Receipt },
-  { href: "/maintenance", label: "Поддержка", icon: Wrench },
-  { href: "/reminders", label: "Напоминания", icon: Bell },
-  { href: "/settings/profile", label: "Настройки", icon: Settings },
+  { href: "/dashboard", key: "dashboard", icon: LayoutDashboard },
+  { href: "/clients", key: "clients", icon: Users },
+  { href: "/leads", key: "leads", icon: Sparkles },
+  { href: "/projects", key: "projects", icon: FolderKanban },
+  { href: "/documents", key: "documents", icon: FileText },
+  { href: "/proposals", key: "proposals", icon: FileCheck2 },
+  { href: "/contracts", key: "contracts", icon: FileSignature },
+  { href: "/payments", key: "payments", icon: Wallet },
+  { href: "/expenses", key: "expenses", icon: Receipt },
+  { href: "/maintenance", key: "maintenance", icon: Wrench },
+  { href: "/reminders", key: "reminders", icon: Bell },
+  { href: "/settings/profile", key: "settings", icon: Settings },
 ];
 
 export const MOBILE_TABS: NavItem[] = [
-  { href: "/dashboard", label: "Дашборд", icon: LayoutDashboard },
-  { href: "/projects", label: "Проекты", icon: FolderKanban },
-  { href: "/clients", label: "Клиенты", icon: Users },
-  { href: "/documents", label: "Документы", icon: FileText },
-  { href: "/more", label: "Ещё", icon: MoreHorizontal },
+  { href: "/dashboard", key: "dashboard", icon: LayoutDashboard },
+  { href: "/projects", key: "projects", icon: FolderKanban },
+  { href: "/clients", key: "clients", icon: Users },
+  { href: "/documents", key: "documents", icon: FileText },
+  { href: "/more", key: "more", icon: MoreHorizontal },
 ];

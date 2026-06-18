@@ -1,0 +1,35 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "clients": "Clients",
+    "leads": "Leads",
+    "projects": "Projects",
+    "documents": "Documents",
+    "proposals": "Proposals",
+    "contracts": "Contracts",
+    "payments": "Payments",
+    "expenses": "Expenses",
+    "maintenance": "Maintenance",
+    "reminders": "Reminders",
+    "settings": "Settings",
+    "more": "More",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "mainMenu": "Main navigation menu"
+  },
+  "more": {
+    "title": "More",
+    "description": "Additional CRM sections."
+  },
+  "common": {
+    "language": "Language",
+    "russian": "Русский",
+    "english": "English",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "signOut": "Sign out"
+  }
+}

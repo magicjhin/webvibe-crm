@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { QuickAddFab } from "@/components/layout/QuickAddFab";
 import { NAV, MOBILE_TABS } from "@/components/layout/nav-items";
 
@@ -30,7 +32,8 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Sidebar() {
+async function Sidebar() {
+  const t = await getTranslations("nav");
   return (
     <aside
       aria-label="Primary navigation"
@@ -52,11 +55,11 @@ function Sidebar() {
             <li key={item.href}>
               <Link
                 href={item.href}
-                title={item.label}
+                title={t(item.key)}
                 className="group flex items-center justify-center gap-3 rounded-md px-3 py-2 text-sm text-foreground-muted transition-colors hover:bg-sidebar-accent hover:text-foreground lg:justify-start"
               >
                 <item.icon className="size-4 shrink-0 opacity-70 group-hover:opacity-100" />
-                <span className="hidden lg:inline">{item.label}</span>
+                <span className="hidden lg:inline">{t(item.key)}</span>
               </Link>
             </li>
           ))}
@@ -86,6 +89,7 @@ function Topbar({ user }: { user?: { email: string; name: string } | null }) {
         {/* Breadcrumbs / page header slot */}
       </div>
       <div className="flex items-center gap-2">
+        <LanguageSwitcher className="hidden sm:inline-flex" />
         {user ? <UserBadge name={user.name} email={user.email} /> : null}
         {user ? <SignOutButton /> : null}
       </div>
@@ -111,7 +115,8 @@ function UserBadge({ name, email }: { name: string; email: string }) {
   );
 }
 
-function MobileBottomNav() {
+async function MobileBottomNav() {
+  const t = await getTranslations("nav");
   return (
     <nav
       aria-label="Mobile navigation"
@@ -125,7 +130,7 @@ function MobileBottomNav() {
           className="flex flex-col items-center justify-center gap-1 text-[11px] text-foreground-muted active:scale-95"
         >
           <item.icon className="size-5" />
-          <span>{item.label}</span>
+          <span>{t(item.key)}</span>
         </Link>
       ))}
     </nav>

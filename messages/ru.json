@@ -1,0 +1,35 @@
+{
+  "nav": {
+    "dashboard": "Дашборд",
+    "clients": "Клиенты",
+    "leads": "Лиды",
+    "projects": "Проекты",
+    "documents": "Документы",
+    "proposals": "КП",
+    "contracts": "Договора",
+    "payments": "Платежи",
+    "expenses": "Расходы",
+    "maintenance": "Поддержка",
+    "reminders": "Напоминания",
+    "settings": "Настройки",
+    "more": "Ещё",
+    "openMenu": "Открыть меню",
+    "closeMenu": "Закрыть меню",
+    "mainMenu": "Главное меню навигации"
+  },
+  "more": {
+    "title": "Ещё",
+    "description": "Дополнительные разделы CRM."
+  },
+  "common": {
+    "language": "Язык",
+    "russian": "Русский",
+    "english": "English",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "create": "Создать",
+    "signOut": "Выйти"
+  }
+}
