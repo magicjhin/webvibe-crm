@@ -40,6 +40,40 @@
     "tabContracts": "Договора",
     "tabProposals": "КП"
   },
+  "invoices": {
+    "colClient": "Клиент",
+    "colKind": "Тип",
+    "colStatus": "Статус",
+    "downloadPdf": "Скачать PDF",
+    "downloadWord": "Скачать Word",
+    "emptyTitle": "Пока нет счетов",
+    "emptyDesc": "Создай первый счёт. PDF сгенерируется автоматически по твоим реквизитам.",
+    "createCta": "Создать счёт",
+    "searchPlaceholder": "Поиск по номеру, клиенту, проекту",
+    "allStatuses": "Все статусы",
+    "allKinds": "Все типы",
+    "deleteTitle": "Удалить счёт?",
+    "deleteDesc": "{number}. Удалить можно черновик или отправленный (не оплаченный) счёт.",
+    "kind": {
+      "advance": "Аванс",
+      "final": "Остаток",
+      "full": "Полная",
+      "maintenance": "Поддержка"
+    }
+  },
+  "proposals": {
+    "colTitle": "Название",
+    "colClient": "Клиент",
+    "colStatus": "Статус",
+    "downloadPdf": "Скачать PDF",
+    "emptyTitle": "Пока нет КП",
+    "emptyDesc": "Создай первое коммерческое предложение. PDF на литовском, конверсия в проект.",
+    "createCta": "Создать КП",
+    "searchPlaceholder": "Поиск по номеру, названию, клиенту",
+    "allStatuses": "Все статусы",
+    "deleteTitle": "Удалить КП?",
+    "deleteDesc": "{number}. Удалять можно только черновики."
+  },
   "quickAdd": {
     "title": "Быстрое создание",
     "newClient": "Новый клиент",
@@ -101,6 +135,33 @@
     "prev": "Предыдущий период",
     "next": "Следующий период",
     "today": "Сегодня"
+  },
+  "docStatus": {
+    "invoice": {
+      "draft": "Черновик",
+      "sent": "Отправлен",
+      "paid": "Оплачен",
+      "cancelled": "Отменён",
+      "overdue": "Просрочен"
+    },
+    "proposal": {
+      "draft": "Черновик",
+      "sent": "Отправлено",
+      "accepted": "Принято",
+      "declined": "Отклонено",
+      "revisions": "Правки"
+    },
+    "contract": {
+      "draft": "Черновик",
+      "sent": "Отправлен",
+      "signed": "Подписан",
+      "cancelled": "Отменён"
+    },
+    "contractKind": {
+      "STAGED": "Поэтапный",
+      "ADVANCE": "Аванс 70/30",
+      "MAINTENANCE": "Поддержка"
+    }
   },
   "expenseCategory": {
     "ai_tools": "AI-инструменты",

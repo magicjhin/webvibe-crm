@@ -1,11 +1,6 @@
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { ContractKind } from "@/lib/validators/contract";
-
-export const CONTRACT_KIND_LABEL: Record<ContractKind, string> = {
-  STAGED: "Поэтапный",
-  ADVANCE: "Аванс 70/30",
-  MAINTENANCE: "Поддержка",
-};
 
 const COLOR: Record<ContractKind, string> = {
   STAGED: "bg-[var(--color-info)]",
@@ -20,6 +15,7 @@ export function ContractKindBadge({
   kind: ContractKind;
   className?: string;
 }) {
+  const t = useTranslations("docStatus.contractKind");
   return (
     <span
       className={cn(
@@ -28,7 +24,7 @@ export function ContractKindBadge({
       )}
     >
       <span className={cn("size-1.5 rounded-full", COLOR[kind])} aria-hidden />
-      <span className="text-foreground">{CONTRACT_KIND_LABEL[kind]}</span>
+      <span className="text-foreground">{t(kind)}</span>
     </span>
   );
 }

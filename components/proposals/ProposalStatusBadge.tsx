@@ -1,20 +1,13 @@
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { ProposalStatus } from "@/lib/validators/proposal";
 
-const MAP: Record<ProposalStatus, { label: string; color: string }> = {
-  draft: { label: "Черновик", color: "bg-[var(--color-status-draft)]" },
-  sent: { label: "Отправлено", color: "bg-[var(--color-info)]" },
-  accepted: { label: "Принято", color: "bg-[var(--color-status-paid)]" },
-  declined: { label: "Отклонено", color: "bg-[var(--color-status-overdue)]" },
-  revisions: { label: "Правки", color: "bg-[var(--color-status-pending)]" },
-};
-
-export const PROPOSAL_STATUS_LABEL: Record<ProposalStatus, string> = {
-  draft: MAP.draft.label,
-  sent: MAP.sent.label,
-  accepted: MAP.accepted.label,
-  declined: MAP.declined.label,
-  revisions: MAP.revisions.label,
+const COLOR: Record<ProposalStatus, string> = {
+  draft: "bg-[var(--color-status-draft)]",
+  sent: "bg-[var(--color-info)]",
+  accepted: "bg-[var(--color-status-paid)]",
+  declined: "bg-[var(--color-status-overdue)]",
+  revisions: "bg-[var(--color-status-pending)]",
 };
 
 export function ProposalStatusBadge({
@@ -24,7 +17,7 @@ export function ProposalStatusBadge({
   status: ProposalStatus;
   className?: string;
 }) {
-  const def = MAP[status];
+  const t = useTranslations("docStatus.proposal");
   return (
     <span
       className={cn(
@@ -32,8 +25,8 @@ export function ProposalStatusBadge({
         className,
       )}
     >
-      <span className={cn("size-1.5 rounded-full", def.color)} aria-hidden />
-      <span className="text-foreground">{def.label}</span>
+      <span className={cn("size-1.5 rounded-full", COLOR[status])} aria-hidden />
+      <span className="text-foreground">{t(status)}</span>
     </span>
   );
 }

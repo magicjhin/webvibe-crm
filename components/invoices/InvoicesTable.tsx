@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { ColumnDef } from "@tanstack/react-table";
 import { FileText, MoreHorizontal, Plus, Search } from "lucide-react";
 
@@ -49,15 +50,11 @@ export type InvoiceRow = {
   isImported?: boolean;
 };
 
-const KIND_LABEL: Record<InvoiceRow["kind"], string> = {
-  advance: "Аванс",
-  final: "Остаток",
-  full: "Полная",
-  maintenance: "Поддержка",
-};
-
 export function InvoicesTable({ rows }: { rows: InvoiceRow[] }) {
   const router = useRouter();
+  const t = useTranslations("invoices");
+  const tc = useTranslations("common");
+  const tStatus = useTranslations("docStatus.invoice");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | InvoiceRow["status"]>("all");
   const [kindFilter, setKindFilter] = useState<"all" | InvoiceRow["kind"]>("all");
@@ -94,7 +91,7 @@ export function InvoicesTable({ rows }: { rows: InvoiceRow[] }) {
       },
       {
         accessorKey: "clientName",
-        header: "Клиент",
+        header: t("colClient"),
         cell: ({ row }) => (
           <Link
             href={`/clients/${row.original.clientId}`}
@@ -107,16 +104,16 @@ export function InvoicesTable({ rows }: { rows: InvoiceRow[] }) {
       },
       {
         accessorKey: "kind",
-        header: "Тип",
+        header: t("colKind"),
         cell: ({ row }) => (
           <span className="text-foreground-muted text-xs">
-            {KIND_LABEL[row.original.kind]}
+            {t(`kind.${row.original.kind}`)}
           </span>
         ),
       },
       {
         accessorKey: "status",
-        header: "Статус",
+        header: t("colStatus"),
         cell: ({ row }) => (
           <InvoiceStatusBadge
             status={row.original.status}
@@ -154,21 +151,21 @@ export function InvoicesTable({ rows }: { rows: InvoiceRow[] }) {
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  aria-label={`Действия с ${row.original.number}`}
+                  aria-label={tc("actionsFor", { name: row.original.number })}
                 >
                   <MoreHorizontal className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href={`/invoices/${row.original.id}`}>Открыть</Link>
+                  <Link href={`/invoices/${row.original.id}`}>{tc("open")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <a
                     href={`/api/invoices/${row.original.id}/pdf?download=1`}
                     download={`${row.original.number}.pdf`}
                   >
-                    Скачать PDF
+                    {t("downloadPdf")}
                   </a>
                 </DropdownMenuItem>
                 {!row.original.isImported ? (
@@ -177,7 +174,7 @@ export function InvoicesTable({ rows }: { rows: InvoiceRow[] }) {
                       href={`/api/invoices/${row.original.id}/docx`}
                       download={`${row.original.number}.docx`}
                     >
-                      Скачать Word
+                      {t("downloadWord")}
                     </a>
                   </DropdownMenuItem>
                 ) : null}
@@ -185,7 +182,7 @@ export function InvoicesTable({ rows }: { rows: InvoiceRow[] }) {
                   <>
                     <DropdownMenuItem asChild>
                       <Link href={`/invoices/${row.original.id}/edit`}>
-                        Редактировать
+                        {tc("edit")}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -196,7 +193,7 @@ export function InvoicesTable({ rows }: { rows: InvoiceRow[] }) {
                         setDeleteTarget(row.original);
                       }}
                     >
-                      Удалить
+                      {tc("delete")}
                     </DropdownMenuItem>
                   </>
                 ) : null}
@@ -206,20 +203,20 @@ export function InvoicesTable({ rows }: { rows: InvoiceRow[] }) {
         ),
       },
     ],
-    [],
+    [t, tc],
   );
 
   if (rows.length === 0) {
     return (
       <EmptyState
         icon={FileText}
-        title="Пока нет счетов"
-        description="Создай первый счёт. PDF сгенерируется автоматически по твоим реквизитам."
+        title={t("emptyTitle")}
+        description={t("emptyDesc")}
         action={
           <Button asChild>
             <Link href="/invoices/new">
               <Plus className="size-4" />
-              Создать счёт
+              {t("createCta")}
             </Link>
           </Button>
         }
@@ -235,7 +232,7 @@ export function InvoicesTable({ rows }: { rows: InvoiceRow[] }) {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск по номеру, клиенту, проекту"
+            placeholder={t("searchPlaceholder")}
             className="pl-9"
           />
         </div>
@@ -247,10 +244,10 @@ export function InvoicesTable({ rows }: { rows: InvoiceRow[] }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Все статусы</SelectItem>
+            <SelectItem value="all">{t("allStatuses")}</SelectItem>
             {INVOICE_STATUSES.map((s) => (
               <SelectItem key={s} value={s}>
-                {s}
+                {tStatus(s)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -263,10 +260,10 @@ export function InvoicesTable({ rows }: { rows: InvoiceRow[] }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Все типы</SelectItem>
+            <SelectItem value="all">{t("allKinds")}</SelectItem>
             {INVOICE_KINDS.map((k) => (
               <SelectItem key={k} value={k}>
-                {KIND_LABEL[k]}
+                {t(`kind.${k}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -280,7 +277,7 @@ export function InvoicesTable({ rows }: { rows: InvoiceRow[] }) {
         onRowClick={(r) => router.push(`/invoices/${r.id}`)}
         empty={
           <div className="px-6 py-10 text-center text-sm text-foreground-muted">
-            Ничего не найдено по фильтрам
+            {tc("notFoundByFilters")}
           </div>
         }
       />
@@ -290,14 +287,14 @@ export function InvoicesTable({ rows }: { rows: InvoiceRow[] }) {
         onOpenChange={(o) => {
           if (!o) setDeleteTarget(null);
         }}
-        title="Удалить счёт?"
+        title={t("deleteTitle")}
         description={
           deleteTarget
-            ? `${deleteTarget.number}. Удалить можно черновик или отправленный (не оплаченный) счёт.`
+            ? t("deleteDesc", { number: deleteTarget.number })
             : undefined
         }
         action={async () => {
-          if (!deleteTarget) return { ok: false, error: "Нет цели" };
+          if (!deleteTarget) return { ok: false, error: tc("noTarget") };
           return deleteInvoice(deleteTarget.id);
         }}
       />

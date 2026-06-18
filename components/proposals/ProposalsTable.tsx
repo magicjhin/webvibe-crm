@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { ColumnDef } from "@tanstack/react-table";
 import { FileText, MoreHorizontal, Plus, Search } from "lucide-react";
 
@@ -27,10 +28,7 @@ import { EmptyState } from "@/components/data/EmptyState";
 import { MoneyDisplay } from "@/components/data/MoneyDisplay";
 import { DateDisplay } from "@/components/data/DateDisplay";
 import { DeleteConfirm } from "@/components/data/DeleteConfirm";
-import {
-  ProposalStatusBadge,
-  PROPOSAL_STATUS_LABEL,
-} from "./ProposalStatusBadge";
+import { ProposalStatusBadge } from "./ProposalStatusBadge";
 import { deleteProposal } from "@/lib/actions/proposals";
 import { PROPOSAL_STATUSES, type ProposalStatus } from "@/lib/validators/proposal";
 
@@ -48,6 +46,9 @@ export type ProposalRow = {
 
 export function ProposalsTable({ rows }: { rows: ProposalRow[] }) {
   const router = useRouter();
+  const t = useTranslations("proposals");
+  const tc = useTranslations("common");
+  const tStatus = useTranslations("docStatus.proposal");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | ProposalStatus>("all");
   const [deleteTarget, setDeleteTarget] = useState<ProposalRow | null>(null);
@@ -82,12 +83,12 @@ export function ProposalsTable({ rows }: { rows: ProposalRow[] }) {
       },
       {
         accessorKey: "title",
-        header: "Название",
+        header: t("colTitle"),
         cell: ({ row }) => <span className="font-medium">{row.original.title}</span>,
       },
       {
         accessorKey: "clientName",
-        header: "Клиент",
+        header: t("colClient"),
         cell: ({ row }) => (
           <Link
             href={`/clients/${row.original.clientId}`}
@@ -100,7 +101,7 @@ export function ProposalsTable({ rows }: { rows: ProposalRow[] }) {
       },
       {
         accessorKey: "status",
-        header: "Статус",
+        header: t("colStatus"),
         cell: ({ row }) => <ProposalStatusBadge status={row.original.status} />,
       },
       {
@@ -128,28 +129,28 @@ export function ProposalsTable({ rows }: { rows: ProposalRow[] }) {
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  aria-label={`Действия с ${row.original.number}`}
+                  aria-label={tc("actionsFor", { name: row.original.number })}
                 >
                   <MoreHorizontal className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href={`/proposals/${row.original.id}`}>Открыть</Link>
+                  <Link href={`/proposals/${row.original.id}`}>{tc("open")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <a
                     href={`/api/proposals/${row.original.id}/pdf?download=1`}
                     download={`${row.original.number}.pdf`}
                   >
-                    Скачать PDF
+                    {t("downloadPdf")}
                   </a>
                 </DropdownMenuItem>
                 {row.original.status === "draft" ? (
                   <>
                     <DropdownMenuItem asChild>
                       <Link href={`/proposals/${row.original.id}/edit`}>
-                        Редактировать
+                        {tc("edit")}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -160,7 +161,7 @@ export function ProposalsTable({ rows }: { rows: ProposalRow[] }) {
                         setDeleteTarget(row.original);
                       }}
                     >
-                      Удалить
+                      {tc("delete")}
                     </DropdownMenuItem>
                   </>
                 ) : null}
@@ -170,20 +171,20 @@ export function ProposalsTable({ rows }: { rows: ProposalRow[] }) {
         ),
       },
     ],
-    [],
+    [t, tc],
   );
 
   if (rows.length === 0) {
     return (
       <EmptyState
         icon={FileText}
-        title="Пока нет КП"
-        description="Создай первое коммерческое предложение. PDF на литовском, конверсия в проект."
+        title={t("emptyTitle")}
+        description={t("emptyDesc")}
         action={
           <Button asChild>
             <Link href="/proposals/new">
               <Plus className="size-4" />
-              Создать КП
+              {t("createCta")}
             </Link>
           </Button>
         }
@@ -199,7 +200,7 @@ export function ProposalsTable({ rows }: { rows: ProposalRow[] }) {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск по номеру, названию, клиенту"
+            placeholder={t("searchPlaceholder")}
             className="pl-9"
           />
         </div>
@@ -211,10 +212,10 @@ export function ProposalsTable({ rows }: { rows: ProposalRow[] }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Все статусы</SelectItem>
+            <SelectItem value="all">{t("allStatuses")}</SelectItem>
             {PROPOSAL_STATUSES.map((s) => (
               <SelectItem key={s} value={s}>
-                {PROPOSAL_STATUS_LABEL[s]}
+                {tStatus(s)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -228,7 +229,7 @@ export function ProposalsTable({ rows }: { rows: ProposalRow[] }) {
         onRowClick={(r) => router.push(`/proposals/${r.id}`)}
         empty={
           <div className="px-6 py-10 text-center text-sm text-foreground-muted">
-            Ничего не найдено по фильтрам
+            {tc("notFoundByFilters")}
           </div>
         }
       />
@@ -238,14 +239,14 @@ export function ProposalsTable({ rows }: { rows: ProposalRow[] }) {
         onOpenChange={(o) => {
           if (!o) setDeleteTarget(null);
         }}
-        title="Удалить КП?"
+        title={t("deleteTitle")}
         description={
           deleteTarget
-            ? `${deleteTarget.number}. Удалять можно только черновики.`
+            ? t("deleteDesc", { number: deleteTarget.number })
             : undefined
         }
         action={async () => {
-          if (!deleteTarget) return { ok: false, error: "Нет цели" };
+          if (!deleteTarget) return { ok: false, error: tc("noTarget") };
           return deleteProposal(deleteTarget.id);
         }}
       />

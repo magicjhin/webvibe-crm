@@ -1,12 +1,13 @@
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 type InvoiceStatus = "draft" | "sent" | "paid" | "cancelled";
 
-const MAP: Record<InvoiceStatus, { label: string; color: string }> = {
-  draft: { label: "Черновик", color: "bg-[var(--color-status-draft)]" },
-  sent: { label: "Отправлен", color: "bg-[var(--color-info)]" },
-  paid: { label: "Оплачен", color: "bg-[var(--color-status-paid)]" },
-  cancelled: { label: "Отменён", color: "bg-[var(--color-status-cancelled)]" },
+const COLOR: Record<InvoiceStatus, string> = {
+  draft: "bg-[var(--color-status-draft)]",
+  sent: "bg-[var(--color-info)]",
+  paid: "bg-[var(--color-status-paid)]",
+  cancelled: "bg-[var(--color-status-cancelled)]",
 };
 
 export function InvoiceStatusBadge({
@@ -18,6 +19,7 @@ export function InvoiceStatusBadge({
   dueAt: Date | null;
   className?: string;
 }) {
+  const t = useTranslations("docStatus.invoice");
   // Derived "overdue" — not stored, computed on the fly per DATABASE.md.
   const isOverdue =
     status === "sent" && dueAt != null && dueAt.getTime() < Date.now();
@@ -34,12 +36,11 @@ export function InvoiceStatusBadge({
           className="size-1.5 rounded-full bg-[var(--color-status-overdue)]"
           aria-hidden
         />
-        <span className="text-[hsl(var(--danger))]">Просрочен</span>
+        <span className="text-[hsl(var(--danger))]">{t("overdue")}</span>
       </span>
     );
   }
 
-  const def = MAP[status];
   return (
     <span
       className={cn(
@@ -47,8 +48,8 @@ export function InvoiceStatusBadge({
         className,
       )}
     >
-      <span className={cn("size-1.5 rounded-full", def.color)} aria-hidden />
-      <span className="text-foreground">{def.label}</span>
+      <span className={cn("size-1.5 rounded-full", COLOR[status])} aria-hidden />
+      <span className="text-foreground">{t(status)}</span>
     </span>
   );
 }

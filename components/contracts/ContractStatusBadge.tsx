@@ -1,11 +1,12 @@
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { ContractStatus } from "@/lib/validators/contract";
 
-const MAP: Record<ContractStatus, { label: string; color: string }> = {
-  draft: { label: "Черновик", color: "bg-[var(--color-status-draft)]" },
-  sent: { label: "Отправлен", color: "bg-[var(--color-info)]" },
-  signed: { label: "Подписан", color: "bg-[var(--color-status-paid)]" },
-  cancelled: { label: "Отменён", color: "bg-[var(--color-status-cancelled)]" },
+const COLOR: Record<ContractStatus, string> = {
+  draft: "bg-[var(--color-status-draft)]",
+  sent: "bg-[var(--color-info)]",
+  signed: "bg-[var(--color-status-paid)]",
+  cancelled: "bg-[var(--color-status-cancelled)]",
 };
 
 export function ContractStatusBadge({
@@ -15,7 +16,7 @@ export function ContractStatusBadge({
   status: ContractStatus;
   className?: string;
 }) {
-  const def = MAP[status];
+  const t = useTranslations("docStatus.contract");
   return (
     <span
       className={cn(
@@ -23,8 +24,8 @@ export function ContractStatusBadge({
         className,
       )}
     >
-      <span className={cn("size-1.5 rounded-full", def.color)} aria-hidden />
-      <span className="text-foreground">{def.label}</span>
+      <span className={cn("size-1.5 rounded-full", COLOR[status])} aria-hidden />
+      <span className="text-foreground">{t(status)}</span>
     </span>
   );
 }

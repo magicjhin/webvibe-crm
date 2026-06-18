@@ -40,6 +40,40 @@
     "tabContracts": "Contracts",
     "tabProposals": "Proposals"
   },
+  "invoices": {
+    "colClient": "Client",
+    "colKind": "Type",
+    "colStatus": "Status",
+    "downloadPdf": "Download PDF",
+    "downloadWord": "Download Word",
+    "emptyTitle": "No invoices yet",
+    "emptyDesc": "Create your first invoice. The PDF is generated automatically from your details.",
+    "createCta": "Create invoice",
+    "searchPlaceholder": "Search by number, client, project",
+    "allStatuses": "All statuses",
+    "allKinds": "All types",
+    "deleteTitle": "Delete invoice?",
+    "deleteDesc": "{number}. You can delete a draft or a sent (unpaid) invoice.",
+    "kind": {
+      "advance": "Advance",
+      "final": "Final",
+      "full": "Full",
+      "maintenance": "Maintenance"
+    }
+  },
+  "proposals": {
+    "colTitle": "Title",
+    "colClient": "Client",
+    "colStatus": "Status",
+    "downloadPdf": "Download PDF",
+    "emptyTitle": "No proposals yet",
+    "emptyDesc": "Create your first proposal. PDF in Lithuanian, convertible into a project.",
+    "createCta": "Create proposal",
+    "searchPlaceholder": "Search by number, title, client",
+    "allStatuses": "All statuses",
+    "deleteTitle": "Delete proposal?",
+    "deleteDesc": "{number}. Only drafts can be deleted."
+  },
   "quickAdd": {
     "title": "Quick create",
     "newClient": "New client",
@@ -101,6 +135,33 @@
     "prev": "Previous period",
     "next": "Next period",
     "today": "Today"
+  },
+  "docStatus": {
+    "invoice": {
+      "draft": "Draft",
+      "sent": "Sent",
+      "paid": "Paid",
+      "cancelled": "Cancelled",
+      "overdue": "Overdue"
+    },
+    "proposal": {
+      "draft": "Draft",
+      "sent": "Sent",
+      "accepted": "Accepted",
+      "declined": "Declined",
+      "revisions": "Revisions"
+    },
+    "contract": {
+      "draft": "Draft",
+      "sent": "Sent",
+      "signed": "Signed",
+      "cancelled": "Cancelled"
+    },
+    "contractKind": {
+      "STAGED": "Staged",
+      "ADVANCE": "Advance 70/30",
+      "MAINTENANCE": "Maintenance"
+    }
   },
   "expenseCategory": {
     "ai_tools": "AI tools",
