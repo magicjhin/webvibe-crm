@@ -21,6 +21,13 @@
     "title": "Ещё",
     "description": "Дополнительные разделы CRM."
   },
+  "auth": {
+    "metaTitle": "Вход",
+    "subtitle": "Внутренний инструмент. Доступ только владельцу.",
+    "password": "Пароль",
+    "signingIn": "Входим…",
+    "signIn": "Войти"
+  },
   "comingSoon": {
     "iterationName": "Итерации {n}",
     "arrivesIn": "Модуль появится в {iteration}.",
@@ -97,6 +104,52 @@
       "full": "Полная",
       "maintenance": "Поддержка"
     }
+  },
+  "expensesTable": {
+    "colDate": "Дата",
+    "colCategory": "Категория",
+    "colVendor": "Поставщик",
+    "colDescription": "Описание",
+    "colAmount": "Сумма",
+    "openReceipt": "Открыть чек",
+    "emptyTitle": "Расходов пока нет",
+    "emptyDesc": "Записывай сюда подписки на AI, хостинг, рекламу — всё, что относится к работе.",
+    "createCta": "Добавить расход",
+    "searchPlaceholder": "Поиск по описанию или поставщику",
+    "allCategories": "Все категории",
+    "deleteTitle": "Удалить расход?",
+    "deleteDesc": "{description} — {amount} EUR. Если есть файл-чек, он тоже будет удалён."
+  },
+  "projectsTable": {
+    "colTitle": "Проект",
+    "colClient": "Клиент",
+    "colType": "Тип",
+    "colStatus": "Статус",
+    "colPrice": "Цена",
+    "colDeadline": "Дедлайн",
+    "emptyTitle": "Пока нет проектов",
+    "emptyDesc": "Создай первый проект для одного из клиентов.",
+    "createCta": "Создать проект",
+    "searchPlaceholder": "Поиск по названию или клиенту",
+    "allStatuses": "Все статусы",
+    "allTypes": "Все типы",
+    "deleteTitle": "Удалить проект?",
+    "deleteDesc": "{title}. Tasks удалятся каскадно. Если есть привязанные документы — операция будет отклонена."
+  },
+  "contracts": {
+    "colClient": "Клиент",
+    "colKind": "Тип",
+    "colStatus": "Статус",
+    "downloadPdf": "Скачать PDF",
+    "downloadWord": "Скачать Word",
+    "emptyTitle": "Пока нет договоров",
+    "emptyDesc": "Создай первый договор. Клиент подпишет его пальцем по ссылке /sign.",
+    "createCta": "Создать договор",
+    "searchPlaceholder": "Поиск по номеру, клиенту, проекту",
+    "allStatuses": "Все статусы",
+    "allKinds": "Все типы",
+    "deleteTitle": "Удалить договор?",
+    "deleteDesc": "{number}. Удалить можно черновик или отправленный (не подписанный) договор."
   },
   "proposals": {
     "colTitle": "Название",
@@ -230,7 +283,30 @@
     "saving": "Сохраняем…",
     "saved": "Сохранено",
     "choose": "Выбери",
-    "editWithName": "Редактировать — {name}"
+    "editWithName": "Редактировать — {name}",
+    "actions": "Действия"
+  },
+  "payments": {
+    "colDate": "Дата",
+    "colClient": "Клиент",
+    "colInvoice": "Счёт",
+    "colProject": "Проект",
+    "colKind": "Тип",
+    "colAmount": "Сумма",
+    "emptyTitle": "Платежей пока нет",
+    "emptyDesc": "Когда поступит оплата от клиента — добавь её сюда. Можно привязать к конкретному счёту.",
+    "createCta": "Добавить платёж",
+    "searchPlaceholder": "Поиск по клиенту, счёту, проекту, заметке",
+    "allTypes": "Все типы",
+    "deleteTitle": "Удалить платёж?",
+    "deleteDesc": "{client} — {amount} EUR. Действие необратимо.",
+    "kind": {
+      "advance": "Аванс",
+      "final": "Остаток",
+      "full": "Полная",
+      "maintenance": "Поддержка",
+      "other": "Другое"
+    }
   },
   "clientForm": {
     "basic": "Основное",

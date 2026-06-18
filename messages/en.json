@@ -21,6 +21,13 @@
     "title": "More",
     "description": "Additional CRM sections."
   },
+  "auth": {
+    "metaTitle": "Sign in",
+    "subtitle": "Internal tool. Owner access only.",
+    "password": "Password",
+    "signingIn": "Signing in…",
+    "signIn": "Sign in"
+  },
   "comingSoon": {
     "iterationName": "Iteration {n}",
     "arrivesIn": "This module arrives in {iteration}.",
@@ -97,6 +104,52 @@
       "full": "Full",
       "maintenance": "Maintenance"
     }
+  },
+  "expensesTable": {
+    "colDate": "Date",
+    "colCategory": "Category",
+    "colVendor": "Vendor",
+    "colDescription": "Description",
+    "colAmount": "Amount",
+    "openReceipt": "Open receipt",
+    "emptyTitle": "No expenses yet",
+    "emptyDesc": "Log AI subscriptions, hosting, ads here — everything work-related.",
+    "createCta": "Add expense",
+    "searchPlaceholder": "Search by description or vendor",
+    "allCategories": "All categories",
+    "deleteTitle": "Delete expense?",
+    "deleteDesc": "{description} — {amount} EUR. If there is a receipt file, it will be deleted too."
+  },
+  "projectsTable": {
+    "colTitle": "Project",
+    "colClient": "Client",
+    "colType": "Type",
+    "colStatus": "Status",
+    "colPrice": "Price",
+    "colDeadline": "Deadline",
+    "emptyTitle": "No projects yet",
+    "emptyDesc": "Create your first project for one of the clients.",
+    "createCta": "Create project",
+    "searchPlaceholder": "Search by title or client",
+    "allStatuses": "All statuses",
+    "allTypes": "All types",
+    "deleteTitle": "Delete project?",
+    "deleteDesc": "{title}. Tasks are deleted cascadingly. If there are linked documents, the operation will be rejected."
+  },
+  "contracts": {
+    "colClient": "Client",
+    "colKind": "Type",
+    "colStatus": "Status",
+    "downloadPdf": "Download PDF",
+    "downloadWord": "Download Word",
+    "emptyTitle": "No contracts yet",
+    "emptyDesc": "Create your first contract. The client signs it with a finger via the /sign link.",
+    "createCta": "Create contract",
+    "searchPlaceholder": "Search by number, client, project",
+    "allStatuses": "All statuses",
+    "allKinds": "All types",
+    "deleteTitle": "Delete contract?",
+    "deleteDesc": "{number}. You can delete a draft or a sent (unsigned) contract."
   },
   "proposals": {
     "colTitle": "Title",
@@ -230,7 +283,30 @@
     "saving": "Saving…",
     "saved": "Saved",
     "choose": "Select",
-    "editWithName": "Edit — {name}"
+    "editWithName": "Edit — {name}",
+    "actions": "Actions"
+  },
+  "payments": {
+    "colDate": "Date",
+    "colClient": "Client",
+    "colInvoice": "Invoice",
+    "colProject": "Project",
+    "colKind": "Type",
+    "colAmount": "Amount",
+    "emptyTitle": "No payments yet",
+    "emptyDesc": "When a client pays — add it here. You can link it to a specific invoice.",
+    "createCta": "Add payment",
+    "searchPlaceholder": "Search by client, invoice, project, note",
+    "allTypes": "All types",
+    "deleteTitle": "Delete payment?",
+    "deleteDesc": "{client} — {amount} EUR. This action is irreversible.",
+    "kind": {
+      "advance": "Advance",
+      "final": "Final",
+      "full": "Full",
+      "maintenance": "Maintenance",
+      "other": "Other"
+    }
   },
   "clientForm": {
     "basic": "General",

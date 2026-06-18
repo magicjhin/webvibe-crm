@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal, Paperclip, Plus, Receipt, Search } from "lucide-react";
 
@@ -41,19 +42,11 @@ export type ExpenseRow = {
   recurring: boolean;
 };
 
-const CATEGORY_LABEL: Record<ExpenseRow["category"], string> = {
-  ai_tools: "AI-инструменты",
-  hosting: "Хостинг",
-  domains: "Домены",
-  software: "Софт",
-  hardware: "Железо",
-  ads: "Реклама",
-  transport: "Транспорт",
-  other: "Другое",
-};
-
 export function ExpensesTable({ rows }: { rows: ExpenseRow[] }) {
   const router = useRouter();
+  const t = useTranslations("expensesTable");
+  const tc = useTranslations("common");
+  const tCat = useTranslations("expenseCategory");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] =
     useState<"all" | ExpenseRow["category"]>("all");
@@ -75,21 +68,21 @@ export function ExpensesTable({ rows }: { rows: ExpenseRow[] }) {
     () => [
       {
         accessorKey: "occurredAt",
-        header: "Дата",
+        header: t("colDate"),
         cell: ({ row }) => <DateDisplay date={row.original.occurredAt} />,
       },
       {
         accessorKey: "category",
-        header: "Категория",
+        header: t("colCategory"),
         cell: ({ row }) => (
           <span className="text-xs text-foreground-muted">
-            {CATEGORY_LABEL[row.original.category]}
+            {tCat(row.original.category)}
           </span>
         ),
       },
       {
         accessorKey: "vendor",
-        header: "Поставщик",
+        header: t("colVendor"),
         cell: ({ row }) =>
           row.original.vendor ? (
             <span className="text-sm">{row.original.vendor}</span>
@@ -99,7 +92,7 @@ export function ExpensesTable({ rows }: { rows: ExpenseRow[] }) {
       },
       {
         accessorKey: "description",
-        header: "Описание",
+        header: t("colDescription"),
         cell: ({ row }) => (
           <span className="text-sm">
             {row.original.description}
@@ -122,7 +115,7 @@ export function ExpensesTable({ rows }: { rows: ExpenseRow[] }) {
               target="_blank"
               rel="noopener noreferrer"
               className="text-foreground-muted hover:text-foreground"
-              aria-label="Открыть чек"
+              aria-label={t("openReceipt")}
               onClick={(e) => e.stopPropagation()}
             >
               <Paperclip className="size-4" />
@@ -131,7 +124,7 @@ export function ExpensesTable({ rows }: { rows: ExpenseRow[] }) {
       },
       {
         accessorKey: "amount",
-        header: "Сумма",
+        header: t("colAmount"),
         cell: ({ row }) => (
           <span className="font-medium">
             <MoneyDisplay value={row.original.amount} />
@@ -146,14 +139,14 @@ export function ExpensesTable({ rows }: { rows: ExpenseRow[] }) {
           <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon-sm" aria-label="Действия">
+                <Button variant="ghost" size="icon-sm" aria-label={tc("actions")}>
                   <MoreHorizontal className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
                   <Link href={`/expenses/${row.original.id}/edit`}>
-                    Редактировать
+                    {tc("edit")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -164,7 +157,7 @@ export function ExpensesTable({ rows }: { rows: ExpenseRow[] }) {
                     setDeleteTarget(row.original);
                   }}
                 >
-                  Удалить
+                  {tc("delete")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -172,20 +165,20 @@ export function ExpensesTable({ rows }: { rows: ExpenseRow[] }) {
         ),
       },
     ],
-    [],
+    [t, tc, tCat],
   );
 
   if (rows.length === 0) {
     return (
       <EmptyState
         icon={Receipt}
-        title="Расходов пока нет"
-        description="Записывай сюда подписки на AI, хостинг, рекламу — всё, что относится к работе."
+        title={t("emptyTitle")}
+        description={t("emptyDesc")}
         action={
           <Button asChild>
             <Link href="/expenses/new">
               <Plus className="size-4" />
-              Добавить расход
+              {t("createCta")}
             </Link>
           </Button>
         }
@@ -201,7 +194,7 @@ export function ExpensesTable({ rows }: { rows: ExpenseRow[] }) {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск по описанию или поставщику"
+            placeholder={t("searchPlaceholder")}
             className="pl-9"
           />
         </div>
@@ -213,10 +206,10 @@ export function ExpensesTable({ rows }: { rows: ExpenseRow[] }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Все категории</SelectItem>
+            <SelectItem value="all">{t("allCategories")}</SelectItem>
             {EXPENSE_CATEGORIES.map((c) => (
               <SelectItem key={c} value={c}>
-                {CATEGORY_LABEL[c]}
+                {tCat(c)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -230,7 +223,7 @@ export function ExpensesTable({ rows }: { rows: ExpenseRow[] }) {
         onRowClick={(r) => router.push(`/expenses/${r.id}/edit`)}
         empty={
           <div className="px-6 py-10 text-center text-sm text-foreground-muted">
-            Ничего не найдено по фильтрам
+            {tc("notFoundByFilters")}
           </div>
         }
       />
@@ -240,14 +233,17 @@ export function ExpensesTable({ rows }: { rows: ExpenseRow[] }) {
         onOpenChange={(o) => {
           if (!o) setDeleteTarget(null);
         }}
-        title="Удалить расход?"
+        title={t("deleteTitle")}
         description={
           deleteTarget
-            ? `${deleteTarget.description} — ${Number(deleteTarget.amount).toFixed(2)} EUR. Если есть файл-чек, он тоже будет удалён.`
+            ? t("deleteDesc", {
+                description: deleteTarget.description,
+                amount: Number(deleteTarget.amount).toFixed(2),
+              })
             : undefined
         }
         action={async () => {
-          if (!deleteTarget) return { ok: false, error: "Нет цели" };
+          if (!deleteTarget) return { ok: false, error: tc("noTarget") };
           return deleteExpense(deleteTarget.id);
         }}
       />

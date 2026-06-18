@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { ColumnDef } from "@tanstack/react-table";
 import { FileSignature, MoreHorizontal, Plus, Search } from "lucide-react";
 
@@ -51,21 +52,12 @@ export type ContractRow = {
   isImported?: boolean;
 };
 
-const STATUS_LABEL: Record<ContractStatus, string> = {
-  draft: "Черновик",
-  sent: "Отправлен",
-  signed: "Подписан",
-  cancelled: "Отменён",
-};
-
-const KIND_LABEL: Record<ContractKind, string> = {
-  STAGED: "Поэтапный",
-  ADVANCE: "Аванс 70/30",
-  MAINTENANCE: "Поддержка",
-};
-
 export function ContractsTable({ rows }: { rows: ContractRow[] }) {
   const router = useRouter();
+  const t = useTranslations("contracts");
+  const tc = useTranslations("common");
+  const tStatus = useTranslations("docStatus.contract");
+  const tKind = useTranslations("docStatus.contractKind");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | ContractStatus>("all");
   const [kindFilter, setKindFilter] = useState<"all" | ContractKind>("all");
@@ -102,7 +94,7 @@ export function ContractsTable({ rows }: { rows: ContractRow[] }) {
       },
       {
         accessorKey: "clientName",
-        header: "Клиент",
+        header: t("colClient"),
         cell: ({ row }) => (
           <Link
             href={`/clients/${row.original.clientId}`}
@@ -115,12 +107,12 @@ export function ContractsTable({ rows }: { rows: ContractRow[] }) {
       },
       {
         accessorKey: "kind",
-        header: "Тип",
+        header: t("colKind"),
         cell: ({ row }) => <ContractKindBadge kind={row.original.kind} />,
       },
       {
         accessorKey: "status",
-        header: "Статус",
+        header: t("colStatus"),
         cell: ({ row }) => <ContractStatusBadge status={row.original.status} />,
       },
       {
@@ -148,21 +140,21 @@ export function ContractsTable({ rows }: { rows: ContractRow[] }) {
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  aria-label={`Действия с ${row.original.number}`}
+                  aria-label={tc("actionsFor", { name: row.original.number })}
                 >
                   <MoreHorizontal className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href={`/contracts/${row.original.id}`}>Открыть</Link>
+                  <Link href={`/contracts/${row.original.id}`}>{tc("open")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <a
                     href={`/api/contracts/${row.original.id}/pdf?download=1`}
                     download={`${row.original.number}.pdf`}
                   >
-                    Скачать PDF
+                    {t("downloadPdf")}
                   </a>
                 </DropdownMenuItem>
                 {!row.original.isImported ? (
@@ -171,7 +163,7 @@ export function ContractsTable({ rows }: { rows: ContractRow[] }) {
                       href={`/api/contracts/${row.original.id}/docx`}
                       download={`${row.original.number}.docx`}
                     >
-                      Скачать Word
+                      {t("downloadWord")}
                     </a>
                   </DropdownMenuItem>
                 ) : null}
@@ -179,7 +171,7 @@ export function ContractsTable({ rows }: { rows: ContractRow[] }) {
                   <>
                     <DropdownMenuItem asChild>
                       <Link href={`/contracts/${row.original.id}/edit`}>
-                        Редактировать
+                        {tc("edit")}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -190,7 +182,7 @@ export function ContractsTable({ rows }: { rows: ContractRow[] }) {
                         setDeleteTarget(row.original);
                       }}
                     >
-                      Удалить
+                      {tc("delete")}
                     </DropdownMenuItem>
                   </>
                 ) : null}
@@ -200,20 +192,20 @@ export function ContractsTable({ rows }: { rows: ContractRow[] }) {
         ),
       },
     ],
-    [],
+    [t, tc],
   );
 
   if (rows.length === 0) {
     return (
       <EmptyState
         icon={FileSignature}
-        title="Пока нет договоров"
-        description="Создай первый договор. Клиент подпишет его пальцем по ссылке /sign."
+        title={t("emptyTitle")}
+        description={t("emptyDesc")}
         action={
           <Button asChild>
             <Link href="/contracts/new">
               <Plus className="size-4" />
-              Создать договор
+              {t("createCta")}
             </Link>
           </Button>
         }
@@ -229,7 +221,7 @@ export function ContractsTable({ rows }: { rows: ContractRow[] }) {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск по номеру, клиенту, проекту"
+            placeholder={t("searchPlaceholder")}
             className="pl-9"
           />
         </div>
@@ -241,10 +233,10 @@ export function ContractsTable({ rows }: { rows: ContractRow[] }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Все статусы</SelectItem>
+            <SelectItem value="all">{t("allStatuses")}</SelectItem>
             {CONTRACT_STATUSES.map((s) => (
               <SelectItem key={s} value={s}>
-                {STATUS_LABEL[s]}
+                {tStatus(s)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -257,10 +249,10 @@ export function ContractsTable({ rows }: { rows: ContractRow[] }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Все типы</SelectItem>
+            <SelectItem value="all">{t("allKinds")}</SelectItem>
             {CONTRACT_KINDS.map((k) => (
               <SelectItem key={k} value={k}>
-                {KIND_LABEL[k]}
+                {tKind(k)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -274,7 +266,7 @@ export function ContractsTable({ rows }: { rows: ContractRow[] }) {
         onRowClick={(r) => router.push(`/contracts/${r.id}`)}
         empty={
           <div className="px-6 py-10 text-center text-sm text-foreground-muted">
-            Ничего не найдено по фильтрам
+            {tc("notFoundByFilters")}
           </div>
         }
       />
@@ -284,14 +276,14 @@ export function ContractsTable({ rows }: { rows: ContractRow[] }) {
         onOpenChange={(o) => {
           if (!o) setDeleteTarget(null);
         }}
-        title="Удалить договор?"
+        title={t("deleteTitle")}
         description={
           deleteTarget
-            ? `${deleteTarget.number}. Удалить можно черновик или отправленный (не подписанный) договор.`
+            ? t("deleteDesc", { number: deleteTarget.number })
             : undefined
         }
         action={async () => {
-          if (!deleteTarget) return { ok: false, error: "Нет цели" };
+          if (!deleteTarget) return { ok: false, error: tc("noTarget") };
           return deleteContract(deleteTarget.id);
         }}
       />

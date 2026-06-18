@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal, Plus, Search, Wallet } from "lucide-react";
 
@@ -42,15 +43,9 @@ export type PaymentRow = {
   note: string | null;
 };
 
-const KIND_LABEL: Record<PaymentRow["kind"], string> = {
-  advance: "Аванс",
-  final: "Остаток",
-  full: "Полная",
-  maintenance: "Поддержка",
-  other: "Другое",
-};
-
 export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
+  const t = useTranslations("payments");
+  const tc = useTranslations("common");
   const [search, setSearch] = useState("");
   const [kindFilter, setKindFilter] = useState<"all" | PaymentRow["kind"]>("all");
   const [deleteTarget, setDeleteTarget] = useState<PaymentRow | null>(null);
@@ -73,12 +68,12 @@ export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
     () => [
       {
         accessorKey: "paidAt",
-        header: "Дата",
+        header: t("colDate"),
         cell: ({ row }) => <DateDisplay date={row.original.paidAt} />,
       },
       {
         accessorKey: "clientName",
-        header: "Клиент",
+        header: t("colClient"),
         cell: ({ row }) => (
           <Link
             href={`/clients/${row.original.clientId}`}
@@ -90,7 +85,7 @@ export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
       },
       {
         accessorKey: "invoiceNumber",
-        header: "Счёт",
+        header: t("colInvoice"),
         cell: ({ row }) =>
           row.original.invoiceId && row.original.invoiceNumber ? (
             <Link
@@ -105,7 +100,7 @@ export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
       },
       {
         accessorKey: "projectTitle",
-        header: "Проект",
+        header: t("colProject"),
         cell: ({ row }) =>
           row.original.projectId && row.original.projectTitle ? (
             <Link
@@ -120,16 +115,16 @@ export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
       },
       {
         accessorKey: "kind",
-        header: "Тип",
+        header: t("colKind"),
         cell: ({ row }) => (
           <span className="text-xs text-foreground-muted">
-            {KIND_LABEL[row.original.kind]}
+            {t(`kind.${row.original.kind}`)}
           </span>
         ),
       },
       {
         accessorKey: "amount",
-        header: "Сумма",
+        header: t("colAmount"),
         cell: ({ row }) => (
           <span className="font-medium">
             <MoneyDisplay value={row.original.amount} />
@@ -144,7 +139,7 @@ export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
           <div className="flex justify-end">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon-sm" aria-label="Действия">
+                <Button variant="ghost" size="icon-sm" aria-label={tc("actions")}>
                   <MoreHorizontal className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -156,7 +151,7 @@ export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
                     setDeleteTarget(row.original);
                   }}
                 >
-                  Удалить
+                  {tc("delete")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -164,20 +159,20 @@ export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
         ),
       },
     ],
-    [],
+    [t, tc],
   );
 
   if (rows.length === 0) {
     return (
       <EmptyState
         icon={Wallet}
-        title="Платежей пока нет"
-        description="Когда поступит оплата от клиента — добавь её сюда. Можно привязать к конкретному счёту."
+        title={t("emptyTitle")}
+        description={t("emptyDesc")}
         action={
           <Button asChild>
             <Link href="/payments/new">
               <Plus className="size-4" />
-              Добавить платёж
+              {t("createCta")}
             </Link>
           </Button>
         }
@@ -193,7 +188,7 @@ export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск по клиенту, счёту, проекту, заметке"
+            placeholder={t("searchPlaceholder")}
             className="pl-9"
           />
         </div>
@@ -202,10 +197,10 @@ export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Все типы</SelectItem>
+            <SelectItem value="all">{t("allTypes")}</SelectItem>
             {PAYMENT_KINDS.map((k) => (
               <SelectItem key={k} value={k}>
-                {KIND_LABEL[k]}
+                {t(`kind.${k}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -218,7 +213,7 @@ export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
         getRowId={(r) => r.id}
         empty={
           <div className="px-6 py-10 text-center text-sm text-foreground-muted">
-            Ничего не найдено по фильтрам
+            {tc("notFoundByFilters")}
           </div>
         }
       />
@@ -228,14 +223,17 @@ export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
         onOpenChange={(o) => {
           if (!o) setDeleteTarget(null);
         }}
-        title="Удалить платёж?"
+        title={t("deleteTitle")}
         description={
           deleteTarget
-            ? `${deleteTarget.clientName} — ${Number(deleteTarget.amount).toFixed(2)} EUR. Действие необратимо.`
+            ? t("deleteDesc", {
+                client: deleteTarget.clientName,
+                amount: Number(deleteTarget.amount).toFixed(2),
+              })
             : undefined
         }
         action={async () => {
-          if (!deleteTarget) return { ok: false, error: "Нет цели" };
+          if (!deleteTarget) return { ok: false, error: tc("noTarget") };
           return deletePayment(deleteTarget.id);
         }}
       />

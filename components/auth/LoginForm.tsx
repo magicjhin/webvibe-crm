@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { signInAction } from "@/lib/actions/auth";
 import { signInSchema, type SignInInput } from "@/lib/validators/auth";
 
 export function LoginForm() {
+  const t = useTranslations("auth");
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
 
@@ -68,7 +70,7 @@ export function LoginForm() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="password">Пароль</Label>
+        <Label htmlFor="password">{t("password")}</Label>
         <Input
           id="password"
           type="password"
@@ -91,10 +93,10 @@ export function LoginForm() {
         {isPending ? (
           <span className="inline-flex items-center gap-2">
             <Loader2 className="size-4 animate-spin" />
-            Входим…
+            {t("signingIn")}
           </span>
         ) : (
-          "Войти"
+          t("signIn")
         )}
       </Button>
     </form>

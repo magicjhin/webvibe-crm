@@ -1,11 +1,14 @@
 import { Suspense } from "react";
+import { getTranslations } from "next-intl/server";
 import { LoginForm } from "@/components/auth/LoginForm";
 
-export const metadata = {
-  title: "Вход",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("auth");
+  return { title: t("metaTitle") };
+}
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const t = await getTranslations("auth");
   return (
     <div className="w-full max-w-sm">
       <div className="mb-8 text-center">
@@ -14,7 +17,7 @@ export default function LoginPage() {
           <span className="text-foreground-muted"> / CRM</span>
         </div>
         <p className="mt-2 text-sm text-foreground-muted">
-          Внутренний инструмент. Доступ только владельцу.
+          {t("subtitle")}
         </p>
       </div>
       <Suspense fallback={null}>

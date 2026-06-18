@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { ColumnDef } from "@tanstack/react-table";
 import { FolderKanban, MoreHorizontal, Plus, Search } from "lucide-react";
 
@@ -47,6 +48,9 @@ export type ProjectRow = {
 
 export function ProjectsTable({ rows }: { rows: ProjectRow[] }) {
   const router = useRouter();
+  const t = useTranslations("projectsTable");
+  const tc = useTranslations("common");
+  const tStatus = useTranslations("status");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | ProjectRow["status"]>("all");
   const [typeFilter, setTypeFilter] = useState<"all" | ProjectRow["type"]>("all");
@@ -69,7 +73,7 @@ export function ProjectsTable({ rows }: { rows: ProjectRow[] }) {
     () => [
       {
         accessorKey: "title",
-        header: "Проект",
+        header: t("colTitle"),
         cell: ({ row }) => (
           <Link
             href={`/projects/${row.original.id}`}
@@ -82,7 +86,7 @@ export function ProjectsTable({ rows }: { rows: ProjectRow[] }) {
       },
       {
         accessorKey: "clientName",
-        header: "Клиент",
+        header: t("colClient"),
         cell: ({ row }) => (
           <Link
             href={`/clients/${row.original.clientId}`}
@@ -95,24 +99,24 @@ export function ProjectsTable({ rows }: { rows: ProjectRow[] }) {
       },
       {
         accessorKey: "type",
-        header: "Тип",
+        header: t("colType"),
         cell: ({ row }) => (
           <span className="text-foreground-muted">{row.original.type}</span>
         ),
       },
       {
         accessorKey: "status",
-        header: "Статус",
+        header: t("colStatus"),
         cell: ({ row }) => <StatusBadge kind="project" value={row.original.status} />,
       },
       {
         accessorKey: "price",
-        header: "Цена",
+        header: t("colPrice"),
         cell: ({ row }) => <MoneyDisplay value={row.original.price} />,
       },
       {
         accessorKey: "deadlineAt",
-        header: "Дедлайн",
+        header: t("colDeadline"),
         cell: ({ row }) => <DateDisplay date={row.original.deadlineAt} />,
       },
       {
@@ -126,17 +130,17 @@ export function ProjectsTable({ rows }: { rows: ProjectRow[] }) {
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  aria-label={`Действия с ${row.original.title}`}
+                  aria-label={tc("actionsFor", { name: row.original.title })}
                 >
                   <MoreHorizontal className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href={`/projects/${row.original.id}`}>Открыть</Link>
+                  <Link href={`/projects/${row.original.id}`}>{tc("open")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href={`/projects/${row.original.id}/edit`}>Редактировать</Link>
+                  <Link href={`/projects/${row.original.id}/edit`}>{tc("edit")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -146,7 +150,7 @@ export function ProjectsTable({ rows }: { rows: ProjectRow[] }) {
                     setDeleteTarget(row.original);
                   }}
                 >
-                  Удалить
+                  {tc("delete")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -154,20 +158,20 @@ export function ProjectsTable({ rows }: { rows: ProjectRow[] }) {
         ),
       },
     ],
-    [],
+    [t, tc],
   );
 
   if (rows.length === 0) {
     return (
       <EmptyState
         icon={FolderKanban}
-        title="Пока нет проектов"
-        description="Создай первый проект для одного из клиентов."
+        title={t("emptyTitle")}
+        description={t("emptyDesc")}
         action={
           <Button asChild>
             <Link href="/projects/new">
               <Plus className="size-4" />
-              Создать проект
+              {t("createCta")}
             </Link>
           </Button>
         }
@@ -183,7 +187,7 @@ export function ProjectsTable({ rows }: { rows: ProjectRow[] }) {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск по названию или клиенту"
+            placeholder={t("searchPlaceholder")}
             className="pl-9"
           />
         </div>
@@ -195,10 +199,10 @@ export function ProjectsTable({ rows }: { rows: ProjectRow[] }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Все статусы</SelectItem>
+            <SelectItem value="all">{t("allStatuses")}</SelectItem>
             {PROJECT_STATUSES.map((s) => (
               <SelectItem key={s} value={s}>
-                {s}
+                {tStatus(`project.${s}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -211,10 +215,10 @@ export function ProjectsTable({ rows }: { rows: ProjectRow[] }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Все типы</SelectItem>
-            {PROJECT_TYPES.map((t) => (
-              <SelectItem key={t} value={t}>
-                {t}
+            <SelectItem value="all">{t("allTypes")}</SelectItem>
+            {PROJECT_TYPES.map((pt) => (
+              <SelectItem key={pt} value={pt}>
+                {pt}
               </SelectItem>
             ))}
           </SelectContent>
@@ -228,7 +232,7 @@ export function ProjectsTable({ rows }: { rows: ProjectRow[] }) {
         onRowClick={(r) => router.push(`/projects/${r.id}`)}
         empty={
           <div className="px-6 py-10 text-center text-sm text-foreground-muted">
-            Ничего не найдено по фильтрам
+            {tc("notFoundByFilters")}
           </div>
         }
       />
@@ -238,14 +242,14 @@ export function ProjectsTable({ rows }: { rows: ProjectRow[] }) {
         onOpenChange={(o) => {
           if (!o) setDeleteTarget(null);
         }}
-        title="Удалить проект?"
+        title={t("deleteTitle")}
         description={
           deleteTarget
-            ? `${deleteTarget.title}. Tasks удалятся каскадно. Если есть привязанные документы — операция будет отклонена.`
+            ? t("deleteDesc", { title: deleteTarget.title })
             : undefined
         }
         action={async () => {
-          if (!deleteTarget) return { ok: false, error: "Нет цели" };
+          if (!deleteTarget) return { ok: false, error: tc("noTarget") };
           return deleteProject(deleteTarget.id);
         }}
       />
