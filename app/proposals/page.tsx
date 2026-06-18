@@ -6,11 +6,16 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { ProposalsTable, type ProposalRow } from "@/components/proposals/ProposalsTable";
 import { getProposals } from "@/lib/actions/proposals";
+import { getTranslations } from "next-intl/server";
 
-export const metadata = { title: "КП" };
+export async function generateMetadata() {
+  const t = await getTranslations("pages.proposals");
+  return { title: t("metaTitle") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function ProposalsPage() {
+  const t = await getTranslations("pages.proposals");
   const proposals = await getProposals();
 
   const rows: ProposalRow[] = proposals.map((p) => ({
@@ -29,13 +34,13 @@ export default async function ProposalsPage() {
     <AppShell>
       <div className="flex flex-col gap-6">
         <PageHeader
-          title="Коммерческие предложения"
-          description="Pasiūlymai клиентам. Литовский PDF, конверсия в проект на accepted."
+          title={t("title")}
+          description={t("description")}
           actions={
             <Button asChild>
               <Link href="/proposals/new">
                 <Plus className="size-4" />
-                Новое КП
+                {t("action")}
               </Link>
             </Button>
           }

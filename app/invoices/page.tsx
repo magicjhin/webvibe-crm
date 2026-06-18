@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -7,10 +8,14 @@ import { Button } from "@/components/ui/button";
 import { InvoicesTable, type InvoiceRow } from "@/components/invoices/InvoicesTable";
 import { prisma } from "@/lib/db";
 
-export const metadata = { title: "Счета" };
+export async function generateMetadata() {
+  const t = await getTranslations("pages.invoices");
+  return { title: t("title") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function InvoicesPage() {
+  const t = await getTranslations("pages.invoices");
   const invoices = await prisma.invoice.findMany({
     orderBy: [{ issuedAt: "desc" }, { number: "desc" }],
     include: {
@@ -37,13 +42,13 @@ export default async function InvoicesPage() {
     <AppShell>
       <div className="flex flex-col gap-6">
         <PageHeader
-          title="Счета"
-          description="Все счета (sąskaitos faktūros) клиентам. Литовский PDF, без PVM."
+          title={t("title")}
+          description={t("description")}
           actions={
             <Button asChild>
               <Link href="/invoices/new">
                 <Plus className="size-4" />
-                Новый счёт
+                {t("action")}
               </Link>
             </Button>
           }

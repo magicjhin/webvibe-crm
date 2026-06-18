@@ -9,11 +9,16 @@ import {
   type PaymentRow,
 } from "@/components/payments/PaymentsTable";
 import { prisma } from "@/lib/db";
+import { getTranslations } from "next-intl/server";
 
-export const metadata = { title: "Платежи" };
+export async function generateMetadata() {
+  const t = await getTranslations("pages.payments");
+  return { title: t("title") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function PaymentsPage() {
+  const t = await getTranslations("pages.payments");
   const payments = await prisma.payment.findMany({
     orderBy: [{ paidAt: "desc" }, { createdAt: "desc" }],
     include: {
@@ -41,13 +46,13 @@ export default async function PaymentsPage() {
     <AppShell>
       <div className="flex flex-col gap-6">
         <PageHeader
-          title="Платежи"
-          description="Все поступления от клиентов. Можно привязать к счёту, проекту или оставить как разовую оплату."
+          title={t("title")}
+          description={t("description")}
           actions={
             <Button asChild>
               <Link href="/payments/new">
                 <Plus className="size-4" />
-                Добавить платёж
+                {t("action")}
               </Link>
             </Button>
           }

@@ -1,16 +1,19 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { AppShell } from "@/components/layout/AppShell";
 import { SettingsForm } from "@/components/forms/SettingsForm";
 import { prisma } from "@/lib/db";
 import type { SettingsInput } from "@/lib/validators/settings";
 
-export const metadata = {
-  title: "Настройки",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("pages.settings");
+  return { title: t("title") };
+}
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsProfilePage() {
+  const t = await getTranslations("pages.settings");
   const row = await prisma.settings.findUnique({ where: { id: 1 } });
   if (!row) {
     // Settings singleton must exist after `prisma/seed.ts`.
@@ -53,9 +56,9 @@ export default async function SettingsProfilePage() {
     <AppShell>
       <div className="flex flex-col gap-6">
         <header className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Настройки</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
           <p className="text-sm text-foreground-muted">
-            Реквизиты, нумерация документов и параметры PDF. Изменения сохраняются сразу.
+            {t("description")}
           </p>
         </header>
         <SettingsForm initial={initial} />

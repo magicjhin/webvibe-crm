@@ -40,6 +40,43 @@
     "tabContracts": "Договора",
     "tabProposals": "КП"
   },
+  "pages": {
+    "projects": {
+      "title": "Проекты",
+      "description": "Все проекты по всем клиентам. Tasks хранятся внутри карточки проекта.",
+      "action": "Новый проект"
+    },
+    "invoices": {
+      "title": "Счета",
+      "description": "Все счета (sąskaitos faktūros) клиентам. Литовский PDF, без PVM.",
+      "action": "Новый счёт"
+    },
+    "proposals": {
+      "metaTitle": "КП",
+      "title": "Коммерческие предложения",
+      "description": "Pasiūlymai клиентам. Литовский PDF, конверсия в проект на accepted.",
+      "action": "Новое КП"
+    },
+    "contracts": {
+      "title": "Договора",
+      "description": "Sutartys клиентам. Литовский PDF, ручная подпись по ссылке /sign.",
+      "action": "Новый договор"
+    },
+    "payments": {
+      "title": "Платежи",
+      "description": "Все поступления от клиентов. Можно привязать к счёту, проекту или оставить как разовую оплату.",
+      "action": "Добавить платёж"
+    },
+    "expenses": {
+      "title": "Расходы",
+      "description": "Подписки, инструменты, реклама — всё, что относится к работе.",
+      "action": "Добавить расход"
+    },
+    "settings": {
+      "title": "Настройки",
+      "description": "Реквизиты, нумерация документов и параметры PDF. Изменения сохраняются сразу."
+    }
+  },
   "invoices": {
     "colClient": "Клиент",
     "colKind": "Тип",

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -10,10 +11,14 @@ import {
 } from "@/components/projects/ProjectsTable";
 import { prisma } from "@/lib/db";
 
-export const metadata = { title: "Проекты" };
+export async function generateMetadata() {
+  const t = await getTranslations("pages.projects");
+  return { title: t("title") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
+  const t = await getTranslations("pages.projects");
   const projects = await prisma.project.findMany({
     orderBy: { createdAt: "desc" },
     include: { client: { select: { id: true, name: true } } },
@@ -34,13 +39,13 @@ export default async function ProjectsPage() {
     <AppShell>
       <div className="flex flex-col gap-6">
         <PageHeader
-          title="Проекты"
-          description="Все проекты по всем клиентам. Tasks хранятся внутри карточки проекта."
+          title={t("title")}
+          description={t("description")}
           actions={
             <Button asChild>
               <Link href="/projects/new">
                 <Plus className="size-4" />
-                Новый проект
+                {t("action")}
               </Link>
             </Button>
           }

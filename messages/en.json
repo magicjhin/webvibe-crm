@@ -40,6 +40,43 @@
     "tabContracts": "Contracts",
     "tabProposals": "Proposals"
   },
+  "pages": {
+    "projects": {
+      "title": "Projects",
+      "description": "All projects across all clients. Tasks live inside the project card.",
+      "action": "New project"
+    },
+    "invoices": {
+      "title": "Invoices",
+      "description": "All client invoices (sąskaitos faktūros). Lithuanian PDF, no VAT.",
+      "action": "New invoice"
+    },
+    "proposals": {
+      "metaTitle": "Proposals",
+      "title": "Proposals",
+      "description": "Client proposals (pasiūlymai). Lithuanian PDF, converts to a project when accepted.",
+      "action": "New proposal"
+    },
+    "contracts": {
+      "title": "Contracts",
+      "description": "Client contracts (sutartys). Lithuanian PDF, manual signature via the /sign link.",
+      "action": "New contract"
+    },
+    "payments": {
+      "title": "Payments",
+      "description": "All client payments. Link to an invoice, a project, or leave as a one-off payment.",
+      "action": "Add payment"
+    },
+    "expenses": {
+      "title": "Expenses",
+      "description": "Subscriptions, tools, ads — everything work-related.",
+      "action": "Add expense"
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Business details, document numbering and PDF settings. Changes are saved instantly."
+    }
+  },
   "invoices": {
     "colClient": "Client",
     "colKind": "Type",

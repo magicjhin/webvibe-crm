@@ -9,11 +9,16 @@ import {
   type ExpenseRow,
 } from "@/components/expenses/ExpensesTable";
 import { prisma } from "@/lib/db";
+import { getTranslations } from "next-intl/server";
 
-export const metadata = { title: "Расходы" };
+export async function generateMetadata() {
+  const t = await getTranslations("pages.expenses");
+  return { title: t("title") };
+}
 export const dynamic = "force-dynamic";
 
 export default async function ExpensesPage() {
+  const t = await getTranslations("pages.expenses");
   const expenses = await prisma.expense.findMany({
     orderBy: [{ occurredAt: "desc" }, { createdAt: "desc" }],
   });
@@ -33,13 +38,13 @@ export default async function ExpensesPage() {
     <AppShell>
       <div className="flex flex-col gap-6">
         <PageHeader
-          title="Расходы"
-          description="Подписки, инструменты, реклама — всё, что относится к работе."
+          title={t("title")}
+          description={t("description")}
           actions={
             <Button asChild>
               <Link href="/expenses/new">
                 <Plus className="size-4" />
-                Добавить расход
+                {t("action")}
               </Link>
             </Button>
           }
