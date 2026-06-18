@@ -21,6 +21,25 @@
     "title": "More",
     "description": "Additional CRM sections."
   },
+  "comingSoon": {
+    "iterationName": "Iteration {n}",
+    "arrivesIn": "This module arrives in {iteration}.",
+    "roadmapNote": "See <code>ROADMAP.md</code> for the iteration plan."
+  },
+  "documents": {
+    "title": "Documents",
+    "description": "All invoices, contracts and proposals. Manage statuses and download PDFs without opening the client card.",
+    "create": "Create",
+    "invoice": "Invoice",
+    "contract": "Contract",
+    "proposal": "Proposal",
+    "importOldPdf": "Import existing PDF",
+    "importInvoice": "Import invoice",
+    "importContract": "Import contract",
+    "tabInvoices": "Invoices",
+    "tabContracts": "Contracts",
+    "tabProposals": "Proposals"
+  },
   "quickAdd": {
     "title": "Quick create",
     "newClient": "New client",

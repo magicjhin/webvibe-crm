@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -34,7 +35,10 @@ import { prisma } from "@/lib/db";
 import { getContracts } from "@/lib/actions/contracts";
 import { getProposals } from "@/lib/actions/proposals";
 
-export const metadata = { title: "Документы" };
+export async function generateMetadata() {
+  const t = await getTranslations("documents");
+  return { title: t("title") };
+}
 export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<{ tab?: string }>;
@@ -44,6 +48,7 @@ export default async function DocumentsPage({
 }: {
   searchParams: SearchParams;
 }) {
+  const t = await getTranslations("documents");
   const { tab } = await searchParams;
   const activeTab =
     tab === "contracts" || tab === "proposals" ? tab : "invoices";
@@ -103,35 +108,35 @@ export default async function DocumentsPage({
     <AppShell>
       <div className="flex flex-col gap-6">
         <PageHeader
-          title="Документы"
-          description="Все счета, договоры и КП. Управляй статусами и скачивай PDF без захода в карточку клиента."
+          title={t("title")}
+          description={t("description")}
           actions={
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button>
                   <Plus className="size-4" />
-                  Создать
+                  {t("create")}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href="/invoices/new">Счёт</Link>
+                  <Link href="/invoices/new">{t("invoice")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/contracts/new">Договор</Link>
+                  <Link href="/contracts/new">{t("contract")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/proposals/new">КП</Link>
+                  <Link href="/proposals/new">{t("proposal")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel className="text-xs font-normal text-foreground-subtle">
-                  Импорт старого PDF
+                  {t("importOldPdf")}
                 </DropdownMenuLabel>
                 <DropdownMenuItem asChild>
-                  <Link href="/invoices/import">Импорт счёта</Link>
+                  <Link href="/invoices/import">{t("importInvoice")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/contracts/import">Импорт договора</Link>
+                  <Link href="/contracts/import">{t("importContract")}</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -141,19 +146,19 @@ export default async function DocumentsPage({
         <Tabs defaultValue={activeTab}>
           <TabsList>
             <TabsTrigger value="invoices">
-              Счета
+              {t("tabInvoices")}
               <span className="ml-2 text-xs text-foreground-muted">
                 {rows.length}
               </span>
             </TabsTrigger>
             <TabsTrigger value="contracts">
-              Договора
+              {t("tabContracts")}
               <span className="ml-2 text-xs text-foreground-muted">
                 {contractRows.length}
               </span>
             </TabsTrigger>
             <TabsTrigger value="proposals">
-              КП
+              {t("tabProposals")}
               <span className="ml-2 text-xs text-foreground-muted">
                 {proposalRows.length}
               </span>

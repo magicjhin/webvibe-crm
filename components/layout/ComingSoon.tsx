@@ -1,16 +1,19 @@
+import { getTranslations } from "next-intl/server";
 import { AppShell } from "@/components/layout/AppShell";
 import { Construction } from "lucide-react";
 
 /**
  * Bootstrap-stage placeholder. Real implementation lands per ROADMAP.md.
  */
-export function ComingSoon({
+export async function ComingSoon({
   name,
   iteration,
 }: {
   name: string;
+  /** Номер итерации, например "5". */
   iteration: string;
 }) {
+  const t = await getTranslations("comingSoon");
   return (
     <AppShell>
       <div className="mx-auto flex max-w-md flex-col items-center gap-4 py-16 text-center">
@@ -19,8 +22,12 @@ export function ComingSoon({
         </div>
         <h1 className="text-2xl font-semibold tracking-tight">{name}</h1>
         <p className="text-sm text-foreground-muted">
-          Модуль появится в <span className="font-medium text-foreground">{iteration}</span>.
-          См. <code className="rounded bg-secondary px-1.5 py-0.5 text-xs">ROADMAP.md</code> для плана итераций.
+          {t("arrivesIn", { iteration: t("iterationName", { n: iteration }) })}{" "}
+          {t.rich("roadmapNote", {
+            code: (chunks) => (
+              <code className="rounded bg-secondary px-1.5 py-0.5 text-xs">{chunks}</code>
+            ),
+          })}
         </p>
       </div>
     </AppShell>

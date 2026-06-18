@@ -21,6 +21,25 @@
     "title": "Ещё",
     "description": "Дополнительные разделы CRM."
   },
+  "comingSoon": {
+    "iterationName": "Итерации {n}",
+    "arrivesIn": "Модуль появится в {iteration}.",
+    "roadmapNote": "См. <code>ROADMAP.md</code> для плана итераций."
+  },
+  "documents": {
+    "title": "Документы",
+    "description": "Все счета, договоры и КП. Управляй статусами и скачивай PDF без захода в карточку клиента.",
+    "create": "Создать",
+    "invoice": "Счёт",
+    "contract": "Договор",
+    "proposal": "КП",
+    "importOldPdf": "Импорт старого PDF",
+    "importInvoice": "Импорт счёта",
+    "importContract": "Импорт договора",
+    "tabInvoices": "Счета",
+    "tabContracts": "Договора",
+    "tabProposals": "КП"
+  },
   "quickAdd": {
     "title": "Быстрое создание",
     "newClient": "Новый клиент",
