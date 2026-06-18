@@ -21,18 +21,15 @@ export type PeriodBounds = {
   nextCursor: string;
 };
 
-const MONTH_LABELS_RU: readonly string[] = [
-  "Янв", "Фев", "Мар", "Апр", "Май", "Июн",
-  "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек",
-];
-
-const MONTH_NAMES_RU: readonly string[] = [
-  "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
-  "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь",
-];
-
-const monthLabel = (m1: number) => MONTH_LABELS_RU[m1 - 1] ?? String(m1);
-const monthName = (m1: number) => MONTH_NAMES_RU[m1 - 1] ?? String(m1);
+// Подписи месяцев берём из Intl по активной локали UI (ru/en).
+const monthLabel = (m1: number, locale: string) =>
+  new Intl.DateTimeFormat(locale, { month: "short" }).format(
+    new Date(Date.UTC(2000, m1 - 1, 1)),
+  );
+const monthName = (m1: number, locale: string) =>
+  new Intl.DateTimeFormat(locale, { month: "long" }).format(
+    new Date(Date.UTC(2000, m1 - 1, 1)),
+  );
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -62,7 +59,11 @@ function parseCursor(cursor: string | undefined): { y: number; m: number } {
   return { y, m };
 }
 
-export function getPeriodBounds(period: Period, cursor: string | undefined): PeriodBounds {
+export function getPeriodBounds(
+  period: Period,
+  cursor: string | undefined,
+  locale = "ru",
+): PeriodBounds {
   const { y, m } = parseCursor(cursor);
 
   if (period === "month") {
@@ -93,7 +94,7 @@ export function getPeriodBounds(period: Period, cursor: string | undefined): Per
       cursor: `${y}-${pad(m)}-01`,
       start,
       end,
-      label: `${monthName(m)} ${y}`,
+      label: `${monthName(m, locale)} ${y}`,
       buckets,
       prevCursor: `${prev.y}-${pad(prev.m)}-01`,
       nextCursor: `${next.y}-${pad(next.m)}-01`,
@@ -116,7 +117,7 @@ export function getPeriodBounds(period: Period, cursor: string | undefined): Per
       const bEnd = parseDateOnly(`${bNext.y}-${pad(bNext.m)}-01`)!;
       buckets.push({
         key: `${bY}-${pad(bM)}`,
-        label: monthLabel(bM),
+        label: monthLabel(bM, locale),
         start: bStart,
         end: bEnd,
       });
@@ -145,7 +146,7 @@ export function getPeriodBounds(period: Period, cursor: string | undefined): Per
     const bEnd = parseDateOnly(`${bNext.y}-${pad(bNext.m)}-01`)!;
     buckets.push({
       key: `${y}-${pad(i + 1)}`,
-      label: monthLabel(i + 1),
+      label: monthLabel(i + 1, locale),
       start: bStart,
       end: bEnd,
     });

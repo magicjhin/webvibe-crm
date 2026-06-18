@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   Bar,
   BarChart,
@@ -31,6 +32,7 @@ const fmtEurFull = (n: number) =>
   }).format(n);
 
 export function IncomeExpenseChart({ data }: { data: ChartPoint[] }) {
+  const t = useTranslations("dashboard");
   // На мобиле даём min-width пропорционально количеству баров (для месяца — 31×36 = ~1100px).
   // Outer wrapper скроллится, чтобы пользователь свайпом видел весь период.
   // Для короткой шкалы (квартал = 3 бара) дефолт 360px чтобы не плющилось.
@@ -83,14 +85,14 @@ export function IncomeExpenseChart({ data }: { data: ChartPoint[] }) {
             itemStyle={{ color: "var(--foreground)" }}
             formatter={(value, name) => [
               typeof value === "number" ? fmtEurFull(value) : String(value),
-              name === "income" ? "Доход" : "Расход",
+              name === "income" ? t("income") : t("expense"),
             ]}
           />
           <Legend
             iconType="circle"
             iconSize={8}
             wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
-            formatter={(value) => (value === "income" ? "Доход" : "Расход")}
+            formatter={(value) => (value === "income" ? t("income") : t("expense"))}
           />
           <Bar
             dataKey="income"

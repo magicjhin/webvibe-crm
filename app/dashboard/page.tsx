@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
   AlertTriangle,
   ArrowDownRight,
@@ -36,21 +37,9 @@ import {
   todayCursor,
   type Period,
 } from "@/lib/dashboard/periodBounds";
-import { EXPENSE_CATEGORIES } from "@/lib/validators/expense";
 
 export const metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
-
-const CATEGORY_LABEL: Record<(typeof EXPENSE_CATEGORIES)[number], string> = {
-  ai_tools: "AI-инструменты",
-  hosting: "Хостинг",
-  domains: "Домены",
-  software: "Софт",
-  hardware: "Железо",
-  ads: "Реклама",
-  transport: "Транспорт",
-  other: "Другое",
-};
 
 type SearchParams = Promise<{ period?: string; cursor?: string }>;
 
@@ -71,10 +60,13 @@ export default async function DashboardPage({
 }: {
   searchParams: SearchParams;
 }) {
+  const t = await getTranslations("dashboard");
+  const tCat = await getTranslations("expenseCategory");
   const params = await searchParams;
   const period: Period = isValidPeriod(params.period) ? params.period : "month";
   const cursor = params.cursor ?? todayCursor();
-  const bounds = getPeriodBounds(period, cursor);
+  const locale = await getLocale();
+  const bounds = getPeriodBounds(period, cursor, locale);
   const now = new Date();
 
   // Все aggregates за период + non-period-dependent блоки в parallel
@@ -171,8 +163,8 @@ export default async function DashboardPage({
     <AppShell>
       <div className="flex flex-col gap-6">
         <PageHeader
-          title="Dashboard"
-          description={`Финансовая сводка. ${bounds.label}.`}
+          title={t("title")}
+          description={t("description", { label: bounds.label })}
         />
 
         <PeriodSwitcher
@@ -187,16 +179,16 @@ export default async function DashboardPage({
         <div className="grid gap-4 sm:grid-cols-3">
           <KpiCard
             icon={<TrendingUp className="size-4" />}
-            label="Доход"
+            label={t("income")}
             value={<MoneyDisplay value={income} />}
-            hint={`${payments.length} платежей`}
+            hint={t("paymentsCount", { count: payments.length })}
             accent="positive"
           />
           <KpiCard
             icon={<TrendingDown className="size-4" />}
-            label="Расход"
+            label={t("expense")}
             value={<MoneyDisplay value={expense} />}
-            hint={`${expenses.length} записей`}
+            hint={t("expensesCount", { count: expenses.length })}
             accent="negative"
           />
           <KpiCard
@@ -207,16 +199,14 @@ export default async function DashboardPage({
                 <ArrowDownRight className="size-4" />
               )
             }
-            label="Чистыми"
+            label={t("net")}
             value={
               <>
                 {net >= 0 ? "+" : ""}
                 <MoneyDisplay value={net} />
               </>
             }
-            hint={
-              net >= 0 ? "Прибыль за период" : "Убыток за период"
-            }
+            hint={net >= 0 ? t("profitPeriod") : t("lossPeriod")}
             accent={net >= 0 ? "positive" : "negative"}
             big
           />
@@ -225,21 +215,21 @@ export default async function DashboardPage({
         {/* Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Доход vs Расход</CardTitle>
+            <CardTitle>{t("chartTitle")}</CardTitle>
             <CardDescription>
               {period === "month"
-                ? "По дням"
+                ? t("chartByDays")
                 : period === "quarter"
-                  ? "По месяцам квартала"
-                  : "По месяцам года"}
-              . Зелёные бары — поступления, красные — расходы.
+                  ? t("chartByQuarterMonths")
+                  : t("chartByYearMonths")}
+              {t("chartLegend")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {income === 0 && expense === 0 ? (
               <EmptyState
-                title="Данных за период нет"
-                description="Добавь платежи и расходы — появятся в виде диаграммы."
+                title={t("noPeriodData")}
+                description={t("noPeriodDataDesc")}
               />
             ) : (
               <IncomeExpenseChart data={chartData} />
@@ -251,35 +241,38 @@ export default async function DashboardPage({
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <KpiCard
             icon={<FileText className="size-4" />}
-            label="Неоплаченные счета"
+            label={t("outstanding")}
             value={<MoneyDisplay value={outstandingTotal} />}
             hint={
               overdueCount > 0
-                ? `${sentInvoices.length} sent · ${overdueCount} просрочено`
-                : `${sentInvoices.length} sent`
+                ? t("outstandingHintOverdue", {
+                    count: sentInvoices.length,
+                    overdue: overdueCount,
+                  })
+                : t("outstandingHint", { count: sentInvoices.length })
             }
             href="/invoices"
             danger={overdueCount > 0}
           />
           <KpiCard
             icon={<FolderKanban className="size-4" />}
-            label="Активные проекты"
+            label={t("activeProjects")}
             value={String(activeProjectsCount)}
-            hint="не paid и не archived"
+            hint={t("activeProjectsHint")}
             href="/projects"
           />
           <KpiCard
             icon={<Wallet className="size-4" />}
-            label="Свежие платежи"
+            label={t("recentPaymentsKpi")}
             value={String(recentPayments.length)}
-            hint="последние 5"
+            hint={t("recentPaymentsHint")}
             href="/payments"
           />
           <KpiCard
             icon={<Receipt className="size-4" />}
-            label="Расходов в периоде"
+            label={t("expensesInPeriod")}
             value={String(expenses.length)}
-            hint="клик → все расходы"
+            hint={t("expensesInPeriodHint")}
             href="/expenses"
           />
         </div>
@@ -294,13 +287,13 @@ export default async function DashboardPage({
                 ) : (
                   <FileText className="size-4 text-foreground-muted" />
                 )}
-                Просроченные счета
+                {t("overdueTitle")}
               </CardTitle>
-              <CardDescription>Status=sent, дата оплаты прошла.</CardDescription>
+              <CardDescription>{t("overdueDesc")}</CardDescription>
             </CardHeader>
             <CardContent>
               {overdueInvoices.length === 0 ? (
-                <EmptyState title="Всё чисто" description="Просроченных счетов нет." />
+                <EmptyState title={t("allClear")} description={t("allClearDesc")} />
               ) : (
                 <ul className="flex flex-col gap-2">
                   {overdueInvoices.map((inv) => (
@@ -319,7 +312,7 @@ export default async function DashboardPage({
                           {inv.client.name}
                         </span>
                         <span className="ml-2 text-xs text-[hsl(var(--danger))]">
-                          до <DateDisplay date={inv.dueAt} />
+                          {t("due")} <DateDisplay date={inv.dueAt} />
                         </span>
                       </div>
                       <span className="font-medium">
@@ -335,14 +328,14 @@ export default async function DashboardPage({
           {/* Recent payments */}
           <Card>
             <CardHeader>
-              <CardTitle>Свежие платежи</CardTitle>
-              <CardDescription>Последние 5 поступлений.</CardDescription>
+              <CardTitle>{t("recentPaymentsTitle")}</CardTitle>
+              <CardDescription>{t("recentPaymentsDesc")}</CardDescription>
             </CardHeader>
             <CardContent>
               {recentPayments.length === 0 ? (
                 <EmptyState
-                  title="Платежей пока нет"
-                  description="Добавь первый платёж — появится здесь."
+                  title={t("noPayments")}
+                  description={t("noPaymentsDesc")}
                 />
               ) : (
                 <ul className="flex flex-col gap-2">
@@ -379,12 +372,12 @@ export default async function DashboardPage({
           <Card className="lg:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Расходы по категориям</CardTitle>
+                <CardTitle>{t("byCategoryTitle")}</CardTitle>
                 <CardDescription>{bounds.label}</CardDescription>
               </div>
               <Button asChild variant="ghost" size="sm">
                 <Link href="/expenses">
-                  Все расходы
+                  {t("allExpenses")}
                   <ArrowUpRight className="size-3.5" />
                 </Link>
               </Button>
@@ -392,8 +385,8 @@ export default async function DashboardPage({
             <CardContent>
               {topCategories.length === 0 ? (
                 <EmptyState
-                  title="Расходов в периоде нет"
-                  description="Записи появятся, когда добавишь первый расход."
+                  title={t("noCategoryData")}
+                  description={t("noCategoryDataDesc")}
                 />
               ) : (
                 <ul className="flex flex-col gap-2">
@@ -402,9 +395,7 @@ export default async function DashboardPage({
                     return (
                       <li key={cat} className="flex flex-col gap-1">
                         <div className="flex items-center justify-between text-sm">
-                          <span>
-                            {CATEGORY_LABEL[cat as keyof typeof CATEGORY_LABEL] ?? cat}
-                          </span>
+                          <span>{tCat(cat)}</span>
                           <span className="font-medium tabular-nums">
                             <MoneyDisplay value={sum} />{" "}
                             <span className="text-xs text-foreground-subtle">
