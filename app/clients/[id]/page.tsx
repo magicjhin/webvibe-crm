@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { FileText, FolderKanban, Plus, Wallet } from "lucide-react";
 
 import { AppShell } from "@/components/layout/AppShell";
@@ -31,7 +32,8 @@ export async function generateMetadata({
     where: { id },
     select: { name: true },
   });
-  return { title: client?.name ?? "Клиент" };
+  const t = await getTranslations("clients");
+  return { title: client?.name ?? t("detailFallback") };
 }
 
 export default async function ClientPage({
@@ -40,6 +42,7 @@ export default async function ClientPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations("clients");
   const client = await prisma.client.findUnique({
     where: { id },
     include: {
@@ -91,44 +94,44 @@ export default async function ClientPage({
 
         <Tabs defaultValue="details">
           <TabsList>
-            <TabsTrigger value="details">Детали</TabsTrigger>
+            <TabsTrigger value="details">{t("tabDetails")}</TabsTrigger>
             <TabsTrigger value="projects">
-              Проекты ({client.projects.length})
+              {t("tabProjects")} ({client.projects.length})
             </TabsTrigger>
-            <TabsTrigger value="documents">Документы</TabsTrigger>
-            <TabsTrigger value="payments">Платежи</TabsTrigger>
+            <TabsTrigger value="documents">{t("tabDocuments")}</TabsTrigger>
+            <TabsTrigger value="payments">{t("tabPayments")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="details" className="mt-4">
             <div className="grid gap-4 md:grid-cols-2">
               <Card>
                 <CardHeader>
-                  <CardTitle>Контакты</CardTitle>
+                  <CardTitle>{t("contacts")}</CardTitle>
                 </CardHeader>
                 <CardContent className="grid gap-3 text-sm">
                   <Row label="Email" value={client.email} />
-                  <Row label="Телефон" value={client.phone} />
-                  <Row label="Сайт" value={client.website} link />
-                  <Row label="Источник" value={client.source} />
+                  <Row label={t("phone")} value={client.phone} />
+                  <Row label={t("website")} value={client.website} link />
+                  <Row label={t("source")} value={client.source} />
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader>
-                  <CardTitle>Реквизиты</CardTitle>
+                  <CardTitle>{t("requisites")}</CardTitle>
                 </CardHeader>
                 <CardContent className="grid gap-3 text-sm">
                   <Row label="PVM kodas" value={client.vatId} mono />
                   <Row label="Įmonės kodas" value={client.regNumber} mono />
-                  <Row label="Адрес" value={client.address} />
-                  <Row label="Представитель" value={client.representative} />
-                  <Row label="Тех. контакт" value={client.technicalContactName} />
-                  <Row label="Язык документов" value={client.language?.toUpperCase()} mono />
+                  <Row label={t("address")} value={client.address} />
+                  <Row label={t("representative")} value={client.representative} />
+                  <Row label={t("techContact")} value={client.technicalContactName} />
+                  <Row label={t("docLanguage")} value={client.language?.toUpperCase()} mono />
                 </CardContent>
               </Card>
               {client.notes ? (
                 <Card className="md:col-span-2">
                   <CardHeader>
-                    <CardTitle>Заметки</CardTitle>
+                    <CardTitle>{t("notes")}</CardTitle>
                   </CardHeader>
                   <CardContent className="whitespace-pre-wrap text-sm text-foreground-muted">
                     {client.notes}
@@ -138,10 +141,10 @@ export default async function ClientPage({
               <Card className="md:col-span-2">
                 <CardContent className="flex items-center justify-between py-4 text-xs text-foreground-subtle">
                   <span>
-                    Создан <DateDisplay date={client.createdAt} mode="long" />
+                    {t("createdAtLabel")} <DateDisplay date={client.createdAt} mode="long" />
                   </span>
                   <span>
-                    Обновлён <DateDisplay date={client.updatedAt} mode="relative" />
+                    {t("updatedAtLabel")} <DateDisplay date={client.updatedAt} mode="relative" />
                   </span>
                 </CardContent>
               </Card>
@@ -151,25 +154,25 @@ export default async function ClientPage({
           <TabsContent value="projects" className="mt-4">
             <div className="flex items-center justify-between pb-3">
               <p className="text-sm text-foreground-muted">
-                Проекты этого клиента
+                {t("projectsOfClient")}
               </p>
               <Button asChild>
                 <Link href={`/projects/new?clientId=${client.id}`}>
                   <Plus className="size-4" />
-                  Новый проект
+                  {t("newProject")}
                 </Link>
               </Button>
             </div>
             {client.projects.length === 0 ? (
               <EmptyState
                 icon={FolderKanban}
-                title="У клиента нет проектов"
-                description="Создай первый проект — он появится здесь и в общем списке."
+                title={t("noProjects")}
+                description={t("noProjectsDesc")}
                 action={
                   <Button asChild>
                     <Link href={`/projects/new?clientId=${client.id}`}>
                       <Plus className="size-4" />
-                      Создать проект
+                      {t("createProject")}
                     </Link>
                   </Button>
                 }
@@ -205,13 +208,13 @@ export default async function ClientPage({
             {client.invoices.length === 0 ? (
               <EmptyState
                 icon={FileText}
-                title="Счетов пока нет"
-                description="КП и договоры появятся в Iter 4. Счета можно создавать уже сейчас."
+                title={t("noInvoices")}
+                description={t("noInvoicesDesc")}
                 action={
                   <Button asChild>
                     <Link href={`/invoices/new?clientId=${client.id}`}>
                       <Plus className="size-4" />
-                      Создать счёт
+                      {t("createInvoice")}
                     </Link>
                   </Button>
                 }
@@ -245,13 +248,13 @@ export default async function ClientPage({
             {client.payments.length === 0 ? (
               <EmptyState
                 icon={Wallet}
-                title="Платежей пока нет"
-                description="Когда поступит оплата от клиента — добавь её, привязать к счёту опционально."
+                title={t("noPaymentsTitle")}
+                description={t("noPaymentsDesc")}
                 action={
                   <Button asChild>
                     <Link href={`/payments/new?clientId=${client.id}`}>
                       <Plus className="size-4" />
-                      Добавить платёж
+                      {t("addPayment")}
                     </Link>
                   </Button>
                 }
@@ -273,7 +276,7 @@ export default async function ClientPage({
                           {p.invoice.number}
                         </Link>
                       ) : (
-                        <span className="text-xs text-foreground-subtle">без счёта</span>
+                        <span className="text-xs text-foreground-subtle">{t("noInvoiceLink")}</span>
                       )}
                     </div>
                     <span className="font-medium">

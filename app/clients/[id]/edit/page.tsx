@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { ClientForm } from "@/components/forms/ClientForm";
 import { prisma } from "@/lib/db";
 import type { ClientInput } from "@/lib/validators/client";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,9 @@ export async function generateMetadata({
 }) {
   const { id } = await params;
   const c = await prisma.client.findUnique({ where: { id }, select: { name: true } });
-  return { title: c ? `Редактировать — ${c.name}` : "Клиент" };
+  const t = await getTranslations("common");
+  const tClients = await getTranslations("clients");
+  return { title: c ? t("editWithName", { name: c.name }) : tClients("detailFallback") };
 }
 
 export default async function EditClientPage({
@@ -24,6 +27,7 @@ export default async function EditClientPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations("common");
   const c = await prisma.client.findUnique({ where: { id } });
   if (!c) notFound();
 
@@ -47,7 +51,7 @@ export default async function EditClientPage({
   return (
     <AppShell>
       <div className="flex flex-col gap-6">
-        <PageHeader title={`Редактировать — ${c.name}`} />
+        <PageHeader title={t("editWithName", { name: c.name })} />
         <ClientForm mode="edit" id={c.id} initial={initial} />
       </div>
     </AppShell>

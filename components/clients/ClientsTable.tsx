@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal, Search, UserPlus, Users } from "lucide-react";
 
@@ -39,12 +40,9 @@ export type ClientRow = {
   createdAt: Date;
 };
 
-const KIND_LABEL: Record<ClientRow["kind"], string> = {
-  individual: "Физлицо",
-  company: "Компания",
-};
-
 export function ClientsTable({ rows }: { rows: ClientRow[] }) {
+  const t = useTranslations("clients");
+  const tc = useTranslations("common");
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | ClientRow["status"]>(
@@ -71,7 +69,7 @@ export function ClientsTable({ rows }: { rows: ClientRow[] }) {
     () => [
       {
         accessorKey: "name",
-        header: "Имя",
+        header: t("colName"),
         cell: ({ row }) => (
           <Link
             href={`/clients/${row.original.id}`}
@@ -84,19 +82,21 @@ export function ClientsTable({ rows }: { rows: ClientRow[] }) {
       },
       {
         accessorKey: "kind",
-        header: "Тип",
+        header: t("colKind"),
         cell: ({ row }) => (
-          <span className="text-foreground-muted">{KIND_LABEL[row.original.kind]}</span>
+          <span className="text-foreground-muted">
+            {t(row.original.kind === "individual" ? "kindIndividual" : "kindCompany")}
+          </span>
         ),
       },
       {
         accessorKey: "status",
-        header: "Статус",
+        header: t("colStatus"),
         cell: ({ row }) => <StatusBadge kind="client" value={row.original.status} />,
       },
       {
         accessorKey: "email",
-        header: "Контакты",
+        header: t("colContacts"),
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex flex-col text-xs text-foreground-muted">
@@ -107,7 +107,7 @@ export function ClientsTable({ rows }: { rows: ClientRow[] }) {
       },
       {
         accessorKey: "projectsCount",
-        header: "Проектов",
+        header: t("colProjects"),
         cell: ({ row }) => (
           <span className="tabular-nums">{row.original.projectsCount}</span>
         ),
@@ -123,17 +123,17 @@ export function ClientsTable({ rows }: { rows: ClientRow[] }) {
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  aria-label={`Действия с ${row.original.name}`}
+                  aria-label={tc("actionsFor", { name: row.original.name })}
                 >
                   <MoreHorizontal className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href={`/clients/${row.original.id}`}>Открыть</Link>
+                  <Link href={`/clients/${row.original.id}`}>{tc("open")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href={`/clients/${row.original.id}/edit`}>Редактировать</Link>
+                  <Link href={`/clients/${row.original.id}/edit`}>{tc("edit")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -143,7 +143,7 @@ export function ClientsTable({ rows }: { rows: ClientRow[] }) {
                     setDeleteTarget(row.original);
                   }}
                 >
-                  Удалить
+                  {tc("delete")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -151,20 +151,20 @@ export function ClientsTable({ rows }: { rows: ClientRow[] }) {
         ),
       },
     ],
-    [],
+    [t, tc],
   );
 
   if (rows.length === 0) {
     return (
       <EmptyState
         icon={Users}
-        title="Пока нет клиентов"
-        description="Добавь первого клиента — потом сможешь создавать для него проекты, КП и счета."
+        title={t("emptyTitle")}
+        description={t("emptyDesc")}
         action={
           <Button asChild>
             <Link href="/clients/new">
               <UserPlus className="size-4" />
-              Добавить первого клиента
+              {t("addFirst")}
             </Link>
           </Button>
         }
@@ -180,7 +180,7 @@ export function ClientsTable({ rows }: { rows: ClientRow[] }) {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск по имени, email, телефону"
+            placeholder={t("searchPlaceholder")}
             className="pl-9"
           />
         </div>
@@ -192,9 +192,9 @@ export function ClientsTable({ rows }: { rows: ClientRow[] }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Все статусы</SelectItem>
-            <SelectItem value="active">Активные</SelectItem>
-            <SelectItem value="archived">В архиве</SelectItem>
+            <SelectItem value="all">{t("allStatuses")}</SelectItem>
+            <SelectItem value="active">{t("activePlural")}</SelectItem>
+            <SelectItem value="archived">{t("archivedPlural")}</SelectItem>
           </SelectContent>
         </Select>
         <Select
@@ -205,9 +205,9 @@ export function ClientsTable({ rows }: { rows: ClientRow[] }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Все типы</SelectItem>
-            <SelectItem value="individual">Физлица</SelectItem>
-            <SelectItem value="company">Компании</SelectItem>
+            <SelectItem value="all">{t("allKinds")}</SelectItem>
+            <SelectItem value="individual">{t("individualsPlural")}</SelectItem>
+            <SelectItem value="company">{t("companiesPlural")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -219,7 +219,7 @@ export function ClientsTable({ rows }: { rows: ClientRow[] }) {
         onRowClick={(r) => router.push(`/clients/${r.id}`)}
         empty={
           <div className="px-6 py-10 text-center text-sm text-foreground-muted">
-            Ничего не найдено по фильтрам
+            {tc("notFoundByFilters")}
           </div>
         }
       />
@@ -229,14 +229,14 @@ export function ClientsTable({ rows }: { rows: ClientRow[] }) {
         onOpenChange={(o) => {
           if (!o) setDeleteTarget(null);
         }}
-        title="Удалить клиента?"
+        title={t("deleteTitle")}
         description={
           deleteTarget
-            ? `${deleteTarget.name}. Действие нельзя отменить. Если есть привязанные проекты — удаление будет отклонено.`
+            ? t("deleteDesc", { name: deleteTarget.name })
             : undefined
         }
         action={async () => {
-          if (!deleteTarget) return { ok: false, error: "Нет цели" };
+          if (!deleteTarget) return { ok: false, error: tc("noTarget") };
           return deleteClient(deleteTarget.id);
         }}
       />

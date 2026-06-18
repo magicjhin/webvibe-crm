@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -37,16 +38,6 @@ type Props =
   | { mode: "create"; initial?: undefined; id?: undefined }
   | { mode: "edit"; initial: ClientInput; id: string };
 
-const KIND_LABEL: Record<(typeof CLIENT_KINDS)[number], string> = {
-  individual: "Физлицо",
-  company: "Компания",
-};
-
-const STATUS_LABEL: Record<(typeof CLIENT_STATUSES)[number], string> = {
-  active: "Активен",
-  archived: "В архиве",
-};
-
 const EMPTY: ClientInput = {
   kind: "individual",
   name: "",
@@ -66,6 +57,10 @@ const EMPTY: ClientInput = {
 
 export function ClientForm(props: Props) {
   const router = useRouter();
+  const t = useTranslations("clientForm");
+  const tc = useTranslations("common");
+  const tClients = useTranslations("clients");
+  const tStatus = useTranslations("status");
   const [isPending, startTransition] = useTransition();
   const {
     register,
@@ -85,7 +80,7 @@ export function ClientForm(props: Props) {
           ? await createClient(data)
           : await updateClient(props.id, data);
       if (result.ok) {
-        toast.success(props.mode === "create" ? "Клиент создан" : "Сохранено");
+        toast.success(props.mode === "create" ? t("created") : tc("saved"));
         if (props.mode === "create") {
           router.push(`/clients/${result.data.id}`);
         } else {
@@ -102,23 +97,23 @@ export function ClientForm(props: Props) {
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6" noValidate>
       <Card>
         <CardHeader>
-          <CardTitle>Основное</CardTitle>
-          <CardDescription>Имя и тип клиента — обязательны.</CardDescription>
+          <CardTitle>{t("basic")}</CardTitle>
+          <CardDescription>{t("basicDesc")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <Field id="kind" label="Тип" required error={errors.kind?.message}>
+          <Field id="kind" label={t("kind")} required error={errors.kind?.message}>
             <Controller
               control={control}
               name="kind"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="kind">
-                    <SelectValue placeholder="Выбери" />
+                    <SelectValue placeholder={tc("choose")} />
                   </SelectTrigger>
                   <SelectContent>
                     {CLIENT_KINDS.map((k) => (
                       <SelectItem key={k} value={k}>
-                        {KIND_LABEL[k]}
+                        {tClients(k === "individual" ? "kindIndividual" : "kindCompany")}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -126,19 +121,19 @@ export function ClientForm(props: Props) {
               )}
             />
           </Field>
-          <Field id="status" label="Статус" error={errors.status?.message}>
+          <Field id="status" label={t("status")} error={errors.status?.message}>
             <Controller
               control={control}
               name="status"
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger id="status">
-                    <SelectValue placeholder="Выбери" />
+                    <SelectValue placeholder={tc("choose")} />
                   </SelectTrigger>
                   <SelectContent>
                     {CLIENT_STATUSES.map((s) => (
                       <SelectItem key={s} value={s}>
-                        {STATUS_LABEL[s]}
+                        {tStatus(`client.${s}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -148,30 +143,30 @@ export function ClientForm(props: Props) {
           </Field>
           <Field
             id="name"
-            label="Имя / название"
+            label={t("name")}
             required
             className="sm:col-span-2"
             error={errors.name?.message}
           >
-            <Input id="name" {...register("name")} placeholder="Иван Иванов / UAB «...»" />
+            <Input id="name" {...register("name")} placeholder={t("namePlaceholder")} />
           </Field>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Контакты</CardTitle>
+          <CardTitle>{t("contacts")}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <Field id="email" label="Email" error={errors.email?.message}>
             <Input id="email" type="email" {...register("email")} />
           </Field>
-          <Field id="phone" label="Телефон" error={errors.phone?.message}>
+          <Field id="phone" label={t("phone")} error={errors.phone?.message}>
             <Input id="phone" {...register("phone")} />
           </Field>
           <Field
             id="website"
-            label="Сайт"
+            label={t("website")}
             hint="https://…"
             className="sm:col-span-2"
             error={errors.website?.message}
@@ -183,10 +178,8 @@ export function ClientForm(props: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Реквизиты</CardTitle>
-          <CardDescription>
-            Понадобятся для PDF-документов. Можно заполнить позже.
-          </CardDescription>
+          <CardTitle>{t("requisites")}</CardTitle>
+          <CardDescription>{t("requisitesDesc")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <Field id="vatId" label="PVM mokėtojo kodas" error={errors.vatId?.message}>
@@ -197,7 +190,7 @@ export function ClientForm(props: Props) {
           </Field>
           <Field
             id="address"
-            label="Адрес"
+            label={t("address")}
             className="sm:col-span-2"
             error={errors.address?.message}
           >
@@ -205,29 +198,29 @@ export function ClientForm(props: Props) {
           </Field>
           <Field
             id="representative"
-            label="Представитель"
-            hint="Например «direktorės Irenos Ulienės»"
+            label={t("representative")}
+            hint={t("representativeHint")}
             error={errors.representative?.message}
           >
             <Input id="representative" {...register("representative")} />
           </Field>
           <Field
             id="technicalContactName"
-            label="Технический контакт"
-            hint="Имя — попадёт в реквизиты счёта"
+            label={t("techContact")}
+            hint={t("techContactHint")}
             error={errors.technicalContactName?.message}
           >
             <Input id="technicalContactName" {...register("technicalContactName")} />
           </Field>
-          <Field id="language" label="Язык документов" hint="ISO-код (lt, en, ru)" error={errors.language?.message}>
+          <Field id="language" label={t("docLanguage")} hint={t("docLanguageHint")} error={errors.language?.message}>
             <Input id="language" {...register("language")} className="font-mono uppercase" />
           </Field>
-          <Field id="source" label="Откуда пришёл" error={errors.source?.message}>
-            <Input id="source" {...register("source")} placeholder="Instagram / друг / поиск" />
+          <Field id="source" label={t("source")} error={errors.source?.message}>
+            <Input id="source" {...register("source")} placeholder={t("sourcePlaceholder")} />
           </Field>
           <Field
             id="notes"
-            label="Заметки"
+            label={t("notes")}
             className="sm:col-span-2"
             error={errors.notes?.message}
           >
@@ -243,7 +236,7 @@ export function ClientForm(props: Props) {
           onClick={() => router.back()}
           disabled={isPending}
         >
-          Отмена
+          {tc("cancel")}
         </Button>
         <Button
           type="submit"
@@ -252,12 +245,12 @@ export function ClientForm(props: Props) {
           {isPending ? (
             <span className="inline-flex items-center gap-2">
               <Loader2 className="size-4 animate-spin" />
-              Сохраняем…
+              {tc("saving")}
             </span>
           ) : props.mode === "create" ? (
-            "Создать клиента"
+            t("submit")
           ) : (
-            "Сохранить"
+            tc("save")
           )}
         </Button>
       </div>
